@@ -1,0 +1,82 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CrmConnectionProjects", "CrmConnectionProjects", "{73578E88-B589-432E-8BEA-47B0F466244A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McTools.Xrm.Connection", "CrmConnectionProjects\McTools.Xrm.Connection\McTools.Xrm.Connection.csproj", "{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McTools.Xrm.Connection.WinForms", "CrmConnectionProjects\McTools.Xrm.Connection.WinForms\McTools.Xrm.Connection.WinForms.csproj", "{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater", "CrmWebResourcesUpdater\CrmWebResourcesUpdater.csproj", "{D903D192-561E-49A4-91F4-E900AB626941}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Services", "CrmWebResourcesUpdater.Helpers\CrmWebResourcesUpdater.Services.csproj", "{8433C7D4-9AB0-47DA-8314-F39D02656C22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Common", "CrmWebResourcesUpdater.Common\CrmWebResourcesUpdater.Common.csproj", "{BEFB0758-1A24-49CC-9C1F-32E9A5351BCF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Settings", "CrmWebResourcesUpdater.Settings\CrmWebResourcesUpdater.Settings.csproj", "{2CF262F9-D0D9-4C45-84EB-430779973A05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Forms", "CrmWebResourcesUpdater.Froms\CrmWebResourcesUpdater.Forms.csproj", "{668B006C-BD03-4A67-8847-6C3792A97703}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Without GemBox|Any CPU = Debug Without GemBox|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}.Debug Without GemBox|Any CPU.ActiveCfg = Debug Without GemBox|Any CPU
+		{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}.Debug Without GemBox|Any CPU.Build.0 = Debug Without GemBox|Any CPU
+		{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB}.Debug Without GemBox|Any CPU.ActiveCfg = Debug Without GemBox|Any CPU
+		{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB}.Debug Without GemBox|Any CPU.Build.0 = Debug Without GemBox|Any CPU
+		{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D903D192-561E-49A4-91F4-E900AB626941}.Debug Without GemBox|Any CPU.ActiveCfg = Debug|Any CPU
+		{D903D192-561E-49A4-91F4-E900AB626941}.Debug Without GemBox|Any CPU.Build.0 = Debug|Any CPU
+		{D903D192-561E-49A4-91F4-E900AB626941}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D903D192-561E-49A4-91F4-E900AB626941}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D903D192-561E-49A4-91F4-E900AB626941}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D903D192-561E-49A4-91F4-E900AB626941}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8433C7D4-9AB0-47DA-8314-F39D02656C22}.Debug Without GemBox|Any CPU.ActiveCfg = Debug|Any CPU
+		{8433C7D4-9AB0-47DA-8314-F39D02656C22}.Debug Without GemBox|Any CPU.Build.0 = Debug|Any CPU
+		{8433C7D4-9AB0-47DA-8314-F39D02656C22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8433C7D4-9AB0-47DA-8314-F39D02656C22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8433C7D4-9AB0-47DA-8314-F39D02656C22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8433C7D4-9AB0-47DA-8314-F39D02656C22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEFB0758-1A24-49CC-9C1F-32E9A5351BCF}.Debug Without GemBox|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEFB0758-1A24-49CC-9C1F-32E9A5351BCF}.Debug Without GemBox|Any CPU.Build.0 = Debug|Any CPU
+		{BEFB0758-1A24-49CC-9C1F-32E9A5351BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEFB0758-1A24-49CC-9C1F-32E9A5351BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEFB0758-1A24-49CC-9C1F-32E9A5351BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEFB0758-1A24-49CC-9C1F-32E9A5351BCF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CF262F9-D0D9-4C45-84EB-430779973A05}.Debug Without GemBox|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CF262F9-D0D9-4C45-84EB-430779973A05}.Debug Without GemBox|Any CPU.Build.0 = Debug|Any CPU
+		{2CF262F9-D0D9-4C45-84EB-430779973A05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CF262F9-D0D9-4C45-84EB-430779973A05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CF262F9-D0D9-4C45-84EB-430779973A05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CF262F9-D0D9-4C45-84EB-430779973A05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{668B006C-BD03-4A67-8847-6C3792A97703}.Debug Without GemBox|Any CPU.ActiveCfg = Debug|Any CPU
+		{668B006C-BD03-4A67-8847-6C3792A97703}.Debug Without GemBox|Any CPU.Build.0 = Debug|Any CPU
+		{668B006C-BD03-4A67-8847-6C3792A97703}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{668B006C-BD03-4A67-8847-6C3792A97703}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{668B006C-BD03-4A67-8847-6C3792A97703}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{668B006C-BD03-4A67-8847-6C3792A97703}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F} = {73578E88-B589-432E-8BEA-47B0F466244A}
+		{EEB5C09F-CEC6-4FB5-87B5-AE61AE89C9EB} = {73578E88-B589-432E-8BEA-47B0F466244A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {883C5138-F27E-44C7-8FFA-A94C203D8FE1}
+	EndGlobalSection
+EndGlobal

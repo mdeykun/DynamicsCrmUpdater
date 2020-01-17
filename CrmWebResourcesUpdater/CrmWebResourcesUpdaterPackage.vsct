@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <Extern href="stdidcmd.h" />
+  <Extern href="vsshlids.h" />
+  <Commands package="guidUpdateWebResourcesPackage">
+    <Groups>
+      <Group guid="guidUpdateWebResourcesPackageProjectCmdSet" id="ProjectNodeMenu" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE" />
+      </Group>
+      <Group guid="guidUpdateWebResourcesPackageItemCmdSet" id="ItemNodeMenu" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      </Group>
+      <Group guid="guidUpdateWebResourcesPackageWebProjectCmdSet" id="ProjectNodeMenu" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_WEBPROJECT" />
+      </Group>
+      <Group guid="guidUpdateWebResourcesPackageWebProjectItemCmdSet" id="ItemNodeMenu" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_WEBITEMNODE" />
+      </Group>
+    </Groups>
+    <Buttons>
+      <!-- Web project -->
+      <Button guid="guidUpdateWebResourcesPackageWebProjectCmdSet" id="UpdateWebResourcesId" priority="0x0100" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageWebProjectCmdSet" id="ProjectNodeMenu" />
+        <Icon guid="guidUpdateImage" id="uploadButtonImage" />
+        <Strings>
+          <ButtonText>Update Web Resources</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidUpdateWebResourcesPackageWebProjectCmdSet" id="UpdaterOptions" priority="0x0100" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageWebProjectCmdSet" id="ProjectNodeMenu" />
+        <Icon guid="guidOptionsImage" id="optionsButtonImage" />
+        <Strings>
+          <ButtonText>Updater Options</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidUpdateWebResourcesPackageWebProjectItemCmdSet" id="UpdateSelectedWebResourcesId" priority="0x0200" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageWebProjectItemCmdSet" id="ItemNodeMenu" />
+        <Icon guid="guidUpdateImage" id="uploadButtonImage" />
+        <Strings>
+          <ButtonText>Update Web Resource(s)</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidUpdateWebResourcesPackageWebProjectItemCmdSet" id="CreateWebResourceId" priority="0x0100" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageWebProjectItemCmdSet" id="ItemNodeMenu" />
+        <Icon guid="guidCreateImage" id="createButtonImage" />
+        <Strings>
+          <ButtonText>Create Web Resource</ButtonText>
+        </Strings>
+      </Button>
+      
+      <!-- Other projects -->
+      <Button guid="guidUpdateWebResourcesPackageProjectCmdSet" id="UpdateWebResourcesId" priority="0x0100" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageProjectCmdSet" id="ProjectNodeMenu" />
+        <Icon guid="guidUpdateImage" id="uploadButtonImage" />
+        <Strings>
+          <ButtonText>Update Web Resources</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidUpdateWebResourcesPackageProjectCmdSet" id="UpdaterOptions" priority="0x0100" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageProjectCmdSet" id="ProjectNodeMenu" />
+        <Icon guid="guidOptionsImage" id="optionsButtonImage" />
+        <Strings>
+          <ButtonText>Updater Options</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidUpdateWebResourcesPackageItemCmdSet" id="UpdateSelectedWebResourcesId" priority="0x0200" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageItemCmdSet" id="ItemNodeMenu" />
+        <Icon guid="guidUpdateImage" id="uploadButtonImage" />
+        <Strings>
+          <ButtonText>Update Web Resource(s)</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidUpdateWebResourcesPackageItemCmdSet" id="CreateWebResourceId" priority="0x0100" type="Button">
+        <Parent guid="guidUpdateWebResourcesPackageItemCmdSet" id="ItemNodeMenu" />
+        <Icon guid="guidCreateImage" id="createButtonImage" />
+        <Strings>
+          <ButtonText>Create Web Resource</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+
+    <Bitmaps>
+      <Bitmap guid="guidUpdateImage" href="Resources\Upload.png" usedList="uploadButtonImage" />
+      <Bitmap guid="guidOptionsImage" href="Resources\Options.png" usedList="optionsButtonImage" />
+      <Bitmap guid="guidCreateImage" href="Resources\Create.png" usedList="createButtonImage" />
+    </Bitmaps>
+  </Commands>
+  <!--
+  <KeyBindings>
+    <KeyBinding guid="guidUpdateWebResourcesPackageProjectCmdSet" id="UpdateWebResourcesId" editor="guidVSStd97" key1="U" mod1="Alt" />
+  </KeyBindings>
+  -->
+  <Symbols>
+    <!-- This is the package guid. -->
+    <GuidSymbol name="guidUpdateWebResourcesPackage" value="{944f3eda-3d74-49f0-a2d4-a25775f1ab36}" />
+
+    <!-- This is the guid used to group the menu commands together -->
+    <GuidSymbol name="guidUpdateWebResourcesPackageWebProjectCmdSet" value="{e51702bf-0cd0-413b-87ba-7d267eecc6c2}">
+      <IDSymbol name="ProjectNodeMenu" value="0x1040" />
+      <IDSymbol value="0x0100" name="UpdateWebResourcesId"  />
+      <IDSymbol value="0x0200" name="UpdaterOptions" />
+    </GuidSymbol>
+    
+    <GuidSymbol name="guidUpdateWebResourcesPackageWebProjectItemCmdSet" value="{AE7DC0B9-634A-46DB-A008-D6D15DD325E0}">
+      <IDSymbol name="ItemNodeMenu" value="0x1050" />
+      <IDSymbol value="0x0400" name="CreateWebResourceId" />
+      <IDSymbol value="0x0300" name="UpdateSelectedWebResourcesId" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidUpdateWebResourcesPackageProjectCmdSet" value="{e51702bf-0cd0-413b-87ba-7d267eecc6c2}">
+      <IDSymbol name="ProjectNodeMenu" value="0x1020" />
+      <IDSymbol value="0x0100" name="UpdateWebResourcesId"  />
+      <IDSymbol value="0x0200" name="UpdaterOptions" />
+    </GuidSymbol>
+    <GuidSymbol name="guidUpdateWebResourcesPackageItemCmdSet" value="{AE7DC0B9-634A-46DB-A008-D6D15DD325E0}">
+      <IDSymbol name="ItemNodeMenu" value="0x1030" />
+      <IDSymbol value="0x0400" name="CreateWebResourceId" />
+      <IDSymbol value="0x0300" name="UpdateSelectedWebResourcesId" />
+    </GuidSymbol>
+    <GuidSymbol name="guidUpdateImage" value="{441ae41f-de66-45b6-8e19-94a38e5d39b7}">
+      <IDSymbol name="uploadButtonImage" value="1" />
+    </GuidSymbol>
+    <GuidSymbol value="{39365666-141c-4341-9505-cb76da0e2e61}" name="guidOptionsImage">
+      <IDSymbol name="optionsButtonImage" value="1" />
+    </GuidSymbol>
+    <GuidSymbol value="{484E60CC-ECA7-4C9E-B60E-318505FF8CEB}" name="guidCreateImage">
+      <IDSymbol name="createButtonImage" value="1" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>
