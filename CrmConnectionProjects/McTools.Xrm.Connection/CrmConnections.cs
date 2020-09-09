@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
 
 namespace McTools.Xrm.Connection
 {
@@ -9,72 +13,121 @@ namespace McTools.Xrm.Connection
     {
         #region Variables
 
-        List<ConnectionDetail> _connections;
+        private static readonly object _fileAccess = new object();
 
-        string _proxyAddress;
+        #endregion Variables
 
-        string _proxyPort;
-
-        string _userName;
-
-        string _password;
-
-        bool _useCustomProxy;
-
-        bool _publishAfterUpload = true;
-
-        bool _ignoreExtensions = false;
-
-        bool _extendedLog = false;
-
-        #endregion
-
-        #region Properties
-
-
-        public List<ConnectionDetail> Connections
+        public CrmConnections(string name)
         {
-            get { return _connections; }
-            set { _connections = value; }
+            Connections = new List<ConnectionDetail>();
+            Name = name;
         }
 
-        public string ProxyAddress
+        public CrmConnections()
         {
-            get { return _proxyAddress; }
-            set { _proxyAddress = value; }
         }
 
+        #region Propriétés
 
-        public string ProxyPort
+        public bool ByPassProxyOnLocal { get; set; }
+
+        /// <summary>
+        /// Obtient ou définit la liste des connexions
+        /// </summary>
+        public List<ConnectionDetail> Connections { get; set; }
+
+        /// <summary>
+        /// Indicates if this connection list can be updated
+        /// </summary>
+        public bool IsReadOnly { get; set; }
+
+        public string Name { get; set; }
+
+        public string Password { get; set; }
+
+        public string ProxyAddress { get; set; }
+
+        public bool UseCustomProxy { get; set; }
+
+        public bool UseDefaultCredentials { get; set; }
+
+        public bool UseInternetExplorerProxy { get; set; }
+
+        public bool UseMruDisplay { get; set; }
+
+        public string UserName { get; set; }
+        public bool PublishAfterUpload { get; set; }
+        public bool IgnoreExtensions { get; set; }
+        public bool ExtendedLog { get; set; }
+
+        #endregion Propriétés
+
+        #region methods
+
+        public static CrmConnections LoadFromFile(string filePath)
         {
-            get { return _proxyPort; }
-            set { _proxyPort = value; }
+            var crmConnections = new CrmConnections("Default");
+
+            if (!Uri.IsWellFormedUriString(filePath, UriKind.Absolute) && !File.Exists(filePath))
+            {
+                return crmConnections;
+            }
+
+            using (var fStream = OpenStream(filePath))
+            {
+                return (CrmConnections)XmlSerializerHelper.Deserialize(fStream, typeof(CrmConnections), typeof(ConnectionDetail));
+            }
         }
 
-
-        public string UserName
+        public ConnectionDetail CloneConnection(ConnectionDetail detail)
         {
-            get { return _userName; }
-            set { _userName = value; }
+            var newDetail = (ConnectionDetail)detail.Clone();
+            newDetail.ConnectionId = Guid.NewGuid();
+
+            int cloneId = 0;
+            string newName;
+            do
+            {
+                cloneId++;
+                newName = string.Format("{0} ({1})", newDetail.ConnectionName, cloneId);
+            } while (Connections.Any(c => c.ConnectionName == newName));
+
+            newDetail.ConnectionName = newName;
+
+            Connections.Add(newDetail);
+
+            return newDetail;
         }
 
-
-        public string Password
+        public void SerializeToFile(string filePath)
         {
-            get { return _password; }
-            set { _password = value; }
+            if (Uri.IsWellFormedUriString(filePath, UriKind.Absolute))
+                return;
+
+            lock (_fileAccess)
+            {
+                XmlSerializerHelper.SerializeToFile(this, filePath, typeof(ConnectionDetail));
+            }
         }
 
-
-        public bool UseCustomProxy
+        public override string ToString()
         {
-            get { return _useCustomProxy; }
-            set { _useCustomProxy = value; }
+            return Name;
         }
 
-        public bool PublishAfterUpload { get { return _publishAfterUpload; } set { _publishAfterUpload = value; } }
-        public bool IgnoreExtensions { get { return _ignoreExtensions; } set { _ignoreExtensions = value; } }
-        public bool ExtendedLog { get { return _extendedLog; } set { _extendedLog = value; } }
-        #endregion
+        private static Stream OpenStream(string filePath)
+        {
+            if (Uri.IsWellFormedUriString(filePath, UriKind.Absolute))
+            {
+                var req = WebRequest.Create(filePath);
+                req.Credentials = CredentialCache.DefaultCredentials;
+                var resp = req.GetResponse();
+                return resp.GetResponseStream();
+            }
+
+            return File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        }
+
+        #endregion methods
     }
 }

@@ -2,12 +2,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
-using CrmWebResourcesUpdater.Helpers;
+using CrmWebResourcesUpdater.Services.Helpers;
 using CrmWebResourcesUpdater.Common;
 using Microsoft.VisualStudio.Shell.Interop;
 using System.Net;
 using Task = System.Threading.Tasks.Task;
 using System.Threading;
+using CrmWebResourcesUpdater.Services;
 
 namespace CrmWebResourcesUpdater
 {
@@ -79,7 +80,7 @@ namespace CrmWebResourcesUpdater
                 }
                 catch (Exception ex)
                 {
-                    JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+                    await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
                 }
             }
         }

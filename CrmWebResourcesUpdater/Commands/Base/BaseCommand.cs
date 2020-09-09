@@ -3,7 +3,7 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 using CrmWebResourcesUpdater.Common;
-using CrmWebResourcesUpdater.Helpers;
+using CrmWebResourcesUpdater.Services.Helpers;
 
 namespace CrmWebResourcesUpdater
 {

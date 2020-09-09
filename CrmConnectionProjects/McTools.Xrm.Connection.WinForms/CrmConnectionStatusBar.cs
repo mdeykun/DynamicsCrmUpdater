@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace McTools.Xrm.Connection.WinForms
@@ -11,121 +14,82 @@ namespace McTools.Xrm.Connection.WinForms
     {
         #region Variables
 
-        /// <summary>
-        /// Crm connection manager
-        /// </summary>
-        ConnectionManager cManager;
-
-        private FormHelper _formHelper;
+        private readonly FormHelper _formHelper;
 
         /// <summary>
         /// Resources manager
         /// </summary>
-        System.ComponentModel.ComponentResourceManager resources;
+        private readonly System.ComponentModel.ComponentResourceManager resources;
 
-        #endregion
+        private bool mergeConnectionFiles;
+
+        #endregion Variables
 
         #region Constructor
 
         /// <summary>
         /// Initializes a new instance of class CrmConnectionStatusBar
         /// </summary>
-        /// <param name="connectionManager">Connection manager to use</param>
-        public CrmConnectionStatusBar(ConnectionManager connectionManager, FormHelper formHelper)
+        public CrmConnectionStatusBar(FormHelper formHelper, bool mergeConnectionFiles = false)
         {
+            this.mergeConnectionFiles = mergeConnectionFiles;
             resources = new System.ComponentModel.ComponentResourceManager(typeof(CrmConnectionStatusBar));
 
-
-            this.cManager = connectionManager;
+            ConnectionManager.Instance.ConnectionListUpdated += cManager_ConnectionListUpdated;
             _formHelper = formHelper;
 
             // Build connection control
-            this.BuildConnectionControl();
+            BuildConnectionControl();
 
             // Add label that will display information about connection
-            ToolStripLabel informationLabel = new ToolStripLabel();
-            this.Items.Add(informationLabel);
-            base.RenderMode = ToolStripRenderMode.Professional;
+            ToolStripStatusLabel informationLabel = new ToolStripStatusLabel
+            {
+                Spring = true,
+                TextAlign = ContentAlignment.MiddleRight
+            };
+
+            Items.Add(informationLabel);
+
+            ToolStripProgressBar progress = new ToolStripProgressBar
+            {
+                Minimum = 0,
+                Maximum = 100,
+                Visible = false
+            };
+            Items.Add(progress);
+
+            RenderMode = ToolStripRenderMode.Professional;
         }
 
-        #endregion
+        private void cManager_ConnectionListUpdated(object sender, EventArgs e)
+        {
+            RebuildConnectionList();
+        }
+
+        #endregion Constructor
+
+        #region Properties
+
+        public bool MergeConnectionsFiles
+        {
+            get { return mergeConnectionFiles; }
+            set
+            {
+                if (value != mergeConnectionFiles)
+                {
+                    mergeConnectionFiles = value;
+                    RebuildConnectionList();
+                }
+            }
+        }
+
+        #endregion Properties
 
         #region Methods
-
-        /// <summary>
-        /// Builds the ToolStripDropDownButton that will manage connections
-        /// </summary>
-        private void BuildConnectionControl()
-        {
-            ToolStripDropDownButton connexionManager = new ToolStripDropDownButton();
-            connexionManager.Text = "Not connected";
-            connexionManager.Image = ((System.Drawing.Image)(resources.GetObject("server")));
-            //connexionManager.Click += new EventHandler(connexionManager_Click);
-
-            this.AddActionsList(connexionManager);
-
-            this.Items.Add(connexionManager);
-        }
 
         public void RebuildConnectionList()
         {
             AddActionsList((ToolStripDropDownButton)Items[0]);
-        }
-
-        /// <summary>
-        /// Adds the ToolStripMenuItems representing connections to the 
-        /// ToolStripDropDownButton
-        /// </summary>
-        /// <param name="btn">ToolStripDropDownButton where to add connections</param>
-        private void AddActionsList(ToolStripDropDownButton btn)
-        {
-            // Clearing existing connections
-            btn.DropDownItems.Clear();
-
-            if (this.cManager != null && this.cManager.ConnectionsList != null && this.cManager.ConnectionsList.Connections.Count > 0)
-            {
-                this.cManager.ConnectionsList.Connections.Sort();
-
-                foreach (ConnectionDetail cDetail in this.cManager.ConnectionsList.Connections)
-                {
-                    ToolStripMenuItem item = new ToolStripMenuItem();
-                    item.Text = cDetail.ConnectionName;
-                    item.Tag = cDetail;
-
-                    if (cDetail.UseOnline)
-                    {
-                        item.Image = RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png");
-                    }
-                    else if (cDetail.UseOsdp)
-                    {
-                        item.Image = RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png");
-                    }
-                    else if (cDetail.UseIfd)
-                    {
-                        item.Image = RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.server_key.png");
-                    }
-                    else
-                    {
-                        item.Image = RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.server.png");
-                    }
-
-                    this.BuildActionItems(item);
-
-                    btn.DropDownItems.Add(item);
-                }
-
-                if (this.cManager.ConnectionsList.Connections.Count > 0)
-                {
-                    ToolStripSeparator separator = new ToolStripSeparator();
-                    btn.DropDownItems.Add(separator);
-                }
-            }
-
-            ToolStripMenuItem newConnectionItem = new ToolStripMenuItem();
-            newConnectionItem.Text = "Create new connection";
-            newConnectionItem.Image = ((System.Drawing.Image)(resources.GetObject("server_add")));
-            newConnectionItem.Click += new EventHandler(newConnectionItem_Click);
-            btn.DropDownItems.Add(newConnectionItem);
         }
 
         /// <summary>
@@ -135,20 +99,18 @@ namespace McTools.Xrm.Connection.WinForms
         /// <param name="detail">Connection details</param>
         public void SetConnectionStatus(bool isConnected, ConnectionDetail detail)
         {
-            ToolStripDropDownButton btn = (ToolStripDropDownButton)this.Items[0];
+            ToolStripDropDownButton btn = (ToolStripDropDownButton)Items[0];
 
             if (isConnected)
             {
-                this.SetMessage("Connected!");
-                btn.Text = string.Format("Connected to '{0} ({1})'",
-                       detail.ServerName,
-                       detail.OrganizationFriendlyName);
-                btn.Image = (System.Drawing.Image)(resources.GetObject("server_lightning"));
+                SetMessage("Connected!");
+                btn.Text = $"Connected to '{detail.ServerName} ({detail.OrganizationFriendlyName})'";
+                btn.Image = (Image)resources.GetObject("server_lightning");
             }
             else
             {
                 btn.Text = "Not connected";
-                btn.Image = (System.Drawing.Image)(resources.GetObject("server"));
+                btn.Image = (Image)resources.GetObject("server");
             }
         }
 
@@ -158,16 +120,44 @@ namespace McTools.Xrm.Connection.WinForms
         /// <param name="message">Message to display</param>
         public void SetMessage(string message)
         {
-            ToolStripLabel label = (ToolStripLabel)this.Items[1];
+            ToolStripStatusLabel label = (ToolStripStatusLabel)Items[1];
 
             MethodInvoker mi = delegate
             {
                 label.Text = message;
             };
 
-            if (this.InvokeRequired)
+            if (InvokeRequired)
             {
-                this.Invoke(mi);
+                Invoke(mi);
+            }
+            else
+            {
+                mi();
+            }
+        }
+
+        public void SetProgress(int? percent)
+        {
+            ToolStripProgressBar progress = (ToolStripProgressBar)Items[2];
+
+            MethodInvoker mi = delegate
+            {
+                if (percent.HasValue)
+                {
+                    progress.Value = percent.Value;
+                    progress.Visible = true;
+                }
+                else
+                {
+                    progress.Value = 0;
+                    progress.Visible = false;
+                }
+            };
+
+            if (InvokeRequired)
+            {
+                Invoke(mi);
             }
             else
             {
@@ -176,81 +166,214 @@ namespace McTools.Xrm.Connection.WinForms
         }
 
         /// <summary>
-        /// Creates the three action menus for a connection
+        /// Adds the ToolStripMenuItems representing connections to the
+        /// ToolStripDropDownButton
         /// </summary>
-        /// <param name="item">Menu where to add the actions</param>
-        private void BuildActionItems(ToolStripMenuItem item)
+        /// <param name="btn">ToolStripDropDownButton where to add connections</param>
+        private void AddActionsList(ToolStripDropDownButton btn)
         {
-            ToolStripMenuItem cItem = new ToolStripMenuItem();
-            cItem.Click += new EventHandler(actionItem_Click);
-            cItem.Text = "Connect";
-            cItem.Image = ((System.Drawing.Image)(resources.GetObject("server_connect")));
-            item.DropDownItems.Add(cItem);
+            var list = new List<ToolStripItem>();
+            int filesCount = ConnectionsList.Instance.Files.Count;
 
-            ToolStripMenuItem eItem = new ToolStripMenuItem();
-            eItem.Click += new EventHandler(actionItem_Click);
-            eItem.Text = "Edit";
-            eItem.Image = ((System.Drawing.Image)(resources.GetObject("server_edit")));
-            item.DropDownItems.Add(eItem);
-
-            ToolStripMenuItem dItem = new ToolStripMenuItem();
-            dItem.Click += new EventHandler(actionItem_Click);
-            dItem.Text = "Delete";
-            dItem.Image = ((System.Drawing.Image)(resources.GetObject("server_delete")));
-            item.DropDownItems.Add(dItem);
-        }
-
-        #endregion
-
-        #region Events
-
-        void connexionManager_Click(object sender, EventArgs e)
-        {
-            // On main ToolStripDropDownButton button click, we rebuild the list
-            // of crm connections
-            this.AddActionsList((ToolStripDropDownButton)sender);
-        }
-
-        void newConnectionItem_Click(object sender, EventArgs e)
-        {
-            ConnectionDetail detail = _formHelper.EditConnection(true, null);
-
-            if (detail != null)
+            if (filesCount == 0)
             {
-                ToolStripMenuItem item = new ToolStripMenuItem();
-                item.Text = detail.ConnectionName;
-                item.Tag = detail;
+                var defaultFilePath = Path.Combine(new FileInfo(ConnectionsList.ConnectionsListFilePath).DirectoryName, "ConnectionsList.Default.xml");
 
-                BuildActionItems(item);
+                CrmConnections cc = new CrmConnections("Default");
+                cc.SerializeToFile(defaultFilePath);
 
-                ToolStripDropDownButton connexionManager = (ToolStripDropDownButton)this.Items[0];
+                ConnectionsList.Instance.Files.Add(new ConnectionFile(cc) { Path = defaultFilePath, LastUsed = DateTime.Now });
+                ConnectionsList.Instance.Save();
+            }
 
-                if (connexionManager.DropDownItems.Count == 1)
+            foreach (var file in ConnectionsList.Instance.Files)
+            {
+                var connections = CrmConnections.LoadFromFile(file.Path);
+                connections.Connections.Sort();
+
+                var fileItem = new ToolStripMenuItem(file.Name);
+                fileItem.Tag = file;
+                if (!mergeConnectionFiles && filesCount > 1)
                 {
-                    connexionManager.DropDownItems.Insert(0, new ToolStripSeparator());
-                    connexionManager.DropDownItems.Insert(0, item);
-                }
-                else
-                {
-                    connexionManager.DropDownItems.Insert(connexionManager.DropDownItems.Count - 2, item);
+                    list.Add(fileItem);
                 }
 
-                MessageBox.Show(this, "Connection Created Successfully!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                foreach (var cDetail in connections.Connections)
+                {
+                    ToolStripMenuItem item = new ToolStripMenuItem();
+                    item.Text = cDetail.ConnectionName;
+                    item.Tag = cDetail;
+
+                    if (cDetail.UseOnline)
+                    {
+                        item.Image =
+                            RessourceManager.GetImage(
+                                "McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png");
+                    }
+                    else if (cDetail.UseIfd)
+                    {
+                        item.Image =
+                            RessourceManager.GetImage(
+                                "McTools.Xrm.Connection.WinForms.Resources.server_key.png");
+                    }
+                    else
+                    {
+                        item.Image =
+                            RessourceManager.GetImage(
+                                "McTools.Xrm.Connection.WinForms.Resources.server.png");
+                    }
+
+                    BuildActionItems(item, connections.IsReadOnly);
+                    if (!mergeConnectionFiles && filesCount > 1)
+                    {
+                        fileItem.DropDownItems.Add(item);
+                    }
+                    else
+                    {
+                        list.Add(item);
+                    }
+                }
+
+                if (!mergeConnectionFiles && filesCount > 1)
+                {
+                    if (fileItem.DropDownItems.Count > 0)
+                    {
+                        fileItem.DropDownItems.Add(new ToolStripSeparator());
+                    }
+                }
+
+                if (!connections.IsReadOnly)
+                {
+                    var newConnectionItem = new ToolStripMenuItem();
+                    newConnectionItem.Text = "Create new connection";
+                    newConnectionItem.Image = (Image)resources.GetObject("server_add");
+                    newConnectionItem.Click += newConnectionItem_Click;
+
+                    if (!mergeConnectionFiles && filesCount > 1)
+                    {
+                        fileItem.DropDownItems.Add(newConnectionItem);
+                    }
+                }
+            }
+
+            if (mergeConnectionFiles || filesCount == 1)
+            {
+                if (list.Count > 0)
+                {
+                    list.Add(new ToolStripSeparator());
+                }
+
+                var newConnectionItem = new ToolStripMenuItem();
+                newConnectionItem.Text = "Create new connection";
+                newConnectionItem.Image = (Image)resources.GetObject("server_add");
+                newConnectionItem.Click += newConnectionItem_Click;
+
+                list.Add(newConnectionItem);
+            }
+
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() =>
+                {
+                    btn.DropDownItems.Clear();
+                    btn.DropDownItems.AddRange(list.ToArray());
+                }));
+            }
+            else
+            {
+                btn.DropDownItems.Clear();
+                btn.DropDownItems.AddRange(list.ToArray());
             }
         }
 
-        void actionItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Creates the three action menus for a connection
+        /// </summary>
+        /// <param name="item">Menu where to add the actions</param>
+        /// <param name="readOnly">Indicates if the connection is from a read-only list</param>
+        private void BuildActionItems(ToolStripMenuItem item, bool readOnly)
+        {
+            ToolStripMenuItem cItem = new ToolStripMenuItem();
+            cItem.Click += actionItem_Click;
+            cItem.Text = "Connect";
+            cItem.Image = (Image)resources.GetObject("server_connect");
+            item.DropDownItems.Add(cItem);
+
+            if (!readOnly)
+            {
+                ToolStripMenuItem eItem = new ToolStripMenuItem();
+                eItem.Click += actionItem_Click;
+                eItem.Text = "Edit";
+                eItem.Image = (Image)resources.GetObject("server_edit");
+                item.DropDownItems.Add(eItem);
+
+                ToolStripMenuItem dItem = new ToolStripMenuItem();
+                dItem.Click += actionItem_Click;
+                dItem.Text = "Delete";
+                dItem.Image = (Image)resources.GetObject("server_delete");
+                item.DropDownItems.Add(dItem);
+            }
+        }
+
+        /// <summary>
+        /// Builds the ToolStripDropDownButton that will manage connections
+        /// </summary>
+        private void BuildConnectionControl()
+        {
+            ToolStripDropDownButton connexionManager = new ToolStripDropDownButton();
+            connexionManager.Text = "Not connected";
+            connexionManager.Image = (Image)resources.GetObject("server");
+            connexionManager.Click += connexionManager_Click;
+            AddActionsList(connexionManager);
+
+            Items.Add(connexionManager);
+        }
+
+        #endregion Methods
+
+        #region Events
+
+        private void actionItem_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem clickedItem = (ToolStripMenuItem)sender;
-            ToolStripMenuItem parentItem = (ToolStripMenuItem)clickedItem.OwnerItem;
+            ToolStripDropDownItem parentItem = (ToolStripDropDownItem)clickedItem.OwnerItem;
             ConnectionDetail currentConnection = (ConnectionDetail)parentItem.Tag;
-            ToolStripDropDownButton connexionManager = (ToolStripDropDownButton)parentItem.OwnerItem;
+            ToolStripDropDownItem connexionManager = (ToolStripDropDownItem)parentItem.OwnerItem;
 
             switch (clickedItem.Text)
             {
                 case "Connect":
-                    this.cManager.ConnectToServer(currentConnection);
+
+                    if (currentConnection.IsCustomAuth)
+                    {
+                        if (_formHelper.RequestPassword(currentConnection))
+                        {
+                            ConnectionManager.Instance.ConnectToServer(new List<ConnectionDetail> { currentConnection });
+                        }
+                    }
+                    else
+                    {
+                        if (currentConnection.IsFromSdkLoginCtrl)
+                        {
+                            var ctrl = new CRMLoginForm1(currentConnection.ConnectionId.Value);
+                            if (currentConnection.AzureAdAppId != Guid.Empty)
+                            {
+                                ctrl.AppId = currentConnection.AzureAdAppId.ToString();
+                                ctrl.RedirectUri = new Uri(currentConnection.ReplyUrl);
+                            }
+
+                            ctrl.ShowDialog();
+
+                            ConnectionManager.Instance.ConnectToServerWithSdkLoginCtrl(currentConnection, ctrl.CrmConnectionMgr.CrmSvc,
+                                null);
+                        }
+                        else
+                        {
+                            ConnectionManager.Instance.ConnectToServer(new List<ConnectionDetail> { currentConnection });
+                        }
+                    }
                     break;
+
                 case "Edit":
                     currentConnection = _formHelper.EditConnection(false, currentConnection);
 
@@ -261,7 +384,11 @@ namespace McTools.Xrm.Connection.WinForms
                     }
 
                     break;
+
                 case "Delete":
+                    if (MessageBox.Show(this, "Are you sure you want to delete selected connection(s)?", "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+                        return;
+
                     connexionManager.DropDownItems.Remove(parentItem);
 
                     if (connexionManager.DropDownItems.Count == 2)
@@ -269,12 +396,68 @@ namespace McTools.Xrm.Connection.WinForms
                         connexionManager.DropDownItems.RemoveAt(0);
                     }
 
-                    _formHelper.DeleteConnection(currentConnection);
+                    _formHelper.DeleteConnection(currentConnection.ConnectionId);
 
                     break;
             }
         }
 
-        #endregion
+        private void connexionManager_Click(object sender, EventArgs e)
+        {
+            // On main ToolStripDropDownButton button click, we rebuild the list
+            // of crm connections
+            AddActionsList((ToolStripDropDownButton)sender);
+        }
+
+        private void newConnectionItem_Click(object sender, EventArgs e)
+        {
+            var actionMenu = (ToolStripMenuItem)sender;
+            ToolStripDropDownItem parentItem = (ToolStripDropDownItem)actionMenu.OwnerItem;
+            var connectionFile = (ConnectionFile)parentItem.Tag;
+
+            ConnectionDetail detail = _formHelper.EditConnection(true, null, connectionFile);
+
+            if (detail != null)
+            {
+                ToolStripMenuItem item = new ToolStripMenuItem();
+                item.Text = detail.ConnectionName;
+                item.Tag = detail;
+
+                if (detail.UseOnline)
+                {
+                    item.Image =
+                        RessourceManager.GetImage(
+                            "McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png");
+                }
+                else if (detail.UseIfd)
+                {
+                    item.Image =
+                        RessourceManager.GetImage(
+                            "McTools.Xrm.Connection.WinForms.Resources.server_key.png");
+                }
+                else
+                {
+                    item.Image =
+                        RessourceManager.GetImage(
+                            "McTools.Xrm.Connection.WinForms.Resources.server.png");
+                }
+
+                BuildActionItems(item, false);
+
+                if (parentItem.DropDownItems.Count == 1)
+                {
+                    parentItem.DropDownItems.Insert(0, new ToolStripSeparator());
+                    parentItem.DropDownItems.Insert(0, item);
+                }
+                else
+                {
+                    parentItem.DropDownItems.Insert(parentItem.DropDownItems.Count - 2, item);
+                }
+
+                MessageBox.Show(this, "Connection Created Successfully!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        #endregion Events
     }
 }

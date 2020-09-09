@@ -59,5 +59,333 @@ namespace McTools.Xrm.Connection.WinForms.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Certificate32 {
+            get {
+                object obj = ResourceManager.GetObject("Certificate32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap connection_certificate_32 {
+            get {
+                object obj = ResourceManager.GetObject("connection-certificate-32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap connection_mfa_32 {
+            get {
+                object obj = ResourceManager.GetObject("connection-mfa-32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap connection_secret_32 {
+            get {
+                object obj = ResourceManager.GetObject("connection-secret-32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap connection_string_32 {
+            get {
+                object obj = ResourceManager.GetObject("connection-string-32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap connection_wizard_32 {
+            get {
+                object obj = ResourceManager.GetObject("connection-wizard-32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ConnectionStringImage1 {
+            get {
+                object obj = ResourceManager.GetObject("ConnectionStringImage1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ConnectionStringImage32 {
+            get {
+                object obj = ResourceManager.GetObject("ConnectionStringImage32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Please wait while the wizard is trying to connect to your Microsoft Dynamics CRM organization.
+        /// </summary>
+        internal static string ConnectionWizard_ConnectingHeaderDescription {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_ConnectingHeaderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Please provide the connection string you want to use to connect to your Microsoft Dynamics CRM organization.
+        /// </summary>
+        internal static string ConnectionWizard_ConnectionStringConnectionHeaderDescription {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_ConnectionStringConnectionHeaderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Enter credentials required to connect to Microsoft Dynamics CRM organization.
+        /// </summary>
+        internal static string ConnectionWizard_CredentialsHeaderDescription {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_CredentialsHeaderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Enter the url displayed in the browser when you are connected to your Microsoft Dynamics CRM organization.
+        /// </summary>
+        internal static string ConnectionWizard_EnterUrlHeaderDescription {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_EnterUrlHeaderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Your information have not been validated.
+        /// </summary>
+        internal static string ConnectionWizard_ErrorHeaderDescription {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_ErrorHeaderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Help us to determine if your Microsoft Dynamics CRM deployment is exposed via IFD.
+        /// </summary>
+        internal static string ConnectionWizard_IfdSelectionHeaderDescription {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_IfdSelectionHeaderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на The url you specified does not look like a valid url for an IFD deployment. Please correct the url.
+        /// </summary>
+        internal static string ConnectionWizard_InvalidIfUrl {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_InvalidIfUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Wrong timeout value!
+        ///
+        ///Expected format : HH:mm:ss.
+        /// </summary>
+        internal static string ConnectionWizard_InvalidTimeoutValue {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_InvalidTimeoutValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на The url you specified is invalid!.
+        /// </summary>
+        internal static string ConnectionWizard_InvalidUrl {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_InvalidUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на You changed some values that require to test the connection. Would you like to test it now?
+        ///
+        ///Note that this is required to validate this wizard.
+        /// </summary>
+        internal static string ConnectionWizard_NeedToTestConnectionAgain {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_NeedToTestConnectionAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Please enter your credentials before trying to connect.
+        /// </summary>
+        internal static string ConnectionWizard_PleaseEnterCredentials {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_PleaseEnterCredentials", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Question.
+        /// </summary>
+        internal static string ConnectionWizard_QuestionHeaderTitle {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_QuestionHeaderTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Your information have been validated.
+        /// </summary>
+        internal static string ConnectionWizard_SuccessHeaderDescription {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_SuccessHeaderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на We were unable to determine the organization name based on the information you specified. Please complete the url to add the organization name inside.
+        /// </summary>
+        internal static string ConnectionWizard_UnableToDetermineOrganization {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_UnableToDetermineOrganization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Unable to identify organization from url, please review it!.
+        /// </summary>
+        internal static string ConnectionWizard_UnableToDetermineOrganizationFromUrl {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_UnableToDetermineOrganizationFromUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Warning.
+        /// </summary>
+        internal static string ConnectionWizard_WarningTitle {
+            get {
+                return ResourceManager.GetString("ConnectionWizard_WarningTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap database_link {
+            get {
+                object obj = ResourceManager.GetObject("database_link", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ico_16_7100 {
+            get {
+                object obj = ResourceManager.GetObject("ico_16_7100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap logo_0100 {
+            get {
+                object obj = ResourceManager.GetObject("logo_0100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap logo_0200 {
+            get {
+                object obj = ResourceManager.GetObject("logo_0200", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap logo_32 {
+            get {
+                object obj = ResourceManager.GetObject("logo_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LogoDyn365 {
+            get {
+                object obj = ResourceManager.GetObject("LogoDyn365", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LogoDyn365_32 {
+            get {
+                object obj = ResourceManager.GetObject("LogoDyn365_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap XTB_HIGHLIGHT_CUSTOM {
+            get {
+                object obj = ResourceManager.GetObject("XTB_HIGHLIGHT_CUSTOM", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap XTB_HIGHLIGHT_PRODUCTION {
+            get {
+                object obj = ResourceManager.GetObject("XTB_HIGHLIGHT_PRODUCTION", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap XTB_HIGHLIGHT_UAT {
+            get {
+                object obj = ResourceManager.GetObject("XTB_HIGHLIGHT_UAT", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

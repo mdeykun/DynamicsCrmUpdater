@@ -4,7 +4,7 @@ using System.Windows.Forms;
 namespace McTools.Xrm.Connection.WinForms
 {
     /// <summary>
-    /// Formulaire Windows permettant de demander le mot de 
+    /// Formulaire Windows permettant de demander le mot de
     /// passe d'un utilisateur
     /// </summary>
     public partial class PasswordForm : Form
@@ -12,44 +12,39 @@ namespace McTools.Xrm.Connection.WinForms
         #region Variables
 
         /// <summary>
-        /// Login de l'utilisateur
-        /// </summary>
-        string userLogin;
-
-        /// <summary>
         /// Nom de domaine pour l'utilisateur
         /// </summary>
-        string userDomain;
+        private string userDomain;
+
+        /// <summary>
+        /// Login de l'utilisateur
+        /// </summary>
+        private string userLogin;
 
         /// <summary>
         /// Mot de passe de l'utilisateur
         /// </summary>
-        string userPassword;
+        private string userPassword;
 
-        #endregion
+        #endregion Variables
 
         #region Constructeur
 
         /// <summary>
         /// Créé une nouvelle instance de la classe PasswordForm
         /// </summary>
-        public PasswordForm()
+        public PasswordForm(ConnectionDetail detail)
         {
             InitializeComponent();
+
+            lblConnectionName.Text = detail.ConnectionName;
         }
 
-        #endregion
+        #endregion Constructeur
 
         #region Propriétés
 
-        /// <summary>
-        /// Obtient ou définit le login de l'utilisateur
-        /// </summary>
-        public string UserLogin
-        {
-            get { return userLogin; }
-            set { userLogin = value; }
-        }
+        public bool SavePassword { get; set; }
 
         /// <summary>
         /// Obtient ou définit le nom de domaine pour l'utilisateur
@@ -61,6 +56,15 @@ namespace McTools.Xrm.Connection.WinForms
         }
 
         /// <summary>
+        /// Obtient ou définit le login de l'utilisateur
+        /// </summary>
+        public string UserLogin
+        {
+            get { return userLogin; }
+            set { userLogin = value; }
+        }
+
+        /// <summary>
         /// Obtient le mot de passe de l'utilisateur
         /// </summary>
         public string UserPassword
@@ -68,9 +72,7 @@ namespace McTools.Xrm.Connection.WinForms
             get { return userPassword; }
         }
 
-        public bool SavePassword { get; set; }
-
-        #endregion
+        #endregion Propriétés
 
         #region Méthodes
 
@@ -81,7 +83,15 @@ namespace McTools.Xrm.Connection.WinForms
                 userDomain.Length > 0 ? "\\" : "",
                 userLogin);
 
+            tbPassword.Focus();
+
             base.OnLoad(e);
+        }
+
+        private void bCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
         }
 
         private void bValidate_Click(object sender, EventArgs e)
@@ -105,10 +115,9 @@ namespace McTools.Xrm.Connection.WinForms
             }
         }
 
-        private void bCancel_Click(object sender, EventArgs e)
+        private void chkShowCharacters_CheckedChanged(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
+            this.tbPassword.PasswordChar = this.chkShowCharacters.Checked ? (char)0 : '•';
         }
 
         private void tbPassword_KeyPress(object sender, KeyPressEventArgs e)
@@ -119,11 +128,6 @@ namespace McTools.Xrm.Connection.WinForms
             }
         }
 
-        private void chkShowCharacters_CheckedChanged(object sender, EventArgs e)
-        {
-            this.tbPassword.PasswordChar = this.chkShowCharacters.Checked ? (char)0 : '•';
-        }
-
-        #endregion
+        #endregion Méthodes
     }
 }

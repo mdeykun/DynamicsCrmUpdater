@@ -3,7 +3,8 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 using CrmWebResourcesUpdater.Common;
-using CrmWebResourcesUpdater.Helpers;
+using CrmWebResourcesUpdater.Services.Helpers;
+using CrmWebResourcesUpdater.Services;
 
 namespace CrmWebResourcesUpdater
 {
@@ -51,33 +52,40 @@ namespace CrmWebResourcesUpdater
         /// <param name="e">Event args.</param>
         public override async void MenuItemCallback(object sender, EventArgs e)
         {
-            var settings = await SettingsService.Instance.GetSettingsAsync();
-
-            var result = DialogResult.Cancel;
-
-            if (settings.SelectedConnection == null)
+            try
             {
+                var settings = await SettingsService.Instance.GetSettingsAsync();
 
-                if (projectHelper.ShowErrorDialog() == DialogResult.Yes)
+                var result = DialogResult.Cancel;
+
+                if (settings.SelectedConnection == null)
                 {
-                    result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Normal);
-                    if (result != DialogResult.OK)
+
+                    if (projectHelper.ShowErrorDialog() == DialogResult.Yes)
+                    {
+                        result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Normal);
+                        if (result != DialogResult.OK)
+                        {
+                            return;
+                        }
+                    }
+                    else
                     {
                         return;
                     }
                 }
-                else
+                if (settings.SelectedConnection == null)
                 {
+                    Logger.WriteLine("Error: Connection is not selected");
                     return;
                 }
+
+                await PublishService.Instance.CreateWebResourceAsync();
             }
-            if (settings.SelectedConnection == null)
+            catch (Exception ex)
             {
-                Logger.WriteLine("Error: Connection is not selected");
-                return;
+                Logger.Write("An error occured: " + ex.Message + "\r\n" + ex.StackTrace);
             }
-            
-            await PublishService.Instance.CreateWebResourceAsync();
         }
     }
 }

@@ -3,10 +3,11 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 using CrmWebResourcesUpdater.Common;
-using CrmWebResourcesUpdater.Helpers;
+using CrmWebResourcesUpdater.Services.Helpers;
 using McTools.Xrm.Connection.WinForms;
 using McTools.Xrm.Connection;
 using System.Collections.Generic;
+using CrmWebResourcesUpdater.Services;
 
 namespace CrmWebResourcesUpdater
 {
@@ -50,6 +51,7 @@ namespace CrmWebResourcesUpdater
         /// <param name="e">Event args.</param>
         public override async void MenuItemCallback(object sender, EventArgs e)
         {
+            try { 
             var settings = await SettingsService.Instance.GetSettingsAsync();
             if (settings.SelectedConnection == null)
             {
@@ -73,6 +75,11 @@ namespace CrmWebResourcesUpdater
             }
 
             await PublishService.Instance.PublishWebResourcesAsync(false);
+            }
+            catch (Exception ex)
+            {
+                Logger.Write("An error occured: " + ex.Message + "\r\n" + ex.StackTrace);
+            }
         }
     }
 }

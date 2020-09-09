@@ -22,12 +22,15 @@ namespace CrmWebResourcesUpdater
         const string ConnectionsPropertyName = "Connections";
         const string SelectedConnectionIdPropertyName = "SelectedConnectionId";
         const string AutoPublishPropertyName = "AutoPublishEnabled";
-        const string IgnoreExtensionsProprtyName = "IgnoreExtensions";
-        const string ExtendedLogProprtyName = "ExtendedLog";
+        const string IgnoreExtensionsPropertyName = "IgnoreExtensions";
+        const string ExtendedLogPropertyName = "ExtendedLog";
+        const string SettingsVersionPropertyName = "SettingsVersion";
 
         public const string FileKindGuid =         "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
         public const string ProjectKindGuid =      "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
         public const string MappingFileName = "UploaderMapping.config";
+
+        public const string CurrentConfigurationVersion = "1";
 
         private byte[] entropy = Encoding.Unicode.GetBytes("crm.publisher");
         private WritableSettingsStore _settingsStore;
@@ -43,6 +46,11 @@ namespace CrmWebResourcesUpdater
         /// Selected Connection Guid
         /// </summary>
         public Guid? SelectedConnectionId { get; set; }
+
+        /// <summary>
+        /// Configuration version
+        /// </summary>
+        public string ConfigurationVersion { get; set; }
 
         /// <summary>
         /// Collection Path based on project guid
@@ -105,6 +113,7 @@ namespace CrmWebResourcesUpdater
 
             if (_settingsStore.CollectionExists(CollectionPath))
             {
+                UpdateSettings();
                 Load();
             }
             else
@@ -112,6 +121,89 @@ namespace CrmWebResourcesUpdater
                 _settingsStore.CreateCollection(CollectionPath);
             }
         }
+
+        private void UpdateSettings()
+        {
+            string configVersion = null;
+            if (_settingsStore.PropertyExists(CollectionPath, SettingsVersionPropertyName))
+            {
+                configVersion = _settingsStore.GetString(CollectionPath, SettingsVersionPropertyName);
+            }
+            if (configVersion == null)
+            {
+                try
+                {
+                    var connections = new List<ConnectionDetail>();
+                    var deprecatedConnectionsXml = _settingsStore.GetString(CollectionPath, ConnectionsPropertyName);
+                    var deprecatedConnections = (List<McTools.Xrm.Connection.Deprecated.ConnectionDetail>)XmlSerializerHelper.Deserialize(deprecatedConnectionsXml, typeof(List<McTools.Xrm.Connection.Deprecated.ConnectionDetail>));
+                    foreach (var connection in deprecatedConnections)
+                    {
+                        connections.Add(UpdateConnection(connection));
+                    }
+                    var connectionsXml = XmlSerializerHelper.Serialize(connections);
+                    _settingsStore.SetString(CollectionPath, ConnectionsPropertyName, connectionsXml);
+                    _settingsStore.SetString(CollectionPath, SettingsVersionPropertyName, CurrentConfigurationVersion);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Write("Failed to convert connections: " + ex.Message);
+                }
+            }
+        }
+
+        private ConnectionDetail UpdateConnection(McTools.Xrm.Connection.Deprecated.ConnectionDetail deprecatedConnection)
+        {
+            //deprecatedConnection.CrmTicket
+            //deprecatedConnection.OrganizationMajorVersion
+            //deprecatedConnection.OrganizationMinorVersion
+            //deprecatedConnection.PublisherPrefix
+            //deprecatedConnection.UseOnline
+            //deprecatedConnection.UseOsdp
+            //deprecatedConnection.UseSsl
+
+            var connection = new ConnectionDetail()
+            {
+                AuthType = deprecatedConnection.AuthType,
+                ConnectionId = deprecatedConnection.ConnectionId,
+                ConnectionName = deprecatedConnection.ConnectionName,
+                IsCustomAuth = deprecatedConnection.IsCustomAuth,
+                IsFromSdkLoginCtrl = false,
+                LastUsedOn = DateTime.MinValue,
+                //NewAuthType = Microsoft.Xrm.Tooling.Connector.AuthenticationType.AD,
+                Organization = deprecatedConnection.Organization,
+                OrganizationDataServiceUrl = deprecatedConnection.OrganizationServiceUrl.Replace("Organization.svc", "OrganizationData.svc"), //TODO: May be wrong conversion
+                OrganizationFriendlyName = deprecatedConnection.OrganizationFriendlyName,
+                OrganizationServiceUrl = deprecatedConnection.OrganizationServiceUrl,
+                OrganizationUrlName = deprecatedConnection.OrganizationUrlName,
+                OrganizationVersion = deprecatedConnection.OrganizationVersion,
+                OriginalUrl = deprecatedConnection.WebApplicationUrl, //TODO: May be wrong conversion
+                SavePassword = deprecatedConnection.SavePassword,
+                ServerName = deprecatedConnection.OrganizationUrlName + "." + deprecatedConnection.ServerName, //TODO: May be wrong conversion
+                TenantId = Guid.Empty,
+                Timeout = deprecatedConnection.Timeout,
+                TimeoutTicks = deprecatedConnection.TimeoutTicks,
+                UseIfd = deprecatedConnection.UseIfd,
+                UseMfa = false, //TODO: May be wrong conversion
+                UserDomain = deprecatedConnection.UserDomain,
+                UserName = deprecatedConnection.UserName,
+                WebApplicationUrl = deprecatedConnection.WebApplicationUrl,
+                SelectedSolution = new SolutionDetail()
+                {
+                    FriendlyName = deprecatedConnection.SolutionFriendlyName,
+                    PublisherPrefix = deprecatedConnection.PublisherPrefix,
+                    SolutionId = new Guid(deprecatedConnection.SolutionId),
+                    UniqueName = deprecatedConnection.Solution
+                }
+            };
+            if(connection.SavePassword)
+            {
+                connection.SetPassword(DecryptString(deprecatedConnection.UserPassword));
+                connection.UserPasswordEncrypted = EncryptString(connection.UserPasswordEncrypted);
+            }
+
+            return connection;
+        }
+
 
         /// <summary>
         /// Gets settings store for current user
@@ -131,6 +223,7 @@ namespace CrmWebResourcesUpdater
         {
             CrmConnections = GetCrmConnections();
             SelectedConnectionId = _settingsStore.GetGuid(CollectionPath, SelectedConnectionIdPropertyName);
+            ConfigurationVersion = _settingsStore.GetString(CollectionPath, SettingsVersionPropertyName);
         }
 
         /// <summary>
@@ -140,6 +233,10 @@ namespace CrmWebResourcesUpdater
         {
             SetCrmConnections(CrmConnections);
             _settingsStore.SetGuid(CollectionPath, SelectedConnectionIdPropertyName, SelectedConnectionId);
+            if (ConfigurationVersion != null)
+            {
+                _settingsStore.SetString(CollectionPath, SettingsVersionPropertyName, ConfigurationVersion);
+            }
         }
 
         /// <summary>
@@ -153,7 +250,7 @@ namespace CrmWebResourcesUpdater
                 List<ConnectionDetail> connections;
                 try
                 {
-                    connections = XmlSerializerHelper.Deserialize<List<ConnectionDetail>>(connectionsXml);
+                    connections = (List<ConnectionDetail>)XmlSerializerHelper.Deserialize(connectionsXml, typeof(List<ConnectionDetail>));
                     var crmConnections = new CrmConnections() { Connections = connections };
                     var publisAfterUpload = true;
                     if(_settingsStore.PropertyExists(CollectionPath, AutoPublishPropertyName))
@@ -163,25 +260,25 @@ namespace CrmWebResourcesUpdater
                     crmConnections.PublishAfterUpload = publisAfterUpload;
 
                     var ignoreExtensions = false;
-                    if (_settingsStore.PropertyExists(CollectionPath, IgnoreExtensionsProprtyName))
+                    if (_settingsStore.PropertyExists(CollectionPath, IgnoreExtensionsPropertyName))
                     {
-                        ignoreExtensions = _settingsStore.GetBoolean(CollectionPath, IgnoreExtensionsProprtyName);
+                        ignoreExtensions = _settingsStore.GetBoolean(CollectionPath, IgnoreExtensionsPropertyName);
                     }
                     crmConnections.IgnoreExtensions = ignoreExtensions;
 
 
                     var extendedLog = false;
-                    if (_settingsStore.PropertyExists(CollectionPath, ExtendedLogProprtyName))
+                    if (_settingsStore.PropertyExists(CollectionPath, ExtendedLogPropertyName))
                     {
-                        extendedLog = _settingsStore.GetBoolean(CollectionPath, ExtendedLogProprtyName);
+                        extendedLog = _settingsStore.GetBoolean(CollectionPath, ExtendedLogPropertyName);
                     }
                     crmConnections.ExtendedLog = extendedLog;
 
                     foreach (var connection in crmConnections.Connections)
                     {
-                        if (!String.IsNullOrEmpty(connection.UserPassword))
+                        if (!String.IsNullOrEmpty(connection.UserPasswordEncrypted))
                         {
-                            connection.UserPassword = DecryptString(connection.UserPassword);
+                            connection.UserPasswordEncrypted = DecryptString(connection.UserPasswordEncrypted);
                         }
                     }
 
@@ -212,30 +309,30 @@ namespace CrmWebResourcesUpdater
             {
                 if (connection.ConnectionId != null && !passwordCache.ContainsKey(connection.ConnectionId.Value))
                 {
-                    passwordCache.Add(connection.ConnectionId.Value, connection.UserPassword);
+                    passwordCache.Add(connection.ConnectionId.Value, connection.UserPasswordEncrypted);
                 }
 
-                if (!String.IsNullOrEmpty(connection.UserPassword) && connection.SavePassword)
+                if (!String.IsNullOrEmpty(connection.UserPasswordEncrypted) && connection.SavePassword)
                 {
-                    connection.UserPassword = EncryptString(connection.UserPassword);
+                    connection.UserPasswordEncrypted = EncryptString(connection.UserPasswordEncrypted);
                 }
                 else
                 {
-                    connection.UserPassword = null;
+                    connection.UserPasswordEncrypted = null;
                 }
             }
 
             var connectionsXml = XmlSerializerHelper.Serialize(crmConnections.Connections);
             _settingsStore.SetString(CollectionPath, ConnectionsPropertyName, connectionsXml);
             _settingsStore.SetBoolean(CollectionPath, AutoPublishPropertyName, crmConnections.PublishAfterUpload);
-            _settingsStore.SetBoolean(CollectionPath, IgnoreExtensionsProprtyName, crmConnections.IgnoreExtensions);
-            _settingsStore.SetBoolean(CollectionPath, ExtendedLogProprtyName, crmConnections.ExtendedLog);
+            _settingsStore.SetBoolean(CollectionPath, IgnoreExtensionsPropertyName, crmConnections.IgnoreExtensions);
+            _settingsStore.SetBoolean(CollectionPath, ExtendedLogPropertyName, crmConnections.ExtendedLog);
 
             foreach (var connection in crmConnections.Connections)
             {
-                if (connection.ConnectionId!= null && passwordCache.ContainsKey(connection.ConnectionId.Value))
+                if (connection.ConnectionId != null && passwordCache.ContainsKey(connection.ConnectionId.Value))
                 {
-                    connection.UserPassword = passwordCache[connection.ConnectionId.Value];
+                    connection.UserPasswordEncrypted = passwordCache[connection.ConnectionId.Value];
                 }
             }
         }
