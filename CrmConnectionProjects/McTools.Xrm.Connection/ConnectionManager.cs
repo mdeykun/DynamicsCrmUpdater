@@ -338,9 +338,9 @@ namespace McTools.Xrm.Connection
                         }
 
                         // Fix old connection for TimeOut
-                        if (detail.Timeout == TimeSpan.Zero)
+                        if (detail.TimeoutSpan == TimeSpan.Zero)
                         {
-                            detail.Timeout = new TimeSpan(1200000000);
+                            detail.TimeoutSpan = new TimeSpan(1200000000);
                         }
                     }
                 }
