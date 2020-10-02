@@ -139,7 +139,7 @@ namespace McTools.Xrm.Connection
             }
         }
 
-        public async  Task<List<SolutionDetail>> GetSolutionsListAsync(bool forceNewService = false)
+        public async Task<List<SolutionDetail>> GetSolutionsListAsync(bool forceNewService = false)
         {
             var task = Task.Run(() => GetSolutionsList(forceNewService));
             return await task;
@@ -240,12 +240,14 @@ namespace McTools.Xrm.Connection
         }
 
         public Guid TenantId { get; set; }
-        public TimeSpan Timeout { get; set; }
+
+        [XmlIgnore]//renaming timeout to something different as in XML settings it comes as empty <Timeout/> node which is not deserializeable
+        public TimeSpan TimeoutSpan { get; set; }
 
         public long TimeoutTicks
         {
-            get { return Timeout.Ticks; }
-            set { Timeout = new TimeSpan(value); }
+            get { return TimeoutSpan.Ticks; }
+            set { TimeoutSpan = new TimeSpan(value); }
         }
 
         [XmlIgnore]
@@ -312,7 +314,7 @@ namespace McTools.Xrm.Connection
             set => ServerPort = string.IsNullOrEmpty(value) ? 80 : int.Parse(value);
         }
         public List<SolutionDetail> Solutions { get; set; }
-        
+
         public SolutionDetail SelectedSolution { get; set; }
         public string SolutionName { get => SelectedSolution == null ? "" : SelectedSolution.FriendlyName; }
 
@@ -331,11 +333,11 @@ namespace McTools.Xrm.Connection
             {
                 return crmSvc;
             }
-            if (Timeout.Ticks == 0)
+            if (TimeoutSpan.Ticks == 0)
             {
-                Timeout = new TimeSpan(0, 2, 0);
+                TimeoutSpan = new TimeSpan(0, 2, 0);
             }
-            CrmServiceClient.MaxConnectionTimeout = Timeout;
+            CrmServiceClient.MaxConnectionTimeout = TimeoutSpan;
 
             if (Certificate != null)
             {
@@ -587,7 +589,7 @@ namespace McTools.Xrm.Connection
             UserName = editedConnection.UserName;
             userPassword = editedConnection.userPassword;
             HomeRealmUrl = editedConnection.HomeRealmUrl;
-            Timeout = editedConnection.Timeout;
+            TimeoutSpan = editedConnection.TimeoutSpan;
             UseMfa = editedConnection.UseMfa;
             ReplyUrl = editedConnection.ReplyUrl;
             AzureAdAppId = editedConnection.AzureAdAppId;
@@ -803,7 +805,7 @@ namespace McTools.Xrm.Connection
                 userPassword = userPassword,
                 WebApplicationUrl = WebApplicationUrl,
                 OriginalUrl = OriginalUrl,
-                Timeout = Timeout,
+                TimeoutSpan = TimeoutSpan,
                 UseMfa = UseMfa,
                 AzureAdAppId = AzureAdAppId,
                 ReplyUrl = ReplyUrl,

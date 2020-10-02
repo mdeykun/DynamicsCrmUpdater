@@ -94,9 +94,9 @@ namespace McTools.Xrm.Connection.WinForms
                 CrmConnectionDetail.ServerName = cfsc.HostName;
                 CrmConnectionDetail.ServerPort = cfsc.HostPort;
                 CrmConnectionDetail.OrganizationUrlName = cfsc.OrganizationUrlName;
-                CrmConnectionDetail.Timeout = cfsc.Timeout;
+                CrmConnectionDetail.TimeoutSpan = cfsc.Timeout;
 
-                if (CrmConnectionDetail.Timeout.Ticks == 0 || CrmConnectionDetail.ServerName == null)
+                if (CrmConnectionDetail.TimeoutSpan.Ticks == 0 || CrmConnectionDetail.ServerName == null)
                 {
                     return;
                 }
@@ -357,7 +357,7 @@ namespace McTools.Xrm.Connection.WinForms
                 }
 
                 CrmConnectionDetail.OriginalUrl = cuc.Url;
-                CrmConnectionDetail.Timeout = cuc.Timeout;
+                CrmConnectionDetail.TimeoutSpan = cuc.Timeout;
 
                 if (type == ConnectionType.Certificate)
                 {
@@ -614,7 +614,7 @@ namespace McTools.Xrm.Connection.WinForms
                 pnlFooter.Visible = true;
                 lblHeader.Text = @"General information and options";
 
-                var timespan = CrmConnectionDetail?.Timeout;
+                var timespan = CrmConnectionDetail?.TimeoutSpan;
                 if (!timespan.HasValue || timespan.Value.Ticks == 0)
                 {
                     timespan = new TimeSpan(0, 2, 0);

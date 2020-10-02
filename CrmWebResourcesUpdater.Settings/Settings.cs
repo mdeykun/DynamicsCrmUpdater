@@ -26,8 +26,8 @@ namespace CrmWebResourcesUpdater
         const string ExtendedLogPropertyName = "ExtendedLog";
         const string SettingsVersionPropertyName = "SettingsVersion";
 
-        public const string FileKindGuid =         "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
-        public const string ProjectKindGuid =      "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
+        public const string FileKindGuid = "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
+        public const string ProjectKindGuid = "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
         public const string MappingFileName = "UploaderMapping.config";
 
         public const string CurrentConfigurationVersion = "1";
@@ -35,7 +35,7 @@ namespace CrmWebResourcesUpdater
         private byte[] entropy = Encoding.Unicode.GetBytes("crm.publisher");
         private WritableSettingsStore _settingsStore;
         private Guid _projectGuid;
-        
+
 
         /// <summary>
         /// Crm Connections
@@ -79,20 +79,20 @@ namespace CrmWebResourcesUpdater
             }
             set
             {
-                if(value == null)
+                if (value == null)
                 {
                     SelectedConnectionId = null;
                     return;
                 }
-                if(CrmConnections == null)
+                if (CrmConnections == null)
                 {
                     CrmConnections = new CrmConnections() { Connections = new List<ConnectionDetail>() { value } };
                 }
-                if(CrmConnections.Connections == null)
+                if (CrmConnections.Connections == null)
                 {
                     CrmConnections.Connections = new List<ConnectionDetail>() { value };
                 }
-                if(CrmConnections.Connections.Where(c => c.ConnectionId == value.ConnectionId).Count() == 0)
+                if (CrmConnections.Connections.Where(c => c.ConnectionId == value.ConnectionId).Count() == 0)
                 {
                     CrmConnections.Connections.Add(value);
                 }
@@ -180,7 +180,7 @@ namespace CrmWebResourcesUpdater
                 SavePassword = deprecatedConnection.SavePassword,
                 ServerName = deprecatedConnection.OrganizationUrlName + "." + deprecatedConnection.ServerName, //TODO: May be wrong conversion
                 TenantId = Guid.Empty,
-                Timeout = deprecatedConnection.Timeout,
+                TimeoutSpan = deprecatedConnection.Timeout,
                 TimeoutTicks = deprecatedConnection.TimeoutTicks,
                 UseIfd = deprecatedConnection.UseIfd,
                 UseMfa = false, //TODO: May be wrong conversion
@@ -191,11 +191,11 @@ namespace CrmWebResourcesUpdater
                 {
                     FriendlyName = deprecatedConnection.SolutionFriendlyName,
                     PublisherPrefix = deprecatedConnection.PublisherPrefix,
-                    SolutionId = new Guid(deprecatedConnection.SolutionId),
+                    SolutionId = new Guid(deprecatedConnection.SolutionId ?? Guid.Empty.ToString()),
                     UniqueName = deprecatedConnection.Solution
                 }
             };
-            if(connection.SavePassword)
+            if (connection.SavePassword)
             {
                 connection.SetPassword(DecryptString(deprecatedConnection.UserPassword));
                 connection.UserPasswordEncrypted = EncryptString(connection.UserPasswordEncrypted);
@@ -221,9 +221,17 @@ namespace CrmWebResourcesUpdater
         /// </summary>
         private void Load()
         {
+
             CrmConnections = GetCrmConnections();
             SelectedConnectionId = _settingsStore.GetGuid(CollectionPath, SelectedConnectionIdPropertyName);
-            ConfigurationVersion = _settingsStore.GetString(CollectionPath, SettingsVersionPropertyName);
+            try
+            {
+                ConfigurationVersion = _settingsStore.GetString(CollectionPath, SettingsVersionPropertyName);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Settings {SettingsVersionPropertyName} not found");
+            }
         }
 
         /// <summary>
@@ -245,7 +253,8 @@ namespace CrmWebResourcesUpdater
         /// <returns>Returns Crm Connetions</returns>
         private CrmConnections GetCrmConnections()
         {
-            if (_settingsStore.PropertyExists(CollectionPath, ConnectionsPropertyName)) {
+            if (_settingsStore.PropertyExists(CollectionPath, ConnectionsPropertyName))
+            {
                 var connectionsXml = _settingsStore.GetString(CollectionPath, ConnectionsPropertyName);
                 List<ConnectionDetail> connections;
                 try
@@ -253,7 +262,7 @@ namespace CrmWebResourcesUpdater
                     connections = (List<ConnectionDetail>)XmlSerializerHelper.Deserialize(connectionsXml, typeof(List<ConnectionDetail>));
                     var crmConnections = new CrmConnections() { Connections = connections };
                     var publisAfterUpload = true;
-                    if(_settingsStore.PropertyExists(CollectionPath, AutoPublishPropertyName))
+                    if (_settingsStore.PropertyExists(CollectionPath, AutoPublishPropertyName))
                     {
                         publisAfterUpload = _settingsStore.GetBoolean(CollectionPath, AutoPublishPropertyName);
                     }
@@ -299,13 +308,13 @@ namespace CrmWebResourcesUpdater
         /// <param name="crmConnections">Crm Connections to write to settings store</param>
         private void SetCrmConnections(CrmConnections crmConnections)
         {
-            if(crmConnections == null || crmConnections.Connections == null)
+            if (crmConnections == null || crmConnections.Connections == null)
             {
                 _settingsStore.DeletePropertyIfExists(CollectionPath, ConnectionsPropertyName);
                 return;
             }
             Dictionary<Guid, string> passwordCache = new Dictionary<Guid, string>();
-            foreach(var connection in crmConnections.Connections)
+            foreach (var connection in crmConnections.Connections)
             {
                 if (connection.ConnectionId != null && !passwordCache.ContainsKey(connection.ConnectionId.Value))
                 {
@@ -360,7 +369,7 @@ namespace CrmWebResourcesUpdater
         {
             try
             {
-                byte[] decryptedData =ProtectedData.Unprotect(
+                byte[] decryptedData = ProtectedData.Unprotect(
                     Convert.FromBase64String(encryptedData),
                     entropy,
                     DataProtectionScope.CurrentUser);

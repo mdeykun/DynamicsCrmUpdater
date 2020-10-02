@@ -261,8 +261,12 @@ namespace CrmWebResourcesUpdater.Services
                     var relativePath = lowerFilePath.Replace(projectRootPath + "\\", "");
                     await Logger.WriteLineAsync("Mapping found: " + relativePath + " to " + webResourceName, connections.ExtendedLog);
                 }
+                else
+                {
+                    await Logger.WriteLineAsync($"Mapping for not found for webresource {webResourceName} trying to find by name", connections.ExtendedLog);
+                }
 
-                var webResource = webResources.FirstOrDefault(x => x.GetAttributeValue<string>("name") == webResourceName);
+                var webResource = webResources.FirstOrDefault(x => x.GetAttributeValue<string>("name").ToLower() == webResourceName.ToLower());
                 if(webResource == null && connections.IgnoreExtensions)
                 {
                     await Logger.WriteLineAsync(webResourceName + " does not exists in selected solution", connections.ExtendedLog);
