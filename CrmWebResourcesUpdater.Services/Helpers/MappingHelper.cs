@@ -53,17 +53,18 @@ namespace CrmWebResourcesUpdater.Services.Helpers
                 projectFiles.RemoveAll(x => x.ToLower() == scriptPath);
                 mappingList.Add(scriptPath, webResourceName);
             }
-            foreach(var mapping in mappingList)
-            {
-                var scriptPath = mapping.Key;
-                var webResourceName = mapping.Value;
-                var projectMappingDublicates = projectFiles.Where(x => Path.GetFileName(x).ToLower() == webResourceName.ToLower());
-                if (projectMappingDublicates.Count() > 0)
-                {
-                    throw new ArgumentException("Project contains dublicate(s) for mapped web resource \"" + webResourceName + "\"");
-                }
+            //this bit totally fine when you have mapping for say uitls.js defined in mapping file and file on disk by the same name -> code below was throwing an error
+            //foreach(var mapping in mappingList)
+            //{
+            //    var scriptPath = mapping.Key;
+            //    var webResourceName = mapping.Value;
+            //    var projectMappingDublicates = projectFiles.Where(x => Path.GetFileName(x).ToLower() == webResourceName.ToLower());
+            //    if (projectMappingDublicates.Count() > 0)
+            //    {
+            //        throw new ArgumentException("Project contains duplicate(s) for mapped web resource \"" + webResourceName + "\"");
+            //    }
 
-            }
+            //}
             return mappingList;
         }
 

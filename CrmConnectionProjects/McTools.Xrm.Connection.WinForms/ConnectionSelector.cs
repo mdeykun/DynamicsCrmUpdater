@@ -88,12 +88,12 @@ namespace McTools.Xrm.Connection.WinForms
 
                 foreach (ConnectionDetail detail in details)
                 {
-                    var item = new ListViewItem(detail.ConnectionName);
+                    var item = new ListViewItem(detail.ConnectionName ?? "No name"); //throws out of memory exception if null
                     item.SubItems.Add(detail.ServerName);
                     item.SubItems.Add(detail.Organization);
                     item.SubItems.Add(string.IsNullOrEmpty(detail.UserDomain) ? detail.UserName : $"{detail.UserDomain}\\{detail.UserName}");
                     item.SubItems.Add(detail.OrganizationVersion);
-                    item.SubItems.Add(detail.SolutionName);
+                    item.SubItems.Add(detail.SolutionName ?? "No name");
                     item.Tag = detail;
                     item.ImageIndex = GetImageIndex(detail);
 
