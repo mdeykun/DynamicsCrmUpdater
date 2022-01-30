@@ -1,9 +1,7 @@
 ﻿using System;
-using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using CrmWebResourcesUpdater.Common;
-using CrmWebResourcesUpdater.Services.Helpers;
-using CrmWebResourcesUpdater.Services;
+using CrmWebResourcesUpdater.Common.Services;
 
 namespace CrmWebResourcesUpdater
 {
@@ -48,7 +46,7 @@ namespace CrmWebResourcesUpdater
         /// <param name="e">Event args.</param>
         public override async void MenuItemCallback(object sender, EventArgs e)
         {
-            try { 
+            try {
                 await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Normal);
             }
             catch (Exception ex)

@@ -44,10 +44,10 @@
             this.btnStandard.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnStandard.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnStandard.Image = global::McTools.Xrm.Connection.WinForms.Properties.Resources.connection_wizard_32;
-            this.btnStandard.Location = new System.Drawing.Point(10, 10);
-            this.btnStandard.Margin = new System.Windows.Forms.Padding(10);
+            this.btnStandard.Location = new System.Drawing.Point(5, 5);
+            this.btnStandard.Margin = new System.Windows.Forms.Padding(5);
             this.btnStandard.Name = "btnStandard";
-            this.btnStandard.Size = new System.Drawing.Size(471, 75);
+            this.btnStandard.Size = new System.Drawing.Size(235, 39);
             this.btnStandard.TabIndex = 0;
             this.btnStandard.Text = "Connection Wizard";
             this.btnStandard.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -59,14 +59,17 @@
             // 
             this.btnSdkLoginControl.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.btnSdkLoginControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnSdkLoginControl.Enabled = false;
             this.btnSdkLoginControl.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSdkLoginControl.ForeColor = System.Drawing.SystemColors.ControlText;
             this.btnSdkLoginControl.Image = global::McTools.Xrm.Connection.WinForms.Properties.Resources.LogoDyn365_32;
-            this.btnSdkLoginControl.Location = new System.Drawing.Point(501, 10);
-            this.btnSdkLoginControl.Margin = new System.Windows.Forms.Padding(10);
+            this.btnSdkLoginControl.Location = new System.Drawing.Point(250, 5);
+            this.btnSdkLoginControl.Margin = new System.Windows.Forms.Padding(5);
             this.btnSdkLoginControl.Name = "btnSdkLoginControl";
-            this.btnSdkLoginControl.Size = new System.Drawing.Size(471, 75);
+            this.btnSdkLoginControl.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.btnSdkLoginControl.Size = new System.Drawing.Size(236, 39);
             this.btnSdkLoginControl.TabIndex = 1;
-            this.btnSdkLoginControl.Text = "SDK Login Control";
+            this.btnSdkLoginControl.Text = "SDK Login (Not implemented)";
             this.btnSdkLoginControl.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnSdkLoginControl.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnSdkLoginControl.UseVisualStyleBackColor = true;
@@ -78,10 +81,10 @@
             this.btnConnectionString.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnConnectionString.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.btnConnectionString.Image = global::McTools.Xrm.Connection.WinForms.Properties.Resources.connection_string_32;
-            this.btnConnectionString.Location = new System.Drawing.Point(501, 105);
-            this.btnConnectionString.Margin = new System.Windows.Forms.Padding(10);
+            this.btnConnectionString.Location = new System.Drawing.Point(250, 54);
+            this.btnConnectionString.Margin = new System.Windows.Forms.Padding(5);
             this.btnConnectionString.Name = "btnConnectionString";
-            this.btnConnectionString.Size = new System.Drawing.Size(471, 75);
+            this.btnConnectionString.Size = new System.Drawing.Size(236, 39);
             this.btnConnectionString.TabIndex = 2;
             this.btnConnectionString.Text = "Connection String";
             this.btnConnectionString.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -94,7 +97,7 @@
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 10F));
             this.tableLayoutPanel1.Controls.Add(this.btnMfa, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.btnClientSecret, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.btnCertificate, 0, 1);
@@ -103,13 +106,13 @@
             this.tableLayoutPanel1.Controls.Add(this.btnConnectionString, 1, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(10, 20, 10, 20);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(5, 10, 5, 10);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(982, 285);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(491, 148);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
             // btnMfa
@@ -118,10 +121,10 @@
             this.btnMfa.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnMfa.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.btnMfa.Image = global::McTools.Xrm.Connection.WinForms.Properties.Resources.connection_mfa_32;
-            this.btnMfa.Location = new System.Drawing.Point(10, 200);
-            this.btnMfa.Margin = new System.Windows.Forms.Padding(10);
+            this.btnMfa.Location = new System.Drawing.Point(5, 103);
+            this.btnMfa.Margin = new System.Windows.Forms.Padding(5);
             this.btnMfa.Name = "btnMfa";
-            this.btnMfa.Size = new System.Drawing.Size(471, 75);
+            this.btnMfa.Size = new System.Drawing.Size(235, 40);
             this.btnMfa.TabIndex = 5;
             this.btnMfa.Text = "Multi Factor Auth.";
             this.btnMfa.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -135,10 +138,10 @@
             this.btnClientSecret.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnClientSecret.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.btnClientSecret.Image = global::McTools.Xrm.Connection.WinForms.Properties.Resources.connection_secret_32;
-            this.btnClientSecret.Location = new System.Drawing.Point(501, 200);
-            this.btnClientSecret.Margin = new System.Windows.Forms.Padding(10);
+            this.btnClientSecret.Location = new System.Drawing.Point(250, 103);
+            this.btnClientSecret.Margin = new System.Windows.Forms.Padding(5);
             this.btnClientSecret.Name = "btnClientSecret";
-            this.btnClientSecret.Size = new System.Drawing.Size(471, 75);
+            this.btnClientSecret.Size = new System.Drawing.Size(236, 40);
             this.btnClientSecret.TabIndex = 4;
             this.btnClientSecret.Text = "Client Id / Secret";
             this.btnClientSecret.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -152,10 +155,10 @@
             this.btnCertificate.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnCertificate.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.btnCertificate.Image = global::McTools.Xrm.Connection.WinForms.Properties.Resources.connection_certificate_32;
-            this.btnCertificate.Location = new System.Drawing.Point(10, 105);
-            this.btnCertificate.Margin = new System.Windows.Forms.Padding(10);
+            this.btnCertificate.Location = new System.Drawing.Point(5, 54);
+            this.btnCertificate.Margin = new System.Windows.Forms.Padding(5);
             this.btnCertificate.Name = "btnCertificate";
-            this.btnCertificate.Size = new System.Drawing.Size(471, 75);
+            this.btnCertificate.Size = new System.Drawing.Size(235, 39);
             this.btnCertificate.TabIndex = 3;
             this.btnCertificate.Text = "Certificate";
             this.btnCertificate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -165,12 +168,13 @@
             // 
             // StartPageControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "StartPageControl";
-            this.Size = new System.Drawing.Size(982, 285);
+            this.Size = new System.Drawing.Size(491, 148);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 

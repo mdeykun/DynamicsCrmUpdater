@@ -1,7 +1,5 @@
-﻿using Microsoft.Crm.Sdk.Messages;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Organization;
-using Microsoft.Xrm.Tooling.Connector;
+﻿using CrmWebResourcesUpdater.Service.Client;
+using McTools.Xrm.Connection.Deprecated;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,7 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using EndpointCollection = Microsoft.Xrm.Sdk.Organization.EndpointCollection;
+//using EndpointCollection = Microsoft.Xrm.Sdk.Organization.EndpointCollection;
 
 namespace McTools.Xrm.Connection
 {
@@ -28,7 +26,7 @@ namespace McTools.Xrm.Connection
     {
         public ConnectionDetail ConnectionDetail { get; set; }
         public int NumberOfConnectionsRequested { get; set; }
-        public IOrganizationService OrganizationService { get; set; }
+        public CrmWebResourcesUpdaterClient OrganizationService { get; set; }
         public object Parameter { get; set; }
     }
 
@@ -100,20 +98,19 @@ namespace McTools.Xrm.Connection
         #endregion Event Handlers
 
         #region Constants
-
-        internal const string CryptoHashAlgorythm = "SHA1";
-        internal const string CryptoInitVector = "ahC3@bCa2Didfc3d";
-        internal const int CryptoKeySize = 256;
-        internal const string CryptoPassPhrase = "MsCrmTools";
-        internal const int CryptoPasswordIterations = 2;
-        internal const string CryptoSaltValue = "Tanguy 92*";
         private const string DefaultConfigFileName = "mscrmtools2011.config";
+        public const string CryptoHashAlgorythm = "SHA1";
+        public const string CryptoInitVector = "ahC3@bCa2Didfc3d";
+        public const int CryptoKeySize = 256;
+        public const string CryptoPassPhrase = "MsCrmTools";
+        public const int CryptoPasswordIterations = 2;
+        public const string CryptoSaltValue = "Tanguy 92*";
 
         #endregion Constants
 
         private static string configfile;
         private static Lazy<ConnectionManager> instance = new Lazy<ConnectionManager>(() => new ConnectionManager());
-        private Dictionary<Guid, CrmServiceClient> crmServices;
+        private Dictionary<Guid, CrmWebResourcesUpdaterClient> crmServices;
         private FileSystemWatcher fsw;
 
         #region Constructor
@@ -123,7 +120,7 @@ namespace McTools.Xrm.Connection
         /// </summary>
         public ConnectionManager()
         {
-            crmServices = new Dictionary<Guid, CrmServiceClient>();
+            crmServices = new Dictionary<Guid, CrmWebResourcesUpdaterClient>();
             ConnectionsList = LoadConnectionsList();
             SetupFileSystemWatcher();
             ServicePointManager.ServerCertificateValidationCallback += ValidateRemoteCertificate;
@@ -278,16 +275,16 @@ namespace McTools.Xrm.Connection
         /// <param name="connectionParameter">A parameter to retrieve after connection</param>
         public void ConnectToServer(List<ConnectionDetail> details, object connectionParameter)
         {
-            foreach (var detail in details)
-            {
-                var parameters = new List<object> { detail, connectionParameter, details.Count };
+            //foreach (var detail in details)
+            //{
+            //    var parameters = new List<object> { detail, connectionParameter, details.Count };
 
-                // Runs the connection asynchronously
-                var worker = new BackgroundWorker();
-                worker.DoWork += WorkerDoWork;
-                worker.RunWorkerCompleted += WorkerRunWorkerCompleted;
-                worker.RunWorkerAsync(parameters);
-            }
+            //    // Runs the connection asynchronously
+            //    var worker = new BackgroundWorker();
+            //    worker.DoWork += WorkerDoWork;
+            //    worker.RunWorkerCompleted += WorkerRunWorkerCompleted;
+            //    worker.RunWorkerAsync(parameters);
+            //}
         }
 
         /// <summary>
@@ -379,150 +376,150 @@ namespace McTools.Xrm.Connection
             ConnectionsList.SerializeToFile(ConfigurationFile);
         }
 
-        /// <summary>
-        /// Tests the specified connection
-        /// </summary>
-        /// <param name="service">Organization service</param>
-        public void TestConnection(IOrganizationService service)
-        {
-            try
-            {
-                SendStepChange("Testing connection...");
+        ///// <summary>
+        ///// Tests the specified connection
+        ///// </summary>
+        ///// <param name="service">Organization service</param>
+        //public void TestConnection(IOrganizationService service)
+        //{
+        //    try
+        //    {
+        //        SendStepChange("Testing connection...");
 
-                var request = new WhoAmIRequest();
-                service.Execute(request);
-            }
-            catch (Exception error)
-            {
-                throw new Exception("Test connection failed: " + CrmExceptionHelper.GetErrorMessage(error, false));
-            }
-        }
+        //        var request = new WhoAmIRequest();
+        //        service.Execute(request);
+        //    }
+        //    catch (Exception error)
+        //    {
+        //        throw new Exception("Test connection failed: " + CrmExceptionHelper.GetErrorMessage(error, false));
+        //    }
+        //}
 
-        /// <summary>
-        /// Connects to a Crm server
-        /// </summary>
-        /// <param name="parameters">List of parameters</param>
-        /// <returns>An exception or an IOrganizationService</returns>
-        private object Connect(List<object> parameters)
-        {
-            if (WebRequest.DefaultWebProxy == null)
-                WebRequest.DefaultWebProxy = WebRequest.GetSystemWebProxy();
+        ///// <summary>
+        ///// Connects to a Crm server
+        ///// </summary>
+        ///// <param name="parameters">List of parameters</param>
+        ///// <returns>An exception or an IOrganizationService</returns>
+        //private object Connect(List<object> parameters)
+        //{
+        //    if (WebRequest.DefaultWebProxy == null)
+        //        WebRequest.DefaultWebProxy = WebRequest.GetSystemWebProxy();
 
-            //Use default credentials if no proxy credentials
-            if (WebRequest.DefaultWebProxy.Credentials == null)
-                WebRequest.DefaultWebProxy.Credentials = CredentialCache.DefaultCredentials;
+        //    //Use default credentials if no proxy credentials
+        //    if (WebRequest.DefaultWebProxy.Credentials == null)
+        //        WebRequest.DefaultWebProxy.Credentials = CredentialCache.DefaultCredentials;
 
-            var detail = (ConnectionDetail)parameters[0];
+        //    var detail = (ConnectionDetail)parameters[0];
 
-            if (ReuseConnections && crmServices.ContainsKey(detail.ConnectionId ?? Guid.Empty))
-            {
-                var service = crmServices[detail.ConnectionId ?? Guid.Empty];
-                if (service.IsReady)
-                {
-                    detail.LastUsedOn = DateTime.Now;
-                    return service;
-                }
-            }
+        //    if (ReuseConnections && crmServices.ContainsKey(detail.ConnectionId ?? Guid.Empty))
+        //    {
+        //        var service = crmServices[detail.ConnectionId ?? Guid.Empty];
+        //        if (service.IsReady)
+        //        {
+        //            detail.LastUsedOn = DateTime.Now;
+        //            return service;
+        //        }
+        //    }
 
-            SendStepChange("Creating Organization service proxy...");
+        //    SendStepChange("Creating Organization service proxy...");
 
-            // Connecting to Crm server
-            try
-            {
-                var service = detail.GetCrmServiceClient();
+        //    // Connecting to Crm server
+        //    try
+        //    {
+        //        var service = detail.GetCrmServiceClient();
 
-                // The connection did not succeeded
-                if (!service.IsReady)
-                {
-                    // If the connection really failed, the service has no endpoints
-                    if (service.ConnectedOrgPublishedEndpoints == null)
-                    {
-                        throw new Exception(service.LastCrmError);
-                    }
+        //        // The connection did not succeeded
+        //        if (!service.IsReady)
+        //        {
+        //            // If the connection really failed, the service has no endpoints
+        //            if (service.ConnectedOrgPublishedEndpoints == null)
+        //            {
+        //                throw new Exception(service.LastCrmError);
+        //            }
 
-                    // When the configuration seems to be wrong, endpoints are available
-                    // so we can check if there is a difference between what the user
-                    // specified for connection.
-                    var returnedWebAppUrl = service.ConnectedOrgPublishedEndpoints[Microsoft.Xrm.Sdk.Discovery.EndpointType.WebApplication];
-                    if (detail.OriginalUrl.ToLower().IndexOf(returnedWebAppUrl.ToLower(), StringComparison.Ordinal) < 0)
-                    {
-                        string message =
-                            "It seems that the connection information your provided are different from the one configured in your CRM deployment. Please review your connection information or contact your system administrator to ensure Microsoft Dynamics CRM is properly configured";
+        //            // When the configuration seems to be wrong, endpoints are available
+        //            // so we can check if there is a difference between what the user
+        //            // specified for connection.
+        //            var returnedWebAppUrl = service.ConnectedOrgPublishedEndpoints[Microsoft.Xrm.Sdk.Discovery.EndpointType.WebApplication];
+        //            if (detail.OriginalUrl.ToLower().IndexOf(returnedWebAppUrl.ToLower(), StringComparison.Ordinal) < 0)
+        //            {
+        //                string message =
+        //                    "It seems that the connection information your provided are different from the one configured in your CRM deployment. Please review your connection information or contact your system administrator to ensure Microsoft Dynamics CRM is properly configured";
 
-                        throw new Exception(string.Format("{0}{1}{1}{2}", service.LastCrmError, Environment.NewLine, message));
-                    }
-                }
+        //                throw new Exception(string.Format("{0}{1}{1}{2}", service.LastCrmError, Environment.NewLine, message));
+        //            }
+        //        }
 
-                var endpoints = service.ConnectedOrgPublishedEndpoints != null ? EndpointCollection.FromDiscovery(service.ConnectedOrgPublishedEndpoints) : null;
+        //        var endpoints = service.ConnectedOrgPublishedEndpoints != null ? EndpointCollection.FromDiscovery(service.ConnectedOrgPublishedEndpoints) : null;
 
-                if (endpoints == null)
-                {
-                    // Some connection methods do not automatically retrieve the endpoints - get them now
-                    var orgDetails = (RetrieveCurrentOrganizationResponse)service.Execute(new RetrieveCurrentOrganizationRequest());
-                    endpoints = orgDetails.Detail.Endpoints;
-                }
+        //        if (endpoints == null)
+        //        {
+        //            // Some connection methods do not automatically retrieve the endpoints - get them now
+        //            var orgDetails = (RetrieveCurrentOrganizationResponse)service.Execute(new RetrieveCurrentOrganizationRequest());
+        //            endpoints = orgDetails.Detail.Endpoints;
+        //        }
 
-                detail.WebApplicationUrl = endpoints[EndpointType.WebApplication];
-                detail.OrganizationDataServiceUrl = endpoints[EndpointType.OrganizationDataService];
-                detail.OrganizationVersion = service.ConnectedOrgVersion.ToString();
+        //        detail.WebApplicationUrl = endpoints[EndpointType.WebApplication];
+        //        detail.OrganizationDataServiceUrl = endpoints[EndpointType.OrganizationDataService];
+        //        detail.OrganizationVersion = service.ConnectedOrgVersion.ToString();
 
-                var currentConnection = ConnectionsList.Connections.FirstOrDefault(x => x.ConnectionId == detail.ConnectionId);
-                if (currentConnection != null)
-                {
-                    currentConnection.WebApplicationUrl = detail.WebApplicationUrl;
-                    currentConnection.OrganizationDataServiceUrl = detail.OrganizationDataServiceUrl;
-                    currentConnection.OrganizationVersion = detail.OrganizationVersion;
-                    currentConnection.SavePassword = detail.SavePassword;
-                    detail.CopyPasswordTo(currentConnection);
-                    detail.CopyClientSecretTo(currentConnection);
-                }
+        //        var currentConnection = ConnectionsList.Connections.FirstOrDefault(x => x.ConnectionId == detail.ConnectionId);
+        //        if (currentConnection != null)
+        //        {
+        //            currentConnection.WebApplicationUrl = detail.WebApplicationUrl;
+        //            currentConnection.OrganizationDataServiceUrl = detail.OrganizationDataServiceUrl;
+        //            currentConnection.OrganizationVersion = detail.OrganizationVersion;
+        //            currentConnection.SavePassword = detail.SavePassword;
+        //            detail.CopyPasswordTo(currentConnection);
+        //            detail.CopyClientSecretTo(currentConnection);
+        //        }
 
-                detail.LastUsedOn = DateTime.Now;
+        //        detail.LastUsedOn = DateTime.Now;
 
-                if (ReuseConnections && !crmServices.ContainsKey(detail.ConnectionId ?? Guid.Empty))
-                {
-                    crmServices.Add(detail.ConnectionId ?? Guid.Empty, service);
-                }
+        //        if (ReuseConnections && !crmServices.ContainsKey(detail.ConnectionId ?? Guid.Empty))
+        //        {
+        //            crmServices.Add(detail.ConnectionId ?? Guid.Empty, service);
+        //        }
 
-                return service;
-            }
-            catch (Exception error)
-            {
-                return error;
-            }
-        }
+        //        return service;
+        //    }
+        //    catch (Exception error)
+        //    {
+        //        return error;
+        //    }
+        //}
 
-        /// <summary>
-        /// Working process
-        /// </summary>
-        /// <param name="sender">BackgroundWorker object</param>
-        /// <param name="e">BackgroundWorker object parameters</param>
-        private void WorkerDoWork(object sender, DoWorkEventArgs e)
-        {
-            object result = Connect((List<object>)e.Argument);
-            e.Result = e.Argument;
-            ((List<object>)e.Result).Add(result);
-        }
+        ///// <summary>
+        ///// Working process
+        ///// </summary>
+        ///// <param name="sender">BackgroundWorker object</param>
+        ///// <param name="e">BackgroundWorker object parameters</param>
+        //private void WorkerDoWork(object sender, DoWorkEventArgs e)
+        //{
+        //    object result = Connect((List<object>)e.Argument);
+        //    e.Result = e.Argument;
+        //    ((List<object>)e.Result).Add(result);
+        //}
 
-        private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            var parameters = (List<object>)e.Result;
+        //private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        //{
+        //    var parameters = (List<object>)e.Result;
 
-            if (parameters.Count == 4)
-            {
-                if (parameters[3] is Exception error)
-                {
-                    SendFailureMessage(parameters, CrmExceptionHelper.GetErrorMessage(error, false));
-                }
-                else
-                {
-                    if (parameters[3] is CrmServiceClient service)
-                    {
-                        SendSuccessMessage(service, parameters);
-                    }
-                }
-            }
-        }
+        //    if (parameters.Count == 4)
+        //    {
+        //        if (parameters[3] is Exception error)
+        //        {
+        //            SendFailureMessage(parameters, CrmExceptionHelper.GetErrorMessage(error, false));
+        //        }
+        //        else
+        //        {
+        //            if (parameters[3] is CrmServiceClient service)
+        //            {
+        //                SendSuccessMessage(service, parameters);
+        //            }
+        //        }
+        //    }
+        //}
 
         #endregion Methods
 
@@ -563,45 +560,43 @@ namespace McTools.Xrm.Connection
             StepChanged?.Invoke(this, args);
         }
 
-        /// <summary>
-        /// Sends a connection success message
-        /// </summary>
-        /// <param name="service">IOrganizationService generated</param>
-        /// <param name="parameters">List of parameters</param>
-        private void SendSuccessMessage(IOrganizationService service, List<object> parameters)
-        {
-            if (ConnectionSucceed != null)
-            {
-                var args = new ConnectionSucceedEventArgs
-                {
-                    OrganizationService = service,
-                    ConnectionDetail = (ConnectionDetail)parameters[0],
-                    Parameter = parameters[1],
-                    NumberOfConnectionsRequested = (int)parameters[2]
-                };
+        ///// <summary>
+        ///// Sends a connection success message
+        ///// </summary>
+        ///// <param name="service">IOrganizationService generated</param>
+        ///// <param name="parameters">List of parameters</param>
+        //private void SendSuccessMessage(IOrganizationService service, List<object> parameters)
+        //{
+        //    if (ConnectionSucceed != null)
+        //    {
+        //        var args = new ConnectionSucceedEventArgs
+        //        {
+        //            OrganizationService = service,
+        //            ConnectionDetail = (ConnectionDetail)parameters[0],
+        //            Parameter = parameters[1],
+        //            NumberOfConnectionsRequested = (int)parameters[2]
+        //        };
 
-                ConnectionSucceed(this, args);
-            }
-        }
+        //        ConnectionSucceed(this, args);
+        //    }
+        //}
 
         #endregion Send Events
 
-        public void ConnectToServerWithSdkLoginCtrl(ConnectionDetail detail, CrmServiceClient crmSvc, object connectionParameter)
-        {
-            detail.ServiceClient = crmSvc;
+        //public void ConnectToServerWithSdkLoginCtrl(ConnectionDetail detail, CrmServiceClient crmSvc, object connectionParameter)
+        //{
+        //    var parameters = new List<object> { detail, connectionParameter, 1 };
 
-            var parameters = new List<object> { detail, connectionParameter, 1 };
+        //    if (crmSvc == null) return;
 
-            if (crmSvc == null) return;
-
-            if (crmSvc.IsReady)
-            {
-                SendSuccessMessage(crmSvc, parameters);
-            }
-            else
-            {
-                SendFailureMessage(parameters, crmSvc.LastCrmError);
-            }
-        }
+        //    if (crmSvc.IsReady)
+        //    {
+        //        SendSuccessMessage(crmSvc, parameters);
+        //    }
+        //    else
+        //    {
+        //        SendFailureMessage(parameters, crmSvc.LastCrmError);
+        //    }
+        //}
     }
 }

@@ -3,8 +3,7 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 using CrmWebResourcesUpdater.Common;
-using CrmWebResourcesUpdater.Services.Helpers;
-using CrmWebResourcesUpdater.Services;
+using CrmWebResourcesUpdater.Common.Services;
 
 namespace CrmWebResourcesUpdater
 {
@@ -56,14 +55,12 @@ namespace CrmWebResourcesUpdater
             {
                 var settings = await SettingsService.Instance.GetSettingsAsync();
 
-                var result = DialogResult.Cancel;
-
                 if (settings.SelectedConnection == null)
                 {
 
                     if (projectHelper.ShowErrorDialog() == DialogResult.Yes)
                     {
-                        result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Normal);
+                        var result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Normal);
                         if (result != DialogResult.OK)
                         {
                             return;
@@ -79,7 +76,14 @@ namespace CrmWebResourcesUpdater
                     Logger.WriteLine("Error: Connection is not selected");
                     return;
                 }
-
+                if(settings.SelectedConnection.PasswordIsEmpty)
+                {
+                    var result = await PublishService.Instance.ShowUpdatePasswordDialogAsync();
+                    if (result != DialogResult.OK)
+                    {
+                        return;
+                    }
+                }
                 await PublishService.Instance.CreateWebResourceAsync();
             }
             catch (Exception ex)

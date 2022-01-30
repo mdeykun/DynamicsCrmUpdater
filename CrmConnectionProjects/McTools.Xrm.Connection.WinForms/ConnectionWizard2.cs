@@ -1,8 +1,6 @@
-﻿using McTools.Xrm.Connection.WinForms.CustomControls;
-using Microsoft.Xrm.Sdk.Client;
-using Microsoft.Xrm.Sdk.Discovery;
-using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Tooling.Connector;
+﻿using CrmWebResourcesUpdater.DataModels;
+using CrmWebResourcesUpdater.Service.Client;
+using McTools.Xrm.Connection.WinForms.CustomControls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -21,6 +19,7 @@ namespace McTools.Xrm.Connection.WinForms
         private string lastError;
         private ConnectionDetail originalDetail;
         private ConnectionType type;
+        private readonly CrmWebResourcesUpdaterClient crmWebResourceUpdaterClient;
 
         public ConnectionWizard2(ConnectionDetail detail = null)
         {
@@ -34,6 +33,8 @@ namespace McTools.Xrm.Connection.WinForms
 
             btnBack.Visible = false;
             btnReset.Visible = false;
+
+            crmWebResourceUpdaterClient = CrmWebResourcesUpdaterClient.Instance;
         }
 
         public ConnectionDetail CrmConnectionDetail { get; private set; }
@@ -68,8 +69,6 @@ namespace McTools.Xrm.Connection.WinForms
                 DisplayControl<ConnectionStringControl>();
             else if (type == typeof(ConnectionSucceededControl))
                 DisplayControl<ConnectionSucceededControl>();
-            else if (type == typeof(SdkLoginControlControl))
-                DisplayControl<SdkLoginControlControl>();
             else if (type == typeof(StartPageControl))
                 DisplayControl<StartPageControl>();
             else if (type == typeof(ConnectionCertificateControl))
@@ -202,7 +201,13 @@ namespace McTools.Xrm.Connection.WinForms
                 }
                 else
                 {
-                    CrmConnectionDetail.Solutions = CrmConnectionDetail.GetSolutionsList();
+                    var solutionsResponse = crmWebResourceUpdaterClient.GetSolutionsList(CrmConnectionDetail);
+                    if(solutionsResponse.IsSuccessful == false)
+                    {
+                        throw new Exception($"Failed to retrieve solutions: {solutionsResponse.Error}");
+                    }
+                    CrmConnectionDetail.Solutions = solutionsResponse.Payload;
+                    //CrmConnectionDetail.Solutions = CrmConnectionDetail.GetSolutionsList();
                     DisplayControl<ConnectionSucceededControl>();
                 }
             }
@@ -266,7 +271,13 @@ namespace McTools.Xrm.Connection.WinForms
                     }
                     else
                     {
-                        CrmConnectionDetail.Solutions = CrmConnectionDetail.GetSolutionsList();
+                        var solutionsResponse = crmWebResourceUpdaterClient.GetSolutionsList(CrmConnectionDetail);
+                        if (solutionsResponse.IsSuccessful == false)
+                        {
+                            throw new Exception($"Failed to retrieve solutions: {solutionsResponse.Error}");
+                        }
+                        CrmConnectionDetail.Solutions = solutionsResponse.Payload;
+                        //CrmConnectionDetail.Solutions = CrmConnectionDetail.GetSolutionsList();
                         DisplayControl<ConnectionSucceededControl>();
                     }
                 }
@@ -318,33 +329,9 @@ namespace McTools.Xrm.Connection.WinForms
                 DialogResult = DialogResult.OK;
                 Close();
             }
-            else if (ctrl is SdkLoginControlControl slcc)
+            if (ctrl is SdkLoginControlControl slcc)
             {
-                CrmConnectionDetail.IsFromSdkLoginCtrl = true;
-                CrmConnectionDetail.AuthType = slcc.AuthType;
-                CrmConnectionDetail.UseIfd = slcc.AuthType == AuthenticationProviderType.Federation;
-                CrmConnectionDetail.Organization = slcc.ConnectionManager.ConnectedOrgUniqueName;
-                CrmConnectionDetail.OrganizationFriendlyName = slcc.ConnectionManager.ConnectedOrgFriendlyName;
-                CrmConnectionDetail.OrganizationDataServiceUrl =
-                    slcc.ConnectionManager.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationDataService];
-                CrmConnectionDetail.OrganizationServiceUrl =
-                    slcc.ConnectionManager.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationService];
-                CrmConnectionDetail.WebApplicationUrl =
-                    slcc.ConnectionManager.ConnectedOrgPublishedEndpoints[EndpointType.WebApplication];
-                CrmConnectionDetail.OriginalUrl = CrmConnectionDetail.WebApplicationUrl;
-                CrmConnectionDetail.ServerName = new Uri(CrmConnectionDetail.WebApplicationUrl).Host;
-                CrmConnectionDetail.OrganizationVersion = slcc.ConnectionManager.CrmSvc.ConnectedOrgVersion.ToString();
-                CrmConnectionDetail.ServiceClient = slcc.ConnectionManager.CrmSvc;
-                if (!string.IsNullOrEmpty(slcc.ConnectionManager.ClientId))
-                {
-                    CrmConnectionDetail.AzureAdAppId = new Guid(slcc.ConnectionManager.ClientId);
-                    CrmConnectionDetail.ReplyUrl = slcc.ConnectionManager.RedirectUri.AbsoluteUri;
-                }
-
-                CrmConnectionDetail.UserName = CrmConnectionDetail.ServiceClient.OAuthUserId;
-
-                CrmConnectionDetail.Solutions = CrmConnectionDetail.GetSolutionsList();
-
+                CrmConnectionDetail = slcc.ConnetctionDetail;
                 DisplayControl<ConnectionSucceededControl>();
             }
             else if (ctrl is ConnectionUrlControl cuc)
@@ -469,12 +456,22 @@ namespace McTools.Xrm.Connection.WinForms
             bw.DoWork += (bwSender, evt) =>
             {
                 var currentDetail = (ConnectionDetail)evt.Argument;
-                var client = currentDetail.GetCrmServiceClient(true);
 
-                var connectionResult = new ConnectionResult();
 
-                connectionResult.CrmServiceClient = client;
-                connectionResult.Solutions = currentDetail.GetSolutionsList();
+
+                var validationResponse = crmWebResourceUpdaterClient.ValidateConnection(currentDetail);
+                if(validationResponse.IsSuccessful == false)
+                {
+                    throw new Exception($"Failed to validate connection: {validationResponse.Error}");
+                }
+                var connectionResult = validationResponse.Payload;
+
+                var solutionsResponse = crmWebResourceUpdaterClient.GetSolutionsList(currentDetail);
+                if (solutionsResponse.IsSuccessful == false)
+                {
+                    throw new Exception($"Failed to retrieve solutions: {solutionsResponse.Error}");
+                }
+                connectionResult.Solutions = solutionsResponse.Payload;
 
                 evt.Result = connectionResult;
             };
@@ -489,31 +486,28 @@ namespace McTools.Xrm.Connection.WinForms
                 }
 
                 ConnectionResult connectionResult = (ConnectionResult)evt.Result;
-                var crmSvc = connectionResult.CrmServiceClient;
 
-                if (!crmSvc.IsReady)
+                if (!connectionResult.IsReady)
                 {
-                    lastError = crmSvc.LastCrmError;
+                    lastError = connectionResult.LastCrmError;
                     DisplayControl<ConnectionFailedControl>();
 
                     return;
                 }
 
                 CrmConnectionDetail.Solutions = connectionResult.Solutions;
-                CrmConnectionDetail.Organization = crmSvc.ConnectedOrgUniqueName;
-                CrmConnectionDetail.OrganizationFriendlyName = crmSvc.ConnectedOrgFriendlyName;
+                CrmConnectionDetail.Organization = connectionResult.Organization;
+                CrmConnectionDetail.OrganizationFriendlyName = connectionResult.OrganizationFriendlyName;
                 CrmConnectionDetail.OrganizationUrlName = CrmConnectionDetail.OrganizationUrlName;
-                CrmConnectionDetail.OrganizationVersion = crmSvc.ConnectedOrgVersion.ToString();
-                CrmConnectionDetail.OrganizationDataServiceUrl = crmSvc.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationDataService];
-                CrmConnectionDetail.OrganizationServiceUrl = crmSvc.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationService];
-                CrmConnectionDetail.ServiceClient = crmSvc;
-                CrmConnectionDetail.UserName = CrmConnectionDetail.UserName?.Length > 0
-                    ? CrmConnectionDetail.UserName
-                    : crmSvc.OAuthUserId?.Length > 0
-                        ? crmSvc.OAuthUserId
-                        : CrmConnectionDetail.AzureAdAppId != Guid.Empty
-                            ? CrmConnectionDetail.AzureAdAppId.ToString("B")
-                            : null;
+                CrmConnectionDetail.OrganizationVersion = connectionResult.OrganizationVersion;
+                CrmConnectionDetail.OrganizationDataServiceUrl = connectionResult.OrganizationDataServiceUrl;
+                CrmConnectionDetail.OrganizationServiceUrl = connectionResult.OrganizationServiceUrl;
+                CrmConnectionDetail.UserName = connectionResult.UserName;
+                CrmConnectionDetail.WebApplicationUrl = connectionResult.WebApplicationUrl;
+                CrmConnectionDetail.TenantId = connectionResult.TenantId;
+                CrmConnectionDetail.EnvironmentId = connectionResult.EnvironmentId;
+                CrmConnectionDetail.ServerName = connectionResult.ServerName;
+                CrmConnectionDetail.ServerPort = connectionResult.ServerPort;
 
                 DisplayControl<ConnectionSucceededControl>();
             };
@@ -533,7 +527,6 @@ namespace McTools.Xrm.Connection.WinForms
                     // Should not be possible as updating a
                     // connection from the SDK login control
                     // is handled in ConnectionSelector class
-                    DisplayControl<SdkLoginControlControl>();
                 }
                 else if (CrmConnectionDetail.Certificate != null)
                 {
@@ -583,11 +576,9 @@ namespace McTools.Xrm.Connection.WinForms
                         case ConnectionType.Wizard:
                             DisplayControl<ConnectionFirstStepControl>();
                             break;
-
                         case ConnectionType.Sdk:
                             DisplayControl<SdkLoginControlControl>();
                             break;
-
                         case ConnectionType.ConnectionString:
                             DisplayControl<ConnectionStringControl>();
                             break;

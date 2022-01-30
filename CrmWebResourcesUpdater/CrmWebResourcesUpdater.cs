@@ -2,13 +2,17 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
-using CrmWebResourcesUpdater.Services.Helpers;
 using CrmWebResourcesUpdater.Common;
 using Microsoft.VisualStudio.Shell.Interop;
 using System.Net;
 using Task = System.Threading.Tasks.Task;
 using System.Threading;
-using CrmWebResourcesUpdater.Services;
+using System.Reflection;
+using System.IO;
+using System.Diagnostics;
+using System.Linq;
+using CrmWebResourcesUpdater.Common.Helpers;
+using CrmWebResourcesUpdater.Common.Services;
 
 namespace CrmWebResourcesUpdater
 {
@@ -24,13 +28,35 @@ namespace CrmWebResourcesUpdater
     {
         private DteInitializer dteInitializer;
         private ProjectHelper projectHelper;
+        private WatchdogService watchdogService;
+        private static readonly string assemblyPath = System.IO.Path.GetDirectoryName(typeof(CrmWebResourcesUpdater).Assembly.Location);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdateWebResources"/> class.
         /// </summary>
         public CrmWebResourcesUpdater()
         {
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            watchdogService = new WatchdogService($@"{assemblyPath}\CrmWebResourceUpdater.ServiceConsole.exe", "CrmWebResourceUpdater.ServiceConsole");
+            watchdogService.Start();
         }
+
+        private static System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            var assyName = new AssemblyName(args.Name);
+            var newPath = Path.Combine(assemblyPath, assyName.Name);
+            if (!newPath.EndsWith(".dll"))
+            {
+                newPath = newPath + ".dll";
+            }
+            if (File.Exists(newPath))
+            {
+                var assy = Assembly.LoadFile(newPath);
+                return assy;
+            }
+            return null;
+        }
+
 
         #region Package Members
         /// <summary>
@@ -77,6 +103,11 @@ namespace CrmWebResourcesUpdater
                     UpdaterOptions.Initialize(this);
                     UpdateSelectedWebResources.Initialize(this);
                     CreateWebResource.Initialize(this);
+
+                    ((EnvDTE.DTE)dteObj).Events.DTEEvents.OnBeginShutdown += () =>
+                    {
+                        watchdogService.Shutdown();
+                    };
                 }
                 catch (Exception ex)
                 {

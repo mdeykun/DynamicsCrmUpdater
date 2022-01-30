@@ -5,7 +5,7 @@ using System.Text;
 
 namespace McTools.Xrm.Connection
 {
-    internal class CryptoManager
+    public class CryptoManager
     {
         /// <summary>
         /// Decrypts specified ciphertext using Rijndael symmetric key algorithm.

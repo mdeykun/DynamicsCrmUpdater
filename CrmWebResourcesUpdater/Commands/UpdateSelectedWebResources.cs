@@ -3,8 +3,8 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 using CrmWebResourcesUpdater.Common;
-using CrmWebResourcesUpdater.Services.Helpers;
-using CrmWebResourcesUpdater.Services;
+using CrmWebResourcesUpdater.Common.Services;
+using CrmWebResourcesUpdater.DataModels;
 
 namespace CrmWebResourcesUpdater
 {
@@ -55,31 +55,54 @@ namespace CrmWebResourcesUpdater
         /// <param name="e">Event args.</param>
         public override async void MenuItemCallback(object sender, EventArgs e)
         {
-            try { 
-            var settings = await SettingsService.Instance.GetSettingsAsync();
-            if (settings.SelectedConnection == null)
-            {
-
-                if (projectHelper.ShowErrorDialog() == DialogResult.Yes)
+            try
+            { 
+                var settings = await SettingsService.Instance.GetSettingsAsync();
+                if (settings.SelectedConnection == null)
                 {
-                    var result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Update);
-                    if (result != DialogResult.Yes)
+
+                    if (projectHelper.ShowErrorDialog() == DialogResult.Yes)
+                    {
+                        var result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Update);
+                        if (result != DialogResult.Yes)
+                        {
+                            return;
+                        }
+                    }
+                    else
                     {
                         return;
                     }
                 }
-                else
+                if (settings.SelectedConnection == null)
                 {
+                    Logger.WriteLine("Error: Connection is not selected");
                     return;
                 }
-            }
-            if (settings.SelectedConnection == null)
-            {
-                Logger.WriteLine("Error: Connection is not selected");
-                return;
-            }
-
-            await PublishService.Instance.PublishWebResourcesAsync(true);
+                if (settings.SelectedConnection.UseConnectionString == false)
+                {
+                    if (settings.SelectedConnection.NewAuthType == AuthenticationType.ClientSecret && settings.SelectedConnection.ClientSecretIsEmpty)
+                    {
+                        var result = await PublishService.Instance.ShowUpdateClientSecretDialogAsync();
+                        if (result != DialogResult.OK)
+                        {
+                            return;
+                        }
+                    }
+                    else if (settings.SelectedConnection.IsCustomAuth)
+                    {
+                        if (settings.SelectedConnection.PasswordIsEmpty && settings.SelectedConnection.Certificate == null)
+                        {
+                            var result = await PublishService.Instance.ShowUpdatePasswordDialogAsync();
+                            if (result != DialogResult.OK)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+                await this.package.JoinableTaskFactory.SwitchToMainThreadAsync();
+                await PublishService.Instance.PublishWebResourcesAsync(true);
             }
             catch (Exception ex)
             {

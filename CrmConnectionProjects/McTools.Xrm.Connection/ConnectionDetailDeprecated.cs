@@ -1,9 +1,9 @@
-﻿using System;
+﻿using CrmWebResourcesUpdater.DataModels;
+using System;
 using System.ComponentModel;
 using System.ServiceModel.Description;
 using System.Xml.Serialization;
-using Microsoft.Xrm.Sdk.Client;
-using Microsoft.Xrm.Sdk.Discovery;
+
 
 namespace McTools.Xrm.Connection.Deprecated
 {

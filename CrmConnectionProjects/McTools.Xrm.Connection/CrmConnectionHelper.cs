@@ -1,6 +1,4 @@
-﻿using Microsoft.Xrm.Sdk.Client;
-using Microsoft.Xrm.Tooling.Connector;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

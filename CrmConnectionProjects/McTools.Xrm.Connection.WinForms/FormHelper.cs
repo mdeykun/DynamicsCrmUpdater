@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CrmWebResourcesUpdater.DataModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -39,23 +40,43 @@ namespace McTools.Xrm.Connection.WinForms
 
                 foreach (var connectionDetail in cs.SelectedConnections)
                 {
-                    if (!connectionDetail.UseConnectionString && connectionDetail.IsCustomAuth)
+                    if (!connectionDetail.UseConnectionString)
                     {
-                        if (connectionDetail.PasswordIsEmpty && connectionDetail.Certificate == null)
+                        if (connectionDetail.NewAuthType == AuthenticationType.ClientSecret
+                            && connectionDetail.ClientSecretIsEmpty)
                         {
-                            var pForm = new PasswordForm(connectionDetail)
+                            var pForm = new SecretForm(connectionDetail)
                             {
-                                UserDomain = connectionDetail.UserDomain,
-                                UserLogin = connectionDetail.UserName
+                                ClientId = connectionDetail.AzureAdAppId.ToString("B")
                             };
                             if (pForm.ShowDialog(innerAppForm) == DialogResult.OK)
                             {
-                                connectionDetail.SetPassword(pForm.UserPassword);
-                                connectionDetail.SavePassword = pForm.SavePassword;
+                                connectionDetail.SetClientSecret(pForm.ClientSecret);
+                                connectionDetail.SavePassword = pForm.SaveSecret;
                             }
                             else
                             {
                                 return false;
+                            }
+                        }
+                        else if (connectionDetail.IsCustomAuth)
+                        {
+                            if (connectionDetail.PasswordIsEmpty && connectionDetail.Certificate == null)
+                            {
+                                var pForm = new PasswordForm(connectionDetail)
+                                {
+                                    UserDomain = connectionDetail.UserDomain,
+                                    UserLogin = connectionDetail.UserName
+                                };
+                                if (pForm.ShowDialog(innerAppForm) == DialogResult.OK)
+                                {
+                                    connectionDetail.SetPassword(pForm.UserPassword);
+                                    connectionDetail.SavePassword = pForm.SavePassword;
+                                }
+                                else
+                                {
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -65,19 +86,19 @@ namespace McTools.Xrm.Connection.WinForms
 
                 if (cs.SelectedConnections.First().IsFromSdkLoginCtrl)
                 {
-                    var cd = cs.SelectedConnections.First();
+                    //var cd = cs.SelectedConnections.First();
 
-                    var ctrl = new CRMLoginForm1(cd.ConnectionId.Value);
-                    if (cd.AzureAdAppId != Guid.Empty)
-                    {
-                        ctrl.AppId = cd.AzureAdAppId.ToString();
-                        ctrl.RedirectUri = new Uri(cd.ReplyUrl);
-                    }
+                    //var ctrl = new CRMLoginForm1(cd.ConnectionId.Value);
+                    //if (cd.AzureAdAppId != Guid.Empty)
+                    //{
+                    //    ctrl.AppId = cd.AzureAdAppId.ToString();
+                    //    ctrl.RedirectUri = new Uri(cd.ReplyUrl);
+                    //}
 
-                    ctrl.ShowDialog();
+                    //ctrl.ShowDialog();
 
-                    ConnectionManager.Instance.ConnectToServerWithSdkLoginCtrl(cd, ctrl.CrmConnectionMgr.CrmSvc,
-                        connectionParameter);
+                    //ConnectionManager.Instance.ConnectToServerWithSdkLoginCtrl(cd, ctrl.CrmConnectionMgr.CrmSvc,
+                    //    connectionParameter);
                 }
                 else
                 {
@@ -124,19 +145,19 @@ namespace McTools.Xrm.Connection.WinForms
 
             if (connectionDetail.IsFromSdkLoginCtrl)
             {
-                var cd = connectionDetail;
+                //var cd = connectionDetail;
 
-                var ctrl = new CRMLoginForm1(cd.ConnectionId.Value);
-                if (cd.AzureAdAppId != Guid.Empty)
-                {
-                    ctrl.AppId = cd.AzureAdAppId.ToString();
-                    ctrl.RedirectUri = new Uri(cd.ReplyUrl);
-                }
+                //var ctrl = new CRMLoginForm1(cd.ConnectionId.Value);
+                //if (cd.AzureAdAppId != Guid.Empty)
+                //{
+                //    ctrl.AppId = cd.AzureAdAppId.ToString();
+                //    ctrl.RedirectUri = new Uri(cd.ReplyUrl);
+                //}
 
-                ctrl.ShowDialog();
+                //ctrl.ShowDialog();
 
-                ConnectionManager.Instance.ConnectToServerWithSdkLoginCtrl(cd, ctrl.CrmConnectionMgr.CrmSvc,
-                    connectionParameter);
+                //ConnectionManager.Instance.ConnectToServerWithSdkLoginCtrl(cd, ctrl.CrmConnectionMgr.CrmSvc,
+                //    connectionParameter);
             }
             else
             {
@@ -162,6 +183,7 @@ namespace McTools.Xrm.Connection.WinForms
             if (connection != null)
             {
                 ConnectionManager.Instance.ConnectionsList.Connections.Remove(connection);
+                ConnectionManager.Instance.SaveConnectionsFile();
             }
         }
 
@@ -193,17 +215,20 @@ namespace McTools.Xrm.Connection.WinForms
                     if (connectionFile == null)
                     {
                         if (ConnectionManager.Instance.ConnectionsList.Connections.FirstOrDefault(
-                            d => d.ConnectionId == cForm.CrmConnectionDetail.ConnectionId) == null)
+                            d => d.ConnectionId == cForm.CrmConnectionDetail.ConnectionId) == null
+                            && !string.IsNullOrEmpty(cForm.CrmConnectionDetail.ConnectionName))
                         {
                             ConnectionManager.Instance.ConnectionsList.Connections.Add(cForm.CrmConnectionDetail);
                         }
 
+                        ConnectionManager.Instance.SaveConnectionsFile();
                     }
                     else
                     {
                         var connections = CrmConnections.LoadFromFile(connectionFile.Path);
                         if (connections.Connections.FirstOrDefault(
-                            d => d.ConnectionId == cForm.CrmConnectionDetail.ConnectionId) == null)
+                            d => d.ConnectionId == cForm.CrmConnectionDetail.ConnectionId) == null
+                            && !string.IsNullOrEmpty(cForm.CrmConnectionDetail.ConnectionName))
                         {
                             connections.Connections.Add(cForm.CrmConnectionDetail);
                         }
@@ -220,6 +245,7 @@ namespace McTools.Xrm.Connection.WinForms
                             .ToList()
                             .ForEach(x => x.UpdateAfterEdit(cForm.CrmConnectionDetail));
 
+                        ConnectionManager.Instance.SaveConnectionsFile();
                     }
                     else
                     {

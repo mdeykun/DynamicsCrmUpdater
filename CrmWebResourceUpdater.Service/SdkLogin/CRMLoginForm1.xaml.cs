@@ -1,10 +1,11 @@
-﻿using Microsoft.Xrm.Tooling.Connector;
+﻿using McTools.Xrm.Connection;
+using Microsoft.Xrm.Tooling.Connector;
 using Microsoft.Xrm.Tooling.CrmConnectControl;
 using System;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace McTools.Xrm.Connection.WinForms
+namespace CrmWebResourcesUpdater.Service.SdkLogin
 {
     /// <summary>
     /// Interaction logic for CRMLoginForm1.xaml

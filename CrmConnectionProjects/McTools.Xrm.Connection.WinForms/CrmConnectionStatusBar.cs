@@ -355,17 +355,7 @@ namespace McTools.Xrm.Connection.WinForms
                     {
                         if (currentConnection.IsFromSdkLoginCtrl)
                         {
-                            var ctrl = new CRMLoginForm1(currentConnection.ConnectionId.Value);
-                            if (currentConnection.AzureAdAppId != Guid.Empty)
-                            {
-                                ctrl.AppId = currentConnection.AzureAdAppId.ToString();
-                                ctrl.RedirectUri = new Uri(currentConnection.ReplyUrl);
-                            }
-
-                            ctrl.ShowDialog();
-
-                            ConnectionManager.Instance.ConnectToServerWithSdkLoginCtrl(currentConnection, ctrl.CrmConnectionMgr.CrmSvc,
-                                null);
+                            throw new NotImplementedException("Sdk login is not supported");
                         }
                         else
                         {

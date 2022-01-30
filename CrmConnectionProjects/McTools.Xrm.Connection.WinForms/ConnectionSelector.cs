@@ -1,4 +1,4 @@
-﻿using Microsoft.Xrm.Sdk.Discovery;
+﻿using CrmWebResourcesUpdater.Service.Client;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -25,6 +25,8 @@ namespace McTools.Xrm.Connection.WinForms
         /// </summary>
         public List<ConnectionDetail> SelectedConnections { get; private set; }
 
+        private readonly CrmWebResourcesUpdaterClient crmWebResourceUpdaterClient;
+
         #endregion Variables
 
         #region Constructeur
@@ -43,6 +45,7 @@ namespace McTools.Xrm.Connection.WinForms
                 bValidate.Text = @"Connect";
             }
 
+            crmWebResourceUpdaterClient = CrmWebResourcesUpdaterClient.Instance;
         }
 
         public ConnectionSelector(CrmConnections connections, ConnectionDetail selectedConnection = null, bool allowMultipleSelection = false, bool showPublisButton = false)
@@ -89,7 +92,7 @@ namespace McTools.Xrm.Connection.WinForms
                 foreach (ConnectionDetail detail in details)
                 {
                     var item = new ListViewItem(detail.ConnectionName);
-                    item.SubItems.Add(detail.ServerName);
+                    item.SubItems.Add(detail.ServerName == null ? detail.OriginalUrl : detail.ServerName);
                     item.SubItems.Add(detail.Organization);
                     item.SubItems.Add(string.IsNullOrEmpty(detail.UserDomain) ? detail.UserName : $"{detail.UserDomain}\\{detail.UserName}");
                     item.SubItems.Add(detail.OrganizationVersion);
@@ -603,7 +606,7 @@ namespace McTools.Xrm.Connection.WinForms
             }
         }
 
-        private void tsbUpdateConnection_Click(object sender, EventArgs e)
+        private async void tsbUpdateConnection_Click(object sender, EventArgs e)
         {
             if (lvConnections.SelectedItems.Count == 1)
             {
@@ -613,22 +616,10 @@ namespace McTools.Xrm.Connection.WinForms
 
                 if (cd.IsFromSdkLoginCtrl)
                 {
-                    var ctrl = new CRMLoginForm1(cd.ConnectionId.Value, true);
-                    ctrl.ShowDialog();
-
-                    if (ctrl.CrmConnectionMgr.CrmSvc?.IsReady ?? false)
+                    var connectionDetail = await crmWebResourceUpdaterClient.UseSdkLoginControlAsync(cd.ConnectionId.Value, true);
+                    if(connectionDetail != null)
                     {
-                        cd.Organization = ctrl.CrmConnectionMgr.ConnectedOrgUniqueName;
-                        cd.OrganizationFriendlyName = ctrl.CrmConnectionMgr.ConnectedOrgFriendlyName;
-                        cd.OrganizationDataServiceUrl =
-                            ctrl.CrmConnectionMgr.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationDataService];
-                        cd.OrganizationServiceUrl =
-                            ctrl.CrmConnectionMgr.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationService];
-                        cd.WebApplicationUrl =
-                            ctrl.CrmConnectionMgr.ConnectedOrgPublishedEndpoints[EndpointType.WebApplication];
-                        cd.ServerName = new Uri(cd.WebApplicationUrl).Host;
-                        cd.OrganizationVersion = ctrl.CrmConnectionMgr.CrmSvc.ConnectedOrgVersion.ToString();
-                        
+                        cd = connectionDetail;
 
                         item.Tag = cd;
                         lvConnections.Items.Remove(item);
@@ -643,6 +634,36 @@ namespace McTools.Xrm.Connection.WinForms
 
                         RefreshComboBoxSelectedConnection();
                     }
+                    //var ctrl = new CRMLoginForm1(cd.ConnectionId.Value, true);
+                    //ctrl.ShowDialog();
+
+                    //if (ctrl.CrmConnectionMgr.CrmSvc?.IsReady ?? false)
+                    //{
+                    //    cd.Organization = ctrl.CrmConnectionMgr.ConnectedOrgUniqueName;
+                    //    cd.OrganizationFriendlyName = ctrl.CrmConnectionMgr.ConnectedOrgFriendlyName;
+                    //    cd.OrganizationDataServiceUrl =
+                    //        ctrl.CrmConnectionMgr.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationDataService];
+                    //    cd.OrganizationServiceUrl =
+                    //        ctrl.CrmConnectionMgr.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationService];
+                    //    cd.WebApplicationUrl =
+                    //        ctrl.CrmConnectionMgr.ConnectedOrgPublishedEndpoints[EndpointType.WebApplication];
+                    //    cd.ServerName = new Uri(cd.WebApplicationUrl).Host;
+                    //    cd.OrganizationVersion = ctrl.CrmConnectionMgr.CrmSvc.ConnectedOrgVersion.ToString();
+
+
+                    //    item.Tag = cd;
+                    //    lvConnections.Items.Remove(item);
+                    //    lvConnections.Items.Add(item);
+                    //    lvConnections.Refresh();//RedrawItems(0, lvConnections.Items.Count - 1, false);
+
+                    //    var updatedConnectionDetail = ConnectionManager.Instance.ConnectionsList.Connections.FirstOrDefault(
+                    //        c => c.ConnectionId == cd.ConnectionId);
+
+                    //    ConnectionManager.Instance.ConnectionsList.Connections.Remove(updatedConnectionDetail);
+                    //    ConnectionManager.Instance.ConnectionsList.Connections.Add(cd);
+
+                    //    RefreshComboBoxSelectedConnection();
+                    //}
 
                     return;
                 }

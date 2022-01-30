@@ -1,11 +1,8 @@
-﻿using System;
+﻿using CrmWebResourcesUpdater.Service.Client;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace McTools.Xrm.Connection.WinForms
@@ -13,6 +10,7 @@ namespace McTools.Xrm.Connection.WinForms
     public partial class UpdateSolutionForm : Form
     {
         private readonly ConnectionDetail connectionDetail;
+        private readonly CrmWebResourcesUpdaterClient crmWebResourceUpdaterClient;
         public UpdateSolutionForm(ConnectionDetail connectionDetail)
         {
             InitializeComponent();
@@ -22,6 +20,7 @@ namespace McTools.Xrm.Connection.WinForms
 
             this.connectionDetail = connectionDetail;
             lblHeaderDesc.Text = string.Format(lblHeaderDesc.Text, connectionDetail.ConnectionName);
+            crmWebResourceUpdaterClient = CrmWebResourcesUpdaterClient.Instance;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -53,20 +52,17 @@ namespace McTools.Xrm.Connection.WinForms
                 var solutionDetails = new List<SolutionDetail>();
                 if (connectionDetail.IsFromSdkLoginCtrl)
                 {
-                    var cd = connectionDetail;
-
-                    var ctrl = new CRMLoginForm1(cd.ConnectionId.Value);
-                    if (cd.AzureAdAppId != Guid.Empty)
-                    {
-                        ctrl.AppId = cd.AzureAdAppId.ToString();
-                        ctrl.RedirectUri = new Uri(cd.ReplyUrl);
-                    }
-
-                    ctrl.ShowDialog();
-
-                    ConnectionManager.Instance.ConnectToServerWithSdkLoginCtrl(connectionDetail, ctrl.CrmConnectionMgr.CrmSvc, null);
+                    throw new NotImplementedException("Sdk login is not supported");
                 }
-                solutionDetails = await connectionDetail.GetSolutionsListAsync();
+
+                //solutionDetails = await connectionDetail.GetSolutionsListAsync();
+                var getSolutionsListResponse = await crmWebResourceUpdaterClient.GetSolutionsListAsync(connectionDetail);
+                if(getSolutionsListResponse.IsSuccessful == false)
+                {
+                    throw new Exception($"Failed to retrieve solution list: {getSolutionsListResponse.Error}");
+                }
+                solutionDetails = getSolutionsListResponse.Payload;
+
 
                 if (solutionDetails.Count == 0)
                 {

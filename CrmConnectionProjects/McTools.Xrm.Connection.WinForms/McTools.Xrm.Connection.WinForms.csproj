@@ -64,41 +64,11 @@
     <AssemblyOriginatorKeyFile>snk.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Crm.Sdk.Proxy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.23\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
-    </Reference>
     <Reference Include="microsoft.identitymodel, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.IdentityModel.7.0.0\lib\net35\microsoft.identitymodel.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=3.19.8.16603, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.3.19.8\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory.Platform, Version=3.19.8.16603, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.3.19.8\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Rest.ClientRuntime, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.0.38\lib\net462\Microsoft.Rest.ClientRuntime.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Sdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.23\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Sdk.Deployment, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.Deployment.9.0.2.23\lib\net462\Microsoft.Xrm.Sdk.Deployment.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Sdk.Workflow, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.Workflow.9.0.2.23\lib\net462\Microsoft.Xrm.Sdk.Workflow.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.Connector, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.0.38\lib\net462\Microsoft.Xrm.Tooling.Connector.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.CrmConnectControl, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.0.38\lib\net462\Microsoft.Xrm.Tooling.CrmConnectControl.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.Ui.Styles, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.0.38\lib\net462\Microsoft.Xrm.Tooling.Ui.Styles.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.WebResourceUtility, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.0.38\lib\net462\Microsoft.Xrm.Tooling.WebResourceUtility.dll</HintPath>
+    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=5.2.9.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.5.2.9\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -170,9 +140,6 @@
     <Compile Include="ConnectionWizard2.designer.cs">
       <DependentUpon>ConnectionWizard2.cs</DependentUpon>
     </Compile>
-    <Compile Include="CRMLoginForm1.xaml.cs">
-      <DependentUpon>CRMLoginForm1.xaml</DependentUpon>
-    </Compile>
     <Compile Include="CustomControls\ConnectionCredentialsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -239,17 +206,17 @@
     <Compile Include="CustomControls\ConnectionCertificateControl.Designer.cs">
       <DependentUpon>ConnectionCertificateControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="CustomControls\StartPageControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="CustomControls\StartPageControl.Designer.cs">
-      <DependentUpon>StartPageControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="CustomControls\SdkLoginControlControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="CustomControls\SdkLoginControlControl.Designer.cs">
       <DependentUpon>SdkLoginControlControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CustomControls\StartPageControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CustomControls\StartPageControl.Designer.cs">
+      <DependentUpon>StartPageControl.cs</DependentUpon>
     </Compile>
     <Compile Include="CustomControls\ConnectionStringControl.cs">
       <SubType>UserControl</SubType>
@@ -281,6 +248,12 @@
     </Compile>
     <Compile Include="RenameConnectionFileDialog.designer.cs">
       <DependentUpon>RenameConnectionFileDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SecretForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SecretForm.designer.cs">
+      <DependentUpon>SecretForm.cs</DependentUpon>
     </Compile>
     <Compile Include="UpdatePasswordForm.cs">
       <SubType>Form</SubType>
@@ -392,12 +365,11 @@
       <DependentUpon>ConnectionCertificateControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="CustomControls\StartPageControl.resx">
-      <DependentUpon>StartPageControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="CustomControls\SdkLoginControlControl.resx">
       <DependentUpon>SdkLoginControlControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CustomControls\StartPageControl.resx">
+      <DependentUpon>StartPageControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CustomControls\ConnectionStringControl.resx">
       <DependentUpon>ConnectionStringControl.cs</DependentUpon>
@@ -415,6 +387,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="RenameConnectionFileDialog.resx">
       <DependentUpon>RenameConnectionFileDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SecretForm.resx">
+      <DependentUpon>SecretForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UpdatePasswordForm.resx">
       <DependentUpon>UpdatePasswordForm.cs</DependentUpon>
@@ -474,7 +449,9 @@
     <EmbeddedResource Include="Resources\server_lightning.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="snk.snk" />
   </ItemGroup>
   <ItemGroup>
@@ -489,12 +466,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\XTB_HIGHLIGHT_CUSTOM.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="CRMLoginForm1.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\logo_0200.png" />
@@ -542,6 +513,22 @@
     <Content Include="Resources\ico_16_7100.gif" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\CrmWebResourcesUpdater.DataModels\CrmWebResourcesUpdater.DataModels.csproj">
+      <Project>{524CD4FE-3293-4A68-88F1-6C6A62FB112A}</Project>
+      <Name>CrmWebResourcesUpdater.DataModels</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CrmWebResourcesUpdater.Service.Client\CrmWebResourcesUpdater.Service.Client.csproj">
+      <Project>{6A1F6EAB-03D8-45C5-AA8D-9C53F609639B}</Project>
+      <Name>CrmWebResourcesUpdater.Service.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CrmWebResourcesUpdater.Service.Common\CrmWebResourcesUpdater.Service.Common.csproj">
+      <Project>{02FC1699-5CB9-4ED9-933E-27FCE6E3D4E0}</Project>
+      <Name>CrmWebResourcesUpdater.Service.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\McTools.Xrm.Connection.ConnectionManager\McTools.Xrm.Connection.ConnectionManager.csproj">
+      <Project>{2775bb70-b234-475b-a933-cf671aa3981a}</Project>
+      <Name>McTools.Xrm.Connection.ConnectionManager</Name>
+    </ProjectReference>
     <ProjectReference Include="..\McTools.Xrm.Connection\McTools.Xrm.Connection.csproj">
       <Project>{c3824c2c-6e2e-4fde-a2aa-229bbc7c3b1f}</Project>
       <Name>McTools.Xrm.Connection</Name>

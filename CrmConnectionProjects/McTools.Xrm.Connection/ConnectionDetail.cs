@@ -1,9 +1,5 @@
-﻿using McTools.Xrm.Connection.Forms;
-using McTools.Xrm.Connection.Utils;
-using Microsoft.Xrm.Sdk.Client;
-using Microsoft.Xrm.Sdk.Discovery;
-using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Tooling.Connector;
+﻿using CrmWebResourcesUpdater.DataModels;
+using McTools.Xrm.Connection.Forms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
@@ -41,6 +38,8 @@ namespace McTools.Xrm.Connection
     public class ConnectionDetail : IComparable, ICloneable
     {
         private string clientSecret;
+        private Guid impersonatedUserId;
+        private string impersonatedUserName;
         private string userPassword;
 
         #region Constructeur
@@ -61,19 +60,26 @@ namespace McTools.Xrm.Connection
 
         #region Propriétés
 
-        [XmlIgnore]
-        private CrmServiceClient crmSvc;
-
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public bool AllowPasswordSharing { get; set; }
 
         public AuthenticationProviderType AuthType { get; set; }
         public Guid AzureAdAppId { get; set; }
 
+        [XmlIgnore] [IgnoreDataMember]
+        public bool CanImpersonate { get; set; }
+
         [XmlElement("CertificateInfo")]
         public CertificateInfo Certificate { get; set; }
 
-        [XmlIgnore]
+        [XmlElement("ClientSecret")]
+        public string ClientSecretEncrypted
+        {
+            get => clientSecret;
+            set => clientSecret = value;
+        }
+
+        [XmlIgnore] [IgnoreDataMember]
         public bool ClientSecretIsEmpty => string.IsNullOrEmpty(clientSecret);
 
         /// <summary>
@@ -88,7 +94,7 @@ namespace McTools.Xrm.Connection
 
         public string ConnectionString { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public Color? EnvironmentColor { get; set; }
 
         ///// <summary>
@@ -99,10 +105,10 @@ namespace McTools.Xrm.Connection
 
         public string EnvironmentId { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public string EnvironmentText { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public Color? EnvironmentTextColor { get; set; }
 
         /// <summary>
@@ -110,15 +116,27 @@ namespace McTools.Xrm.Connection
         /// </summary>
         public string HomeRealmUrl { get; set; }
 
+        [XmlIgnore] [IgnoreDataMember]
+        public Guid ImpersonatedUserId {
+            get => impersonatedUserId;
+            set => impersonatedUserId = value;
+        }
+
+        [XmlIgnore] [IgnoreDataMember]
+        public string ImpersonatedUserName {
+            get => impersonatedUserName;
+            set => impersonatedUserName = value;
+        }
+
         /// <summary>
         /// Get or set flag to know if custom authentication
         /// </summary>
         public bool IsCustomAuth { get; set; }
 
-        [XmlIgnore] public bool IsEnvironmentHighlightSet => EnvironmentHighlightingInfo != null;
+        [XmlIgnore] [IgnoreDataMember] public bool IsEnvironmentHighlightSet => EnvironmentHighlightingInfo != null;
         public bool IsFromSdkLoginCtrl { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public DateTime LastUsedOn { get; set; }
 
         [XmlElement("LastUsedOn")]
@@ -137,40 +155,6 @@ namespace McTools.Xrm.Connection
                     LastUsedOn = DateTime.Parse(value);
                 }
             }
-        }
-
-        public async  Task<List<SolutionDetail>> GetSolutionsListAsync(bool forceNewService = false)
-        {
-            var task = Task.Run(() => GetSolutionsList(forceNewService));
-            return await task;
-        }
-
-        public List<SolutionDetail> GetSolutionsList(bool forceNewService = false)
-        {
-            var client = GetCrmServiceClient(forceNewService);
-
-            QueryExpression query = new QueryExpression
-            {
-                EntityName = "solution",
-                ColumnSet = new ColumnSet(new string[] { "friendlyname", "uniquename", "publisherid" }),
-                Criteria = new FilterExpression()
-            };
-            query.Criteria.AddCondition("isvisible", ConditionOperator.Equal, true);
-            query.AddOrder("friendlyname", OrderType.Ascending);
-
-            query.LinkEntities.Add(new LinkEntity("solution", "publisher", "publisherid", "publisherid", JoinOperator.Inner));
-            query.LinkEntities[0].Columns.AddColumns("customizationprefix");
-            query.LinkEntities[0].EntityAlias = "publisher";
-
-            var solutions = client.RetrieveMultiple(query).Entities;
-            this.Solutions = solutions.Select(x => new SolutionDetail()
-            {
-                UniqueName = x.GetAttributeValue<string>("uniquename"),
-                FriendlyName = x.GetAttributeValue<string>("friendlyname"),
-                PublisherPrefix = x.GetAttributeValue<Microsoft.Xrm.Sdk.AliasedValue>("publisher.customizationprefix") == null ? null : x.GetAttributeValue<Microsoft.Xrm.Sdk.AliasedValue>("publisher.customizationprefix").Value.ToString(),
-                SolutionId = x.Id
-            }).ToList();
-            return this.Solutions;
         }
 
         public AuthenticationType NewAuthType { get; set; }
@@ -216,6 +200,15 @@ namespace McTools.Xrm.Connection
         public string ReplyUrl { get; set; }
 
         /// <summary>
+        /// Client Secret used for S2S Auth
+        /// </summary>
+        public string S2SClientSecret
+        {
+            get => clientSecret;
+            set => clientSecret = value;
+        }
+
+        /// <summary>
         /// Gets or sets the information if the password must be saved
         /// </summary>
         public bool SavePassword { get; set; }
@@ -229,14 +222,14 @@ namespace McTools.Xrm.Connection
         /// Get or set the server port
         /// </summary>
         [DefaultValue(80)]
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public int? ServerPort { get; set; }
 
-        [XmlIgnore]
-        public CrmServiceClient ServiceClient
+        [XmlElement("ServerPort")]
+        public string ServerPortString
         {
-            get { return GetCrmServiceClient(); }
-            set { crmSvc = value; }
+            get => ServerPort.ToString();
+            set => ServerPort = string.IsNullOrEmpty(value) ? 80 : int.Parse(value);
         }
 
         public Guid TenantId { get; set; }
@@ -248,7 +241,7 @@ namespace McTools.Xrm.Connection
             set { Timeout = new TimeSpan(value); }
         }
 
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public bool UseConnectionString => !string.IsNullOrEmpty(ConnectionString);
 
         /// <summary>
@@ -264,8 +257,8 @@ namespace McTools.Xrm.Connection
         /// <summary>
         /// Get or set flag to know if we use CRM Online
         /// </summary>
-        [XmlIgnore]
-        public bool UseOnline => OriginalUrl != null && OriginalUrl.IndexOf(".dynamics.com", StringComparison.InvariantCultureIgnoreCase) > 0;
+        [XmlIgnore] [IgnoreDataMember]
+        public bool UseOnline => OriginalUrl.IndexOf(".dynamics.com", StringComparison.InvariantCultureIgnoreCase) > 0;
 
         /// <summary>
         /// Get or set the user domain name
@@ -291,26 +284,11 @@ namespace McTools.Xrm.Connection
         /// <summary>
         /// Get or set the use of SSL connection
         /// </summary>
-        [XmlIgnore]
-        public bool UseSsl => WebApplicationUrl.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        [XmlIgnore] [IgnoreDataMember]
+        public bool UseSsl => WebApplicationUrl?.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ?? OriginalUrl.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
 
         public string WebApplicationUrl { get; set; }
 
-        /// <summary>
-        /// Client Secret used for S2S Auth
-        /// </summary>
-        public string S2SClientSecret
-        {
-            get => clientSecret;
-            set => clientSecret = value;
-        }
-
-        [XmlElement("ServerPort")]
-        private string ServerPortString
-        {
-            get => ServerPort.ToString();
-            set => ServerPort = string.IsNullOrEmpty(value) ? 80 : int.Parse(value);
-        }
         public List<SolutionDetail> Solutions { get; set; }
         
         public SolutionDetail SelectedSolution { get; set; }
@@ -323,112 +301,7 @@ namespace McTools.Xrm.Connection
         public void ErasePassword()
         {
             userPassword = null;
-        }
-
-        public CrmServiceClient GetCrmServiceClient(bool forceNewService = false)
-        {
-            if (forceNewService == false && crmSvc != null)
-            {
-                return crmSvc;
-            }
-            if (Timeout.Ticks == 0)
-            {
-                Timeout = new TimeSpan(0, 2, 0);
-            }
-            CrmServiceClient.MaxConnectionTimeout = Timeout;
-
-            if (Certificate != null)
-            {
-                var cs = HandleConnectionString($"AuthType=Certificate;url={OriginalUrl};thumbprint={Certificate.Thumbprint};ClientId={AzureAdAppId};");
-                crmSvc = new CrmServiceClient(cs);
-            }
-            else if (!string.IsNullOrEmpty(ConnectionString))
-            {
-                var cs = HandleConnectionString(ConnectionString);
-                crmSvc = new CrmServiceClient(cs);
-            }
-            else if (NewAuthType == AuthenticationType.ClientSecret)
-            {
-                var cs = HandleConnectionString($"AuthType=ClientSecret;url={OriginalUrl};ClientId={AzureAdAppId};ClientSecret={clientSecret}");
-                crmSvc = new CrmServiceClient(cs);
-            }
-            else if (NewAuthType == AuthenticationType.OAuth && UseMfa)
-            {
-                var path = Path.Combine(Path.GetTempPath(), ConnectionId.Value.ToString("B"));
-
-                var cs = HandleConnectionString($"AuthType=OAuth;Username={UserName};Url={OriginalUrl};AppId={AzureAdAppId};RedirectUri={ReplyUrl};TokenCacheStorePath={path};LoginPrompt=Auto");
-                crmSvc = new CrmServiceClient(cs);
-            }
-            else if (!string.IsNullOrEmpty(clientSecret))
-            {
-                ConnectOAuth();
-            }
-            else if (UseOnline)
-            {
-                ConnectOnline();
-            }
-            else if (UseIfd)
-            {
-                ConnectIfd();
-            }
-            else
-            {
-                ConnectOnprem();
-            }
-
-            if (!crmSvc.IsReady)
-            {
-                var error = crmSvc.LastCrmError;
-                crmSvc = null;
-                throw new Exception(error);
-            }
-
-            OrganizationFriendlyName = crmSvc.ConnectedOrgFriendlyName;
-            OrganizationDataServiceUrl = crmSvc.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationDataService];
-            OrganizationServiceUrl = crmSvc.ConnectedOrgPublishedEndpoints[EndpointType.OrganizationService];
-            WebApplicationUrl = crmSvc.ConnectedOrgPublishedEndpoints[EndpointType.WebApplication];
-            Organization = crmSvc.ConnectedOrgUniqueName;
-            OrganizationVersion = crmSvc.ConnectedOrgVersion.ToString();
-            TenantId = crmSvc.TenantId;
-            EnvironmentId = crmSvc.EnvironmentId;
-
-            var webAppURi = new Uri(WebApplicationUrl);
-            ServerName = webAppURi.Host;
-            ServerPort = webAppURi.Port;
-
-            UseIfd = crmSvc.ActiveAuthenticationType == AuthenticationType.IFD;
-
-            switch (crmSvc.ActiveAuthenticationType)
-            {
-                case AuthenticationType.AD:
-                case AuthenticationType.Claims:
-                    AuthType = AuthenticationProviderType.ActiveDirectory;
-                    break;
-
-                case AuthenticationType.IFD:
-                    AuthType = AuthenticationProviderType.Federation;
-                    break;
-
-                case AuthenticationType.Live:
-                    AuthType = AuthenticationProviderType.LiveId;
-                    break;
-
-                case AuthenticationType.OAuth:
-                    // TODO add new property in ConnectionDetail class?
-                    break;
-
-                case AuthenticationType.Office365:
-                    AuthType = AuthenticationProviderType.OnlineFederation;
-                    break;
-            }
-
-            return crmSvc;
-        }
-
-        public async Task<CrmServiceClient> GetCrmServiceClientAsync(bool forceNewService = false)
-        {
-            var task = Task.Run(() => GetCrmServiceClient(forceNewService));
-            return await task;
+            clientSecret = null;
         }
 
         public void SetClientSecret(string secret, bool isEncrypted = false)
@@ -441,37 +314,53 @@ namespace McTools.Xrm.Connection
                 }
                 else
                 {
-                    clientSecret = CryptoManager.Encrypt(secret, ConnectionManager.CryptoPassPhrase,
-                        ConnectionManager.CryptoSaltValue,
-                        ConnectionManager.CryptoHashAlgorythm,
-                        ConnectionManager.CryptoPasswordIterations,
-                        ConnectionManager.CryptoInitVector,
-                        ConnectionManager.CryptoKeySize);
+                    clientSecret = CryptoManager.Encrypt(secret, EncriptionSettings.CryptoPassPhrase,
+                        EncriptionSettings.CryptoSaltValue,
+                        EncriptionSettings.CryptoHashAlgorythm,
+                        EncriptionSettings.CryptoPasswordIterations,
+                        EncriptionSettings.CryptoInitVector,
+                        EncriptionSettings.CryptoKeySize);
                 }
             }
         }
+
+        public string GetClientSecret(bool isEncrypted = false)
+        {
+            return clientSecret;
+        }
+        public string GetUserPassword(bool isEncrypted = false)
+        {
+            return userPassword;
+        }
+        
 
         public void SetConnectionString(string connectionString)
         {
             var csb = new DbConnectionStringBuilder { ConnectionString = connectionString };
 
+            OriginalUrl = (csb.ContainsKey("ServiceUri") ? csb["ServiceUri"] :
+                csb.ContainsKey("Service Uri") ? csb["Service Uri"] :
+                csb.ContainsKey("Url") ? csb["Url"] :
+                csb.ContainsKey("Server") ? csb["Server"] : "").ToString();
+
+
             if (csb.ContainsKey("Password"))
             {
-                csb["Password"] = CryptoManager.Encrypt(csb["Password"].ToString(), ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
+                csb["Password"] = CryptoManager.Encrypt(csb["Password"].ToString(), EncriptionSettings.CryptoPassPhrase,
+                    EncriptionSettings.CryptoSaltValue,
+                    EncriptionSettings.CryptoHashAlgorythm,
+                    EncriptionSettings.CryptoPasswordIterations,
+                    EncriptionSettings.CryptoInitVector,
+                    EncriptionSettings.CryptoKeySize);
             }
             if (csb.ContainsKey("ClientSecret"))
             {
-                csb["ClientSecret"] = CryptoManager.Encrypt(csb["ClientSecret"].ToString(), ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
+                csb["ClientSecret"] = CryptoManager.Encrypt(csb["ClientSecret"].ToString(), EncriptionSettings.CryptoPassPhrase,
+                    EncriptionSettings.CryptoSaltValue,
+                    EncriptionSettings.CryptoHashAlgorythm,
+                    EncriptionSettings.CryptoPasswordIterations,
+                    EncriptionSettings.CryptoInitVector,
+                    EncriptionSettings.CryptoKeySize);
             }
 
             ConnectionString = csb.ToString();
@@ -487,24 +376,24 @@ namespace McTools.Xrm.Connection
                 }
                 else
                 {
-                    userPassword = CryptoManager.Encrypt(password, ConnectionManager.CryptoPassPhrase,
-                        ConnectionManager.CryptoSaltValue,
-                        ConnectionManager.CryptoHashAlgorythm,
-                        ConnectionManager.CryptoPasswordIterations,
-                        ConnectionManager.CryptoInitVector,
-                        ConnectionManager.CryptoKeySize);
+                    userPassword = CryptoManager.Encrypt(password, EncriptionSettings.CryptoPassPhrase,
+                        EncriptionSettings.CryptoSaltValue,
+                        EncriptionSettings.CryptoHashAlgorythm,
+                        EncriptionSettings.CryptoPasswordIterations,
+                        EncriptionSettings.CryptoInitVector,
+                        EncriptionSettings.CryptoKeySize);
                 }
             }
         }
 
         public string GetPassword(string password)
         {
-            return CryptoManager.Decrypt(password, ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
+            return CryptoManager.Decrypt(password, EncriptionSettings.CryptoPassPhrase,
+                    EncriptionSettings.CryptoSaltValue,
+                    EncriptionSettings.CryptoHashAlgorythm,
+                    EncriptionSettings.CryptoPasswordIterations,
+                    EncriptionSettings.CryptoInitVector,
+                    EncriptionSettings.CryptoKeySize);
         }
 
         /// <summary>
@@ -513,7 +402,7 @@ namespace McTools.Xrm.Connection
         /// <returns>Nom de la connexion</returns>
         public override string ToString()
         {
-            return ConnectionName;
+            return string.IsNullOrEmpty(ConnectionName) ? "Connection name not set" : ConnectionName;
         }
 
         public bool TryRequestClientSecret(Control parent, string secretUsageDescription, out string secret, out SensitiveDataNotFoundReason notFoundReason)
@@ -528,12 +417,12 @@ namespace McTools.Xrm.Connection
                     return false;
                 }
 
-                secret = CryptoManager.Decrypt(clientSecret, ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
+                secret = CryptoManager.Decrypt(clientSecret, EncriptionSettings.CryptoPassPhrase,
+                    EncriptionSettings.CryptoSaltValue,
+                    EncriptionSettings.CryptoHashAlgorythm,
+                    EncriptionSettings.CryptoPasswordIterations,
+                    EncriptionSettings.CryptoInitVector,
+                    EncriptionSettings.CryptoKeySize);
 
                 notFoundReason = SensitiveDataNotFoundReason.None;
                 return true;
@@ -556,12 +445,12 @@ namespace McTools.Xrm.Connection
                     return false;
                 }
 
-                password = CryptoManager.Decrypt(userPassword, ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
+                password = CryptoManager.Decrypt(userPassword, EncriptionSettings.CryptoPassPhrase,
+                    EncriptionSettings.CryptoSaltValue,
+                    EncriptionSettings.CryptoHashAlgorythm,
+                    EncriptionSettings.CryptoPasswordIterations,
+                    EncriptionSettings.CryptoInitVector,
+                    EncriptionSettings.CryptoKeySize);
 
                 notFoundReason = SensitiveDataNotFoundReason.None;
                 return true;
@@ -598,183 +487,9 @@ namespace McTools.Xrm.Connection
             EnvironmentTextColor = editedConnection.EnvironmentTextColor;
         }
 
-        private void ConnectIfd()
-        {
-            AuthType = AuthenticationProviderType.Federation;
+        
 
-            if (!IsCustomAuth)
-            {
-                crmSvc = new CrmServiceClient(CredentialCache.DefaultNetworkCredentials,
-                    AuthenticationType.IFD,
-                    ServerName,
-                    ServerPort.ToString(),
-                    OrganizationUrlName,
-                    true,
-                    UseSsl);
-            }
-            else
-            {
-                var password = CryptoManager.Decrypt(userPassword, ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
-
-                crmSvc = new CrmServiceClient(UserName, CrmServiceClient.MakeSecureString(password), UserDomain,
-                    HomeRealmUrl,
-                    ServerName,
-                    ServerPort.ToString(),
-                    OrganizationUrlName,
-                    true,
-                    UseSsl);
-            }
-        }
-
-        private void ConnectOAuth()
-        {
-            if (!string.IsNullOrEmpty(RefreshToken))
-            {
-                CrmServiceClient.AuthOverrideHook = new RefreshTokenAuthOverride(this);
-                crmSvc = new CrmServiceClient(new Uri($"https://{ServerName}:{ServerPort}"), true);
-                CrmServiceClient.AuthOverrideHook = null;
-            }
-            else
-            {
-                var secret = CryptoManager.Decrypt(clientSecret, ConnectionManager.CryptoPassPhrase,
-                     ConnectionManager.CryptoSaltValue,
-                     ConnectionManager.CryptoHashAlgorythm,
-                     ConnectionManager.CryptoPasswordIterations,
-                     ConnectionManager.CryptoInitVector,
-                     ConnectionManager.CryptoKeySize);
-
-                var path = Path.Combine(Path.GetTempPath(), ConnectionId.Value.ToString("B"), "oauth-cache.txt");
-                crmSvc = new CrmServiceClient(new Uri($"https://{ServerName}:{ServerPort}"), AzureAdAppId.ToString(), CrmServiceClient.MakeSecureString(secret), true, path);
-            }
-        }
-
-        private void ConnectOnline()
-        {
-            AuthType = AuthenticationProviderType.OnlineFederation;
-
-            if (string.IsNullOrEmpty(userPassword))
-            {
-                throw new Exception("Unable to read user password");
-            }
-
-            var password = CryptoManager.Decrypt(userPassword, ConnectionManager.CryptoPassPhrase,
-                 ConnectionManager.CryptoSaltValue,
-                 ConnectionManager.CryptoHashAlgorythm,
-                 ConnectionManager.CryptoPasswordIterations,
-                 ConnectionManager.CryptoInitVector,
-                 ConnectionManager.CryptoKeySize);
-
-            Utilities.GetOrgnameAndOnlineRegionFromServiceUri(new Uri(OriginalUrl), out var region, out var orgName, out _);
-
-            if (UseMfa)
-            {
-                var path = Path.Combine(Path.GetTempPath(), ConnectionId.Value.ToString("B"), "oauth-cache.txt");
-
-                crmSvc = new CrmServiceClient(UserName, CrmServiceClient.MakeSecureString(password),
-                    region,
-                    orgName,
-                    false,
-                    null,
-                    null,
-                    AzureAdAppId.ToString(),
-                    new Uri(ReplyUrl),
-                    path,
-                    null, Microsoft.IdentityModel.Clients.ActiveDirectory.PromptBehavior.Auto, false);
-            }
-            else
-            {
-                crmSvc = new CrmServiceClient(UserName, CrmServiceClient.MakeSecureString(password),
-                    region,
-                    orgName,
-                    true,
-                    true,
-                    null,
-                    true);
-            }
-        }
-
-        private void ConnectOnprem()
-        {
-            AuthType = AuthenticationProviderType.ActiveDirectory;
-
-            NetworkCredential credential;
-            if (!IsCustomAuth)
-            {
-                credential = CredentialCache.DefaultNetworkCredentials;
-            }
-            else
-            {
-                var password = CryptoManager.Decrypt(userPassword, ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
-
-                credential = new NetworkCredential(UserName, password, UserDomain);
-            }
-
-            crmSvc = new CrmServiceClient(credential,
-                AuthenticationType.AD,
-                ServerName,
-                ServerPort.ToString(),
-                OrganizationUrlName,
-                true,
-                UseSsl);
-        }
-
-        private string HandleConnectionString(string connectionString)
-        {
-            var csb = new DbConnectionStringBuilder { ConnectionString = connectionString };
-            if (csb.ContainsKey("timeout"))
-            {
-                var csTimeout = TimeSpan.Parse(csb["timeout"].ToString());
-                csb.Remove("timeout");
-                CrmServiceClient.MaxConnectionTimeout = csTimeout;
-            }
-
-            OriginalUrl = csb["Url"].ToString();
-            UserName = csb.ContainsKey("username") ? csb["username"].ToString() :
-                csb.ContainsKey("clientid") ? csb["clientid"].ToString() : null;
-
-            if (csb.ContainsKey("Password"))
-            {
-                csb["Password"] = CryptoManager.Decrypt(csb["Password"].ToString(), ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
-            }
-            if (csb.ContainsKey("ClientSecret"))
-            {
-                csb["ClientSecret"] = CryptoManager.Decrypt(csb["ClientSecret"].ToString(), ConnectionManager.CryptoPassPhrase,
-                    ConnectionManager.CryptoSaltValue,
-                    ConnectionManager.CryptoHashAlgorythm,
-                    ConnectionManager.CryptoPasswordIterations,
-                    ConnectionManager.CryptoInitVector,
-                    ConnectionManager.CryptoKeySize);
-            }
-
-            var cs = csb.ToString();
-
-            if (cs.IndexOf("RequireNewInstance=", StringComparison.Ordinal) < 0)
-            {
-                if (!cs.EndsWith(";"))
-                {
-                    cs += ";";
-                }
-
-                cs += "RequireNewInstance=True;";
-            }
-
-            return cs;
-        }
+        
 
         #endregion Méthodes
 
@@ -868,21 +583,36 @@ namespace McTools.Xrm.Connection
                 return csb.ToString();
             }
 
-            if (!string.IsNullOrEmpty(UserDomain))
-                csb["Domain"] = UserDomain;
-            csb["Username"] = UserName;
-            csb["Password"] = "********";
+            if (!string.IsNullOrEmpty(clientSecret))
+            {
+                csb["AuthType"] = "ClientSecret";
+                csb["ClientId"] = AzureAdAppId.ToString("B");
+                csb["ClientSecret"] = "*************";
 
-            if (!string.IsNullOrEmpty(HomeRealmUrl))
-                csb["HomeRealmUri"] = HomeRealmUrl;
+                return csb.ToString();
+            }
 
             if (UseMfa)
             {
+                csb["Username"] = UserName;
                 csb["AuthType"] = "OAuth";
                 csb["ClientId"] = AzureAdAppId.ToString("B");
                 csb["LoginPrompt"] = "Auto";
                 csb["RedirectUri"] = ReplyUrl;
                 csb["TokenCacheStorePath"] = Path.Combine(Path.GetTempPath(), ConnectionId.Value.ToString("B"), "oauth-cache.txt");
+                return csb.ToString();
+            }
+
+            if (!string.IsNullOrEmpty(UserDomain))
+            {
+                csb["Domain"] = UserDomain;
+                csb["Username"] = UserName;
+                csb["Password"] = "********";
+            }
+
+            if (!string.IsNullOrEmpty(HomeRealmUrl))
+            {
+                csb["HomeRealmUri"] = HomeRealmUrl;
             }
 
             return csb.ToString();
@@ -911,6 +641,7 @@ namespace McTools.Xrm.Connection
                 || originalDetail.UserDomain?.ToLower() != UserDomain?.ToLower()
                 || originalDetail.UserName?.ToLower() != UserName?.ToLower()
                 || SavePassword && !string.IsNullOrEmpty(userPassword) && originalDetail.userPassword != userPassword
+                || SavePassword && !string.IsNullOrEmpty(clientSecret) && originalDetail.clientSecret != clientSecret
                 || originalDetail.Certificate.Thumbprint != Certificate.Thumbprint)
             {
                 return true;
@@ -938,7 +669,7 @@ namespace McTools.Xrm.Connection
 
     public class EnvironmentHighlighting
     {
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public Color? Color { get; set; }
 
         [XmlElement("Color")]
@@ -950,7 +681,7 @@ namespace McTools.Xrm.Connection
 
         public string Text { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore] [IgnoreDataMember]
         public Color? TextColor { get; set; }
 
         [XmlElement("TextColor")]

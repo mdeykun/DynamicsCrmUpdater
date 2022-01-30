@@ -37,10 +37,10 @@ Connections created with this wizard cannot be transported across multiple compu
             {
                 Type = ConnectionType.Wizard;
             }
-            else if (sender == btnSdkLoginControl)
-            {
-                Type = ConnectionType.Sdk;
-            }
+            //else if (sender == btnSdkLoginControl)
+            //{
+            //    Type = ConnectionType.Sdk;
+            //}
             else if (sender == btnCertificate)
             {
                 Type = ConnectionType.Certificate;

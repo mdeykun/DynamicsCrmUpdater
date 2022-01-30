@@ -3,11 +3,10 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 using CrmWebResourcesUpdater.Common;
-using CrmWebResourcesUpdater.Services.Helpers;
 using McTools.Xrm.Connection.WinForms;
 using McTools.Xrm.Connection;
 using System.Collections.Generic;
-using CrmWebResourcesUpdater.Services;
+using CrmWebResourcesUpdater.Common.Services;
 
 namespace CrmWebResourcesUpdater
 {
@@ -51,30 +50,39 @@ namespace CrmWebResourcesUpdater
         /// <param name="e">Event args.</param>
         public override async void MenuItemCallback(object sender, EventArgs e)
         {
-            try { 
-            var settings = await SettingsService.Instance.GetSettingsAsync();
-            if (settings.SelectedConnection == null)
-            {
-                if (projectHelper.ShowErrorDialog() == DialogResult.Yes)
+            try
+            { 
+                var settings = await SettingsService.Instance.GetSettingsAsync();
+                if (settings.SelectedConnection == null)
                 {
-                    var result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Update);
-                    if (result != DialogResult.Yes)
+                    if (projectHelper.ShowErrorDialog() == DialogResult.Yes)
+                    {
+                        var result = await PublishService.Instance.ShowConfigurationDialogAsync(ConfigurationMode.Update);
+                        if (result != DialogResult.Yes)
+                        {
+                            return;
+                        }
+                    }
+                    else
                     {
                         return;
                     }
                 }
-                else
+                if (settings.SelectedConnection == null)
                 {
+                    Logger.WriteLine("Error: Connection is not selected");
                     return;
                 }
-            }
-            if (settings.SelectedConnection == null)
-            {
-                Logger.WriteLine("Error: Connection is not selected");
-                return;
-            }
+                if (settings.SelectedConnection.PasswordIsEmpty)
+                {
+                    var result = await PublishService.Instance.ShowUpdatePasswordDialogAsync();
+                    if (result != DialogResult.OK)
+                    {
+                        return;
+                    }
+                }
 
-            await PublishService.Instance.PublishWebResourcesAsync(false);
+                await PublishService.Instance.PublishWebResourcesAsync(false);
             }
             catch (Exception ex)
             {
