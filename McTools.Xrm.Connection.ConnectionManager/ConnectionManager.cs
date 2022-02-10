@@ -87,7 +87,7 @@ namespace McTools.Xrm.Connection
 
         public event ConnectionListUpdatedEventHandler ConnectionListUpdated;
 
-        public event ConnectionSucceedEventHandler ConnectionSucceed;
+        //public event ConnectionSucceedEventHandler ConnectionSucceed;
 
         //public event RequestPasswordEventHandler RequestPassword;
 

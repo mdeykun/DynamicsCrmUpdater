@@ -435,42 +435,42 @@ namespace CrmWebResourcesUpdater.Service
 
         public async Task<UpdaterServiceResponse<ConnectionResult>> ValidateConnectionAsync(ConnectionDetail connectionDetail)
         {
-            return await Task.Factory.StartNew(() => ValidateConnection(connectionDetail));
+            return await Task.Factory.StartNew(() => ValidateConnection(connectionDetail), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
         public async Task<UpdaterServiceResponse<bool>> UploadWebresourceAsync(ConnectionDetail connectionDetail, WebResource webResource)
         {
-            return await Task.Factory.StartNew(() => UploadWebresource(connectionDetail, webResource));
+            return await Task.Factory.StartNew(() => UploadWebresource(connectionDetail, webResource), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
         public async Task<UpdaterServiceResponse<bool>> CreateWebresourceAsync(ConnectionDetail connectionDetail, WebResource webResource, string solution)
         {
-            return await Task.Factory.StartNew(() => CreateWebresource(connectionDetail, webResource, solution));
+            return await Task.Factory.StartNew(() => CreateWebresource(connectionDetail, webResource, solution), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
         public async Task<UpdaterServiceResponse<List<SolutionDetail>>> GetSolutionsListAsync(ConnectionDetail connectionDetail)
         {
-            return await Task.Factory.StartNew(() => GetSolutionsList(connectionDetail));
+            return await Task.Factory.StartNew(() => GetSolutionsList(connectionDetail), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
         public async Task<UpdaterServiceResponse<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(ConnectionDetail connectionDetail, List<string> webResourceNames)
         {
-            return await Task.Factory.StartNew(() => RetrieveWebResources(connectionDetail, webResourceNames));
+            return await Task.Factory.StartNew(() => RetrieveWebResources(connectionDetail, webResourceNames), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
         public async Task<UpdaterServiceResponse<bool>> PublishWebResourcesAsync(ConnectionDetail connectionDetail, IEnumerable<Guid> webResourcesIds)
         {
-            return await Task.Factory.StartNew(() => PublishWebResources(connectionDetail, webResourcesIds));
+            return await Task.Factory.StartNew(() => PublishWebResources(connectionDetail, webResourcesIds), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
         public async Task<UpdaterServiceResponse<SolutionDetail>> RetrieveSolutionAsync(ConnectionDetail connectionDetail, Guid solutionId)
         {
-            return await Task.Factory.StartNew(() => RetrieveSolution(connectionDetail, solutionId));
+            return await Task.Factory.StartNew(() => RetrieveSolution(connectionDetail, solutionId), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
 
         public async Task<UpdaterServiceResponse<bool>> IsWebResourceExistsAsync(ConnectionDetail connectionDetail, string webResourceName)
         {
-            return await Task.Factory.StartNew(() => IsWebResourceExists(connectionDetail, webResourceName));
+            return await Task.Factory.StartNew(() => IsWebResourceExists(connectionDetail, webResourceName), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
     }
 }

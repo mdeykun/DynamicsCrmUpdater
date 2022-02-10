@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Task = System.Threading.Tasks.Task;
 
 namespace CrmWebResourcesUpdater.Common.Helpers
 {
@@ -18,11 +19,11 @@ namespace CrmWebResourcesUpdater.Common.Helpers
         {
             this.projectHelper = new ProjectHelper(asyncPackage);
         }
-        public Dictionary<string, string> LoadMappings(Project project)
+        public async Task<Dictionary<string, string>> LoadMappingsAsync(Project project)
         {
-            var projectRootPath = projectHelper.GetProjectRoot(project);
-            var projectFiles = projectHelper.GetProjectFiles(project);
-            var mappingFilePath = this.GetMappingFilePath(project);
+            var projectRootPath = await projectHelper.GetProjectRootAsync(project);
+            var projectFiles = await projectHelper.GetProjectFilesAsync(project);
+            var mappingFilePath = await this.GetMappingFilePathAsync(project);
             if (mappingFilePath == null)
             {
                 return null;
@@ -68,15 +69,15 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             return mappingList;
         }
 
-        public void CreateMapping(Project project, string filePath, string webresourceName)
+        public async Task CreateMappingAsync(Project project, string filePath, string webresourceName)
         {
-            var mappingFilePath = this.GetMappingFilePath(project);
+            var mappingFilePath = await this.GetMappingFilePathAsync(project);
             if (mappingFilePath == null)
             {
-                mappingFilePath = this.CreateMappingFile(project);
+                mappingFilePath = await this.CreateMappingFileAsync(project);
             }
 
-            var projectRootPath = projectHelper.GetProjectRoot(project) + "\\";
+            var projectRootPath = await projectHelper.GetProjectRootAsync(project) + "\\";
             var scriptShortPath = filePath.Replace(projectRootPath, "");
 
             XDocument doc = XDocument.Load(mappingFilePath);
@@ -87,9 +88,9 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             doc.Save(mappingFilePath);
         }
 
-        public bool IsMappingFileReadOnly(Project project)
+        public async Task<bool> IsMappingFileReadOnlyAsync(Project project)
         {
-            var path = GetMappingFilePath(project);
+            var path = await GetMappingFilePathAsync(project);
             if(path == null)
             {
                 return false;
@@ -112,26 +113,27 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             {
                 return false;
             }
-            if(MappingAlreadyExists(project, webresourceName))
+            if(await MappingAlreadyExistsAsync(project, webresourceName))
             {
                 return false;
             }
             return true;
         }
 
-        private bool MappingAlreadyExists(Project project, string webresourceName)
+        private async Task<bool> MappingAlreadyExistsAsync(Project project, string webresourceName)
         {
-            var mappings = LoadMappings(project);
+            var mappings = await LoadMappingsAsync(project);
             return mappings.Any(x => x.Value == webresourceName);
         }
 
-        public string CreateMappingFile(Project project)
+        public async Task<string> CreateMappingFileAsync(Project project)
         {
-            var projectPath = projectHelper.GetProjectRoot(project);
+            var projectPath = await projectHelper.GetProjectRootAsync(project);
             var filePath = projectPath + "\\UploaderMapping.config";
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             if (File.Exists(filePath))
             {
-                var path = GetMappingFilePath(project);
+                var path = GetMappingFilePathAsync(project);
                 if (path == null)
                 {
                     project.ProjectItems.AddFromFile(filePath);
@@ -139,23 +141,24 @@ namespace CrmWebResourcesUpdater.Common.Helpers
                 return filePath;
             }
             var writer = File.CreateText(projectPath + "\\UploaderMapping.config");
-            writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\" ?>");
-            writer.WriteLine("<Mappings  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"	xsi:noNamespaceSchemaLocation=\"http://exitoconsulting.ru/schema/CrmWebResourcesUpdater/MappingSchema.xsd\">");
-            writer.WriteLine("<!--");
-            writer.WriteLine("EXAMPLES OF MAPPINGS:");
-            writer.WriteLine("<Mapping localPath=\"scripts\\contact.js\" webResourceName=\"new_contact\"/>");
-            writer.WriteLine("<Mapping localPath=\"account.js\" webResourceName=\"new_account\"/>");
-            writer.WriteLine("-->");
-            writer.WriteLine("</Mappings>");
-            writer.Flush();
+            await writer.WriteLineAsync("<?xml version=\"1.0\" encoding=\"utf-8\" ?>");
+            await writer.WriteLineAsync("<Mappings  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"	xsi:noNamespaceSchemaLocation=\"http://exitoconsulting.ru/schema/CrmWebResourcesUpdater/MappingSchema.xsd\">");
+            await writer.WriteLineAsync("<!--");
+            await writer.WriteLineAsync("EXAMPLES OF MAPPINGS:");
+            await writer.WriteLineAsync("<Mapping localPath=\"scripts\\contact.js\" webResourceName=\"new_contact\"/>");
+            await writer.WriteLineAsync("<Mapping localPath=\"account.js\" webResourceName=\"new_account\"/>");
+            await writer.WriteLineAsync("-->");
+            await writer.WriteLineAsync("</Mappings>");
+            await writer.FlushAsync();
             writer.Close();
             project.ProjectItems.AddFromFile(filePath);
             return filePath;
         }
 
-        public string GetMappingFilePath(Project project)
+        public async Task<string> GetMappingFilePathAsync(Project project)
         {
-            var projectFiles = projectHelper.GetProjectFiles(project.ProjectItems);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var projectFiles = await projectHelper.GetProjectFilesAsync(project.ProjectItems);
             if (projectFiles == null || projectFiles.Count == 0)
             {
                 return null;

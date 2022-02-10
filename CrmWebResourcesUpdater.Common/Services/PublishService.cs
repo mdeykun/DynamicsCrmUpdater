@@ -13,6 +13,7 @@ using CrmWebResourcesUpdater.DataModel;
 using CrmWebResourcesUpdater.Service.Client;
 using McTools.Xrm.Connection;
 using McTools.Xrm.Connection.WinForms;
+using Task = System.Threading.Tasks.Task;
 
 namespace CrmWebResourcesUpdater.Common.Services
 {
@@ -213,8 +214,8 @@ namespace CrmWebResourcesUpdater.Common.Services
             var ids = new Dictionary<Guid, string>();
 
             var project = await projectHelper.GetSelectedProjectAsync();
-            var projectRootPath = projectHelper.GetProjectRoot(project);
-            var mappings = mappingHelper.LoadMappings(project);
+            var projectRootPath = await projectHelper.GetProjectRootAsync(project);
+            var mappings = await mappingHelper.LoadMappingsAsync(project);
 
             var filters = new List<string>();
             foreach (var filePath in selectedFiles)
@@ -301,7 +302,7 @@ namespace CrmWebResourcesUpdater.Common.Services
             await Logger.WriteLineAsync("Uploading " + webResourceName, connections.ExtendedLog);
 
             var project = await projectHelper.GetSelectedProjectAsync();
-            var projectRootPath = projectHelper.GetProjectRoot(project);
+            var projectRootPath = await projectHelper.GetProjectRootAsync(project);
 
             var localContent = FileHelper.GetEncodedFileContent(filePath);
             var remoteContent = webResource.Content;
@@ -406,7 +407,7 @@ namespace CrmWebResourcesUpdater.Common.Services
                 }
                 
             }
-            OpenCreateWebResourceFormAsync();
+            await OpenCreateWebResourceFormAsync();
         }
 
         public void TestDialog()
@@ -415,7 +416,7 @@ namespace CrmWebResourcesUpdater.Common.Services
             //(new TestForm()).Show();
         }
 
-        private async void OpenCreateWebResourceFormAsync()
+        private async Task OpenCreateWebResourceFormAsync()
         {
             var settings = await SettingsService.Instance.GetSettingsAsync();
             var project = await projectHelper.GetSelectedProjectAsync();
@@ -447,11 +448,11 @@ namespace CrmWebResourcesUpdater.Common.Services
 
                 try
                 {
-                    Cursor.Current = Cursors.Arrow;
                     var isMappingRequired = await mappingHelper.IsMappingRequiredAsync(project, path, webresourceName);
-                    var isMappingFileReadOnly = mappingHelper.IsMappingFileReadOnly(project);
+                    var isMappingFileReadOnly = await mappingHelper.IsMappingFileReadOnlyAsync(project);
                     if (isMappingRequired && isMappingFileReadOnly)
                     {
+                        Cursor.Current = Cursors.Arrow;
                         var message = "Mapping record can't be created. File \"UploaderMapping.config\" is read-only. Do you want to proceed? \r\n\r\n" +
                                         "Schema name of the web resource you are creating is differ from the file name. " +
                                         "Because of that new mapping record has to be created in the file \"UploaderMapping.config\". " +
@@ -463,9 +464,10 @@ namespace CrmWebResourcesUpdater.Common.Services
                             return;
                         }
                     }
+                    Cursor.Current = Cursors.WaitCursor;
                     if (isMappingRequired && !isMappingFileReadOnly)
                     {
-                        mappingHelper.CreateMapping(project, path, webresourceName);
+                        await mappingHelper.CreateMappingAsync(project, path, webresourceName);
                     }
                     //TODO: Check solution name
                     this.CreateWebResource(connectionDetail, webResource, settings.SelectedConnection.SelectedSolution.UniqueName);
@@ -555,8 +557,8 @@ namespace CrmWebResourcesUpdater.Common.Services
             var project = await projectHelper.GetSelectedProjectAsync();
             var crmConnections = settings.CrmConnections == null ? new CrmConnections() { Connections = new List<ConnectionDetail>() } : settings.CrmConnections;
             var selector = new ConnectionSelector(crmConnections, settings.SelectedConnection, false, mode == ConfigurationMode.Update);
-            selector.OnCreateMappingFile = () => {
-                mappingHelper.CreateMappingFile(project);
+            selector.OnCreateMappingFile = async () => {
+                await mappingHelper.CreateMappingFileAsync(project);
                 MessageBox.Show("UploaderMapping.config successfully created", "Microsoft Dynamics CRM Web Resources Updater", MessageBoxButtons.OK, MessageBoxIcon.Information);
             };
             selector.ShowDialog();

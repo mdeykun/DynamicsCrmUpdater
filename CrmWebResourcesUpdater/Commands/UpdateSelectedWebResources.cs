@@ -76,7 +76,7 @@ namespace CrmWebResourcesUpdater
                 }
                 if (settings.SelectedConnection == null)
                 {
-                    Logger.WriteLine("Error: Connection is not selected");
+                    await Logger.WriteLineAsync("Error: Connection is not selected");
                     return;
                 }
                 if (settings.SelectedConnection.UseConnectionString == false)
@@ -106,7 +106,7 @@ namespace CrmWebResourcesUpdater
             }
             catch (Exception ex)
             {
-                Logger.Write("An error occured: " + ex.Message + "\r\n" + ex.StackTrace);
+                await Logger.WriteAsync("An error occured: " + ex.Message + "\r\n" + ex.StackTrace);
             }
         }
     }

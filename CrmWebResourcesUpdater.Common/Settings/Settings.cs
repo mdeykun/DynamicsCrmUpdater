@@ -146,7 +146,7 @@ namespace CrmWebResourcesUpdater
                     _settingsStore.SetString(CollectionPath, ConnectionsPropertyName, connectionsXml);
                     _settingsStore.SetString(CollectionPath, SettingsVersionPropertyName, CurrentConfigurationVersion);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     try
                     {

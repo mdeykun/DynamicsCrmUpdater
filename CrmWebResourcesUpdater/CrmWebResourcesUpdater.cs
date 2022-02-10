@@ -22,12 +22,13 @@ namespace CrmWebResourcesUpdater
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
+    [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
     [Guid(ProjectGuids.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class CrmWebResourcesUpdater : AsyncPackage
     {
-        private DteInitializer dteInitializer;
-        private ProjectHelper projectHelper;
+        //private DteInitializer dteInitializer;
+        //private ProjectHelper projectHelper;
         private WatchdogService watchdogService;
         private static readonly string assemblyPath = System.IO.Path.GetDirectoryName(typeof(CrmWebResourcesUpdater).Assembly.Location);
 
@@ -67,18 +68,17 @@ namespace CrmWebResourcesUpdater
         {
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             await base.InitializeAsync(cancellationToken, progress);
-            await Logger.InitializeAsync(this);
-
             SettingsService.Initialize(this);
             PublishService.Initialize(this);
+            await Logger.InitializeAsync(this);
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            await InitializeDTE(cancellationToken);
+            await InitializeDTEAsync(cancellationToken);
         }
 
-        private async Task InitializeDTE(CancellationToken cancellationToken)
+        private async Task InitializeDTEAsync(CancellationToken cancellationToken)
         {
-            var dteObj = await this.GetServiceAsync(typeof(EnvDTE.DTE));
+            var dteObj = (EnvDTE80.DTE2) await this.GetServiceAsync(typeof(EnvDTE.DTE));
             var settings = await SettingsService.Instance.GetSettingsAsync();
 
             var extendedLog = false;
@@ -89,7 +89,7 @@ namespace CrmWebResourcesUpdater
 
             if (dteObj == null) // The IDE is not yet fully initialized
             {
-                Logger.WriteLine("Warning: DTE service is null. Seems that VisualStudio is not fully initialized.", extendedLog);
+                await Logger.WriteLineAsync("Warning: DTE service is null. Seems that VisualStudio is not fully initialized.", extendedLog);
                 //Logger.WriteLine("Waiting for DTE.", extendedLog);
                 //var shellService = await this.GetServiceAsync(typeof(SVsShell)) as IVsShell;
                 //this.dteInitializer = new DteInitializer(shellService, this.InitializeDTE);
@@ -98,22 +98,34 @@ namespace CrmWebResourcesUpdater
             {
                 try
                 {
-                    Logger.WriteLine("DTE service found.", extendedLog);
+                    await Logger.WriteLineAsync("DTE service found.", extendedLog);
                     UpdateWebResources.Initialize(this);
                     UpdaterOptions.Initialize(this);
                     UpdateSelectedWebResources.Initialize(this);
                     CreateWebResource.Initialize(this);
 
-                    ((EnvDTE.DTE)dteObj).Events.DTEEvents.OnBeginShutdown += () =>
-                    {
-                        watchdogService.Shutdown();
-                    };
+                    await JoinableTaskFactory.SwitchToMainThreadAsync();
+                    //Microsoft.VisualStudio.Shell.Events.SolutionEvents.OnAfterCloseSolution +=
+                    //(object sender, EventArgs args) =>
+
+                    //dteObj.Events.DTEEvents.OnBeginShutdown += 
+                    //() =>
+                    //{
+                    //    watchdogService.Shutdown();
+                    //};
+
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
                 }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            watchdogService.Shutdown();
+            base.Dispose(disposing);
         }
 
         //private void InitializeDTE()

@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace CrmWebResourcesUpdater.Common
 {
@@ -12,22 +13,17 @@ namespace CrmWebResourcesUpdater.Common
         private static AsyncPackage _asyncPackage;
 
         /// <summary>
-        /// Initialize Logger output window
-        /// </summary>
-        public static void Initialize()
-        {
-            _outputWindow = AsyncPackage.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-            var windowGuid = new Guid(ProjectGuids.OutputWindowGuidString);
-            var windowTitle = "Crm Publisher";
-            _outputWindow.CreatePane(ref windowGuid, windowTitle, 1, 1);
-        }
-
-        /// <summary>
         /// Initialize Logger output window async
         /// </summary>
         public static async System.Threading.Tasks.Task InitializeAsync(AsyncPackage package)
         {
-            _outputWindow = await package.GetServiceAsync(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+             var svsOutputWindow = await package.GetServiceAsync(typeof(SVsOutputWindow));
+            if (svsOutputWindow == null)
+            {
+                throw new InvalidOperationException("Failed to initialize output window");
+            }
+            _outputWindow = svsOutputWindow as IVsOutputWindow;
             var windowGuid = new Guid(ProjectGuids.OutputWindowGuidString);
             var windowTitle = "Crm Publisher";
             _asyncPackage = package;
@@ -37,6 +33,7 @@ namespace CrmWebResourcesUpdater.Common
 
         public static async System.Threading.Tasks.Task ClearAsync()
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             _outputWindowPane.Clear();
         }
 
@@ -57,8 +54,9 @@ namespace CrmWebResourcesUpdater.Common
         /// Writes message to output window
         /// </summary>
         /// <param name="message">Text message to write</param>
-        public static async System.Threading.Tasks.Task WriteAsync(string message)
+        public static async Task WriteAsync(string message)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             _outputWindowPane.Activate();
             _outputWindowPane.OutputStringThreadSafe(message);
 
@@ -67,14 +65,6 @@ namespace CrmWebResourcesUpdater.Common
         public static async System.Threading.Tasks.Task WriteLineWithTimeAsync(string message, bool print = true)
         {
             await WriteLineAsync(DateTime.Now.ToString("HH:mm") + ": " + message, print);
-        }
-
-        public static void Clear()
-        {
-            var windowGuid = new Guid(ProjectGuids.OutputWindowGuidString);
-            IVsOutputWindowPane pane;
-            _outputWindow.GetPane(ref windowGuid, out pane);
-            pane.Clear();
         }
 
         /// <summary>
@@ -101,11 +91,6 @@ namespace CrmWebResourcesUpdater.Common
             _outputWindow.GetPane(ref windowGuid, out pane);
             pane.Activate();
             pane.OutputString(message);
-        }
-
-        public static void WriteLineWithTime(string message, bool print = true)
-        {
-            WriteLine(DateTime.Now.ToString("HH:mm") + ": " + message, print);
         }
     }
 }

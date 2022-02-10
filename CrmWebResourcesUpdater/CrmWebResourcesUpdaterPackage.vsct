@@ -80,11 +80,13 @@
       </Button>
     </Buttons>
 
+    
     <Bitmaps>
       <Bitmap guid="guidUpdateImage" href="Resources\Upload.png" usedList="uploadButtonImage" />
       <Bitmap guid="guidOptionsImage" href="Resources\Options.png" usedList="optionsButtonImage" />
       <Bitmap guid="guidCreateImage" href="Resources\Create.png" usedList="createButtonImage" />
     </Bitmaps>
+    
   </Commands>
   <!--
   <KeyBindings>

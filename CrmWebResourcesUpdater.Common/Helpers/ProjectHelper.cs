@@ -29,8 +29,9 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             _joinableTaskFactory =  joinableTaskFactory;
         }
 
-        public string GetProjectRoot(Project project)
+        public async Task<string> GetProjectRootAsync(Project project)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             return Path.GetDirectoryName(project.FullName).ToLower();
         }
 
@@ -70,7 +71,13 @@ namespace CrmWebResourcesUpdater.Common.Helpers
         {
             Guid projectGuid = Guid.Empty;
             IVsHierarchy hierarchy;
-            IVsSolution solution = await _serviceProvider.GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
+            var svsSolution = await _serviceProvider.GetServiceAsync(typeof(SVsSolution));
+            if(svsSolution == null)
+            {
+                throw new InvalidOperationException("Failed to load project guid");
+            }
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var solution = svsSolution as IVsSolution;
             solution.GetProjectOfUniqueName(project.FullName, out hierarchy);
             if (hierarchy != null)
             {
@@ -90,9 +97,10 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             var dte = await _serviceProvider.GetServiceAsync(typeof(DTE)) as EnvDTE80.DTE2;
             if (dte == null)
             {
-                Logger.WriteLine("Failed to get DTE service.");
+                await Logger.WriteLineAsync("Failed to get DTE service.");
                 throw new Exception("Failed to get DTE service.");
             }
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             UIHierarchyItem uiHierarchyItem = Enumerable.FirstOrDefault<UIHierarchyItem>(Enumerable.OfType<UIHierarchyItem>((IEnumerable)(object[])dte.ToolWindows.SolutionExplorer.SelectedItems));
             var project = uiHierarchyItem.Object as Project;
             if (project != null)
@@ -117,7 +125,14 @@ namespace CrmWebResourcesUpdater.Common.Helpers
 
         public async System.Threading.Tasks.Task SetStatusBarAsync(string message, object icon = null)
         {
-            var statusBar = await _serviceProvider.GetServiceAsync(typeof(SVsStatusbar)) as IVsStatusbar;
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var svsStatusbar = await _serviceProvider.GetServiceAsync(typeof(SVsStatusbar));
+            if(svsStatusbar == null)
+            {
+                await Logger.WriteLineAsync("Failed to access status bar");
+                return;
+            }
+            var statusBar = svsStatusbar as IVsStatusbar;
             int frozen;
             statusBar.IsFrozen(out frozen);
             if (frozen == 0)
@@ -139,7 +154,7 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             var dte = await _serviceProvider.GetServiceAsync(typeof(DTE)) as EnvDTE80.DTE2;
             if (dte == null)
             {
-                Logger.WriteLine("Failed to get DTE service.");
+                await Logger.WriteLineAsync("Failed to get DTE service.");
                 throw new Exception("Failed to get DTE service.");
             }
             dte.ExecuteCommand("File.SaveAll");
@@ -154,10 +169,10 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             var dte = await _serviceProvider.GetServiceAsync(typeof(DTE)) as EnvDTE80.DTE2;
             if (dte == null)
             {
-                Logger.WriteLine("Failed to get DTE service.");
+                await Logger.WriteLineAsync("Failed to get DTE service.");
                 throw new Exception("Failed to get DTE service.");
             }
-
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var uiHierarchyItems = Enumerable.OfType<UIHierarchyItem>((IEnumerable)(object[])dte.ToolWindows.SolutionExplorer.SelectedItems);
             var items = new List<ProjectItem>();
             foreach (var uiItem in uiHierarchyItems)
@@ -183,12 +198,14 @@ namespace CrmWebResourcesUpdater.Common.Helpers
         /// Iterates through ProjectItems list and adds files paths to the output list
         /// </summary>
         /// <param name="list">List of project items</param>
-        public List<string> GetProjectFiles(List<ProjectItem> list)
+        public async Task<List<string>> GetProjectFilesAsync(List<ProjectItem> list)
         {
             if(list == null)
             {
                 return null;
             }
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var files = new List<string>();
             foreach (ProjectItem item in list)
@@ -202,7 +219,7 @@ namespace CrmWebResourcesUpdater.Common.Helpers
 
                 if (item.ProjectItems != null)
                 {
-                    var childItems = GetProjectFiles(item.ProjectItems);
+                    var childItems = await GetProjectFilesAsync(item.ProjectItems);
                     files.AddRange(childItems);
                 }
             }
@@ -210,30 +227,31 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             return files;
         }
 
-        public List<string> GetProjectFiles(Project project)
+        public async Task<List<string>> GetProjectFilesAsync(Project project)
         {
-            return GetProjectFiles(project.ProjectItems);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            return await GetProjectFilesAsync(project.ProjectItems);
         }
 
         /// <summary>
         /// Iterates through ProjectItems tree and adds files paths to the list
         /// </summary>
         /// <param name="projectItems">List of project items</param>
-        public List<string> GetProjectFiles(ProjectItems projectItems)
+        public async Task<List<string>> GetProjectFilesAsync(ProjectItems projectItems)
         {
             var list = new List<ProjectItem>();
             foreach (ProjectItem item in projectItems)
             {
                 list.Add(item);
             }
-            var projectFiles = GetProjectFiles(list);
+            var projectFiles = await GetProjectFilesAsync(list);
             return projectFiles;
         }
 
         public async Task<List<string>> GetSelectedFilesAsync()
         {
             var selectedItems = await GetSelectedItemsAsync();
-            return GetProjectFiles(selectedItems);
+            return await GetProjectFilesAsync(selectedItems);
         }
 
         public async Task<string> GetSelectedFilePathAsync()
@@ -251,7 +269,8 @@ namespace CrmWebResourcesUpdater.Common.Helpers
             {
                 return null;
             }
-            var projectFiles = GetProjectFiles(selectedProject.ProjectItems);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var projectFiles = await GetProjectFilesAsync(selectedProject.ProjectItems);
             return projectFiles;
         }
     }

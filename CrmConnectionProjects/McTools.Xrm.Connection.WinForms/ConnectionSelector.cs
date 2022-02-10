@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -890,7 +891,7 @@ namespace McTools.Xrm.Connection.WinForms
         {
             SelectedConnection = comboBoxSelectedConnection.SelectedItem as ConnectionDetail;
         }
-        public Action OnCreateMappingFile { get; set; }
+        public Func<Task> OnCreateMappingFile { get; set; }
         private void bCreateMappingClick(object sender, EventArgs e)
         {
             OnCreateMappingFile();

@@ -2,6 +2,7 @@
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using CrmWebResourcesUpdater.Common.Helpers;
+using System.Threading.Tasks;
 
 namespace CrmWebResourcesUpdater
 {
@@ -31,6 +32,7 @@ namespace CrmWebResourcesUpdater
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
         /// <param name="commandId">Command ID, not null.</param>
+        /// <param name="commandSets">Command Sets, not null.</param>
         public BaseCommand(AsyncPackage package, int commandId, params Guid[] commandSets)
         {
             if (package == null)

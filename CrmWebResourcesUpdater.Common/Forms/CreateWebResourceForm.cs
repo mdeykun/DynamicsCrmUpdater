@@ -5,6 +5,7 @@ using System.IO;
 using CrmWebResourcesUpdater.Common.Helpers;
 using System.Threading.Tasks;
 using CrmWebResourcesUpdater.DataModel;
+using CrmWebResourcesUpdater.Common;
 
 namespace CrmWebResourcesUpdater.Forms
 {
@@ -27,42 +28,55 @@ namespace CrmWebResourcesUpdater.Forms
 
         private async void bCreateClick(object sender, EventArgs e)
         {
-            var name = tbName.Text;
-            if(String.IsNullOrEmpty(name))
+            try
             {
-                MessageBox.Show("Name can not be empty", "Error",MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                var name = tbName.Text;
+                if (String.IsNullOrEmpty(name))
+                {
+                    MessageBox.Show("Name can not be empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var prefix = tbPrefix.Text;
+                if (String.IsNullOrEmpty(prefix))
+                {
+                    MessageBox.Show("Prefix can not be empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (cbType.SelectedIndex < 0)
+                {
+                    MessageBox.Show("Please select web resource type", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var webresourceName = prefix + "_" + name;
+
+                var webResource = new WebResource()
+                {
+                    Name = webresourceName,
+                    DisplayName = tbDisplayName.Text,
+                    Description = tbDescription.Text,
+                    Content = FileHelper.GetEncodedFileContent(ProjectItemPath),
+                    Type = cbType.SelectedIndex + 1
+                };
+
+                bCreate.Enabled = false;
+                bCancel.Enabled = false;
+                Cursor.Current = Cursors.WaitCursor;
+                await OnCreate(webResource);
+                
             }
-
-            var prefix = tbPrefix.Text;
-            if (String.IsNullOrEmpty(prefix))
+            catch(Exception ex)
             {
-                MessageBox.Show("Prefix can not be empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                await Logger.WriteLineAsync($"Failed to create web resource: {ex}");
             }
-
-            if (cbType.SelectedIndex < 0)
+            finally
             {
-                MessageBox.Show("Please select web resource type", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                Cursor.Current = Cursors.Default;
+                bCreate.Enabled = true;
+                bCancel.Enabled = true;
             }
-
-            var webresourceName = prefix + "_" + name;
-
-            var webResource = new WebResource()
-            {
-                Name = webresourceName,
-                DisplayName = tbDisplayName.Text,
-                Description = tbDescription.Text,
-                Content = FileHelper.GetEncodedFileContent(ProjectItemPath),
-                Type = cbType.SelectedIndex + 1
-            };
-
-            bCreate.Enabled = false;
-            Cursor.Current = Cursors.WaitCursor;
-            await OnCreate(webResource);
-            Cursor.Current = Cursors.Default;
-            bCreate.Enabled = true;
         }
 
 
