@@ -52,6 +52,7 @@
             this.comboBoxSelectedConnection = new System.Windows.Forms.ComboBox();
             this.bPublish = new System.Windows.Forms.Button();
             this.pnlMain = new System.Windows.Forms.Panel();
+            this.button1 = new System.Windows.Forms.Button();
             this.menu.SuspendLayout();
             this.pnlFooter.SuspendLayout();
             this.pnlMain.SuspendLayout();
@@ -149,7 +150,7 @@
             this.tsbUpdateSolution});
             this.menu.Location = new System.Drawing.Point(0, 0);
             this.menu.Name = "menu";
-            this.menu.Padding = new System.Windows.Forms.Padding(0);
+            this.menu.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.menu.Size = new System.Drawing.Size(744, 25);
             this.menu.TabIndex = 1;
             this.menu.Text = "tsMain";
@@ -250,6 +251,7 @@
             // 
             // bCreateMapping
             // 
+            this.bCreateMapping.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.bCreateMapping.Location = new System.Drawing.Point(580, 5);
             this.bCreateMapping.Name = "bCreateMapping";
             this.bCreateMapping.Size = new System.Drawing.Size(156, 23);
@@ -290,12 +292,24 @@
             this.pnlMain.Size = new System.Drawing.Size(744, 251);
             this.pnlMain.TabIndex = 6;
             // 
+            // button1
+            // 
+            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.button1.Location = new System.Drawing.Point(717, 1);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(23, 23);
+            this.button1.TabIndex = 7;
+            this.button1.Text = "?";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // ConnectionSelector
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.bCancel;
             this.ClientSize = new System.Drawing.Size(744, 410);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.pnlMain);
             this.Controls.Add(this.pnlFooter);
             this.Controls.Add(this.menu);
@@ -342,5 +356,6 @@
         private System.Windows.Forms.Button bCreateMapping;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button bPublish;
+        private System.Windows.Forms.Button button1;
     }
 }

@@ -98,6 +98,14 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CrmConnectionProjects\McTools.Xrm.Connection.ConnectionManager\McTools.Xrm.Connection.ConnectionManager.csproj">
+      <Project>{2775bb70-b234-475b-a933-cf671aa3981a}</Project>
+      <Name>McTools.Xrm.Connection.ConnectionManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CrmConnectionProjects\McTools.Xrm.Connection.Utils\McTools.Xrm.Connection.Utils.csproj">
+      <Project>{a02f1db0-45de-496e-874e-02ba7dc0f934}</Project>
+      <Name>McTools.Xrm.Connection.Utils</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CrmConnectionProjects\McTools.Xrm.Connection.WinForms\McTools.Xrm.Connection.WinForms.csproj">
       <Project>{eeb5c09f-cec6-4fb5-87b5-ae61ae89c9eb}</Project>
       <Name>McTools.Xrm.Connection.WinForms</Name>
@@ -134,27 +142,13 @@
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
-    <ProjectReference Include="..\CrmWebResourceUpdater.ServiceConsole\CrmWebResourceUpdater.ServiceConsole.csproj">
-      <Project>{171C66B5-E521-4A0F-B33A-D3F016573BE3}</Project>
-      <Name>CrmWebResourceUpdater.ServiceConsole</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
-    </ProjectReference>
-    <ProjectReference Include="..\CrmWebResourceUpdater.Service\CrmWebResourcesUpdater.Service.csproj">
-      <Project>{501576CB-A73C-4591-BCF5-77B1E7A793B6}</Project>
+    <ProjectReference Include="..\CrmWebResourcesUpdater.Service\CrmWebResourcesUpdater.Service.csproj">
+      <Project>{501576cb-a73c-4591-bcf5-77b1e7a793b6}</Project>
       <Name>CrmWebResourcesUpdater.Service</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
-    <ProjectReference Include="..\McTools.Xrm.Connection.ConnectionManager\McTools.Xrm.Connection.ConnectionManager.csproj">
-      <Project>{2775BB70-B234-475B-A933-CF671AA3981A}</Project>
-      <Name>McTools.Xrm.Connection.ConnectionManager</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
-    </ProjectReference>
-    <ProjectReference Include="..\McTools.Xrm.Connection.Utils\McTools.Xrm.Connection.Utils.csproj">
-      <Project>{A02F1DB0-45DE-496E-874E-02BA7DC0F934}</Project>
-      <Name>McTools.Xrm.Connection.Utils</Name>
+    <ProjectReference Include="..\CrmWebResourceUpdater.ServiceConsole\CrmWebResourcesUpdater.ServiceConsole.csproj">
+      <Project>{171c66b5-e521-4a0f-b33a-d3f016573be3}</Project>
+      <Name>CrmWebResourcesUpdater.ServiceConsole</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>

@@ -8,11 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace CrmWebResourcesUpdater.Forms
+namespace McTools.Xrm.Connection.WinForms
 {
-    public partial class TestForm : Form
+    public partial class AboutForm : Form
     {
-        public TestForm()
+        public AboutForm()
         {
             InitializeComponent();
         }

@@ -13,9 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McTools.Xrm.Connection.WinF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Common", "CrmWebResourcesUpdater.Common\CrmWebResourcesUpdater.Common.csproj", "{22260532-D32B-4762-86D9-6631E6F23FF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Service", "CrmWebResourceUpdater.Service\CrmWebResourcesUpdater.Service.csproj", "{501576CB-A73C-4591-BCF5-77B1E7A793B6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Service", "CrmWebResourcesUpdater.Service\CrmWebResourcesUpdater.Service.csproj", "{501576CB-A73C-4591-BCF5-77B1E7A793B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourceUpdater.ServiceConsole", "CrmWebResourceUpdater.ServiceConsole\CrmWebResourceUpdater.ServiceConsole.csproj", "{171C66B5-E521-4A0F-B33A-D3F016573BE3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.ServiceConsole", "CrmWebResourceUpdater.ServiceConsole\CrmWebResourcesUpdater.ServiceConsole.csproj", "{171C66B5-E521-4A0F-B33A-D3F016573BE3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.DataModels", "CrmWebResourcesUpdater.DataModels\CrmWebResourcesUpdater.DataModels.csproj", "{524CD4FE-3293-4A68-88F1-6C6A62FB112A}"
 EndProject
@@ -25,21 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Serv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrmWebResourcesUpdater.Service.Client", "CrmWebResourcesUpdater.Service.Client\CrmWebResourcesUpdater.Service.Client.csproj", "{6A1F6EAB-03D8-45C5-AA8D-9C53F609639B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McTools.Xrm.Connection.Utils", "McTools.Xrm.Connection.Utils\McTools.Xrm.Connection.Utils.csproj", "{A02F1DB0-45DE-496E-874E-02BA7DC0F934}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McTools.Xrm.Connection.Utils", "CrmConnectionProjects\McTools.Xrm.Connection.Utils\McTools.Xrm.Connection.Utils.csproj", "{A02F1DB0-45DE-496E-874E-02BA7DC0F934}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McTools.Xrm.Connection.ConnectionManager", "McTools.Xrm.Connection.ConnectionManager\McTools.Xrm.Connection.ConnectionManager.csproj", "{2775BB70-B234-475B-A933-CF671AA3981A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedFiles", "SharedFiles", "{5180B185-A3FD-4ED7-958A-5D6857C9D23F}"
-	ProjectSection(SolutionItems) = preProject
-		SharedFiles\Create.png = SharedFiles\Create.png
-		SharedFiles\license.txt = SharedFiles\license.txt
-		SharedFiles\MenuItems.png = SharedFiles\MenuItems.png
-		SharedFiles\Options.png = SharedFiles\Options.png
-		SharedFiles\ReadMe.docx = SharedFiles\ReadMe.docx
-		SharedFiles\UpdaterLogo.ico = SharedFiles\UpdaterLogo.ico
-		SharedFiles\UpdaterLogo.png = SharedFiles\UpdaterLogo.png
-		SharedFiles\Upload.png = SharedFiles\Upload.png
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McTools.Xrm.Connection.ConnectionManager", "CrmConnectionProjects\McTools.Xrm.Connection.ConnectionManager\McTools.Xrm.Connection.ConnectionManager.csproj", "{2775BB70-B234-475B-A933-CF671AA3981A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

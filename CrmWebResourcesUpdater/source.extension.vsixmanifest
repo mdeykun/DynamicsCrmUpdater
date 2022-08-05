@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="MicrosoftDynamicsCrmWebResourcesUpdater - 0.5.1" Version="0.5.87" Language="en-US" Publisher="Marat Deykun" />
+        <Identity Id="MicrosoftDynamicsCrmWebResourcesUpdater - 0.5.1" Version="0.5.89" Language="en-US" Publisher="Marat Deykun" />
         <DisplayName>Microsoft Dynamics 365 CRM Web Resources Updater</DisplayName>
         <Description xml:space="preserve">Microsoft Dynamics 365 CRM Web Resources Updater gives you an easy way to update and publish web resources directly from Visual Studio. Add-on updates only web resources that are differ. So it takes as little time as possible to publish web resources. You can configure add-on to automatically publish just updated web resources.</Description>
         <MoreInfo>https://happycrm.blogspot.ru/p/crm-publisher.html</MoreInfo>
@@ -32,9 +32,9 @@
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="%CurrentProject%.Service" Path="|CrmWebResourcesUpdater.Service|" AssemblyName="|CrmWebResourcesUpdater.Service;AssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="%CurrentProject%.Service.Client" Path="|CrmWebResourcesUpdater.Service.Client|" AssemblyName="|CrmWebResourcesUpdater.Service.Client;AssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="%CurrentProject%.Common" Path="|CrmWebResourcesUpdater.Common|" AssemblyName="|CrmWebResourcesUpdater.Common;AssemblyName|" />
+        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="%CurrentProject%.ServiceConsole" Path="|CrmWebResourcesUpdater.ServiceConsole|" AssemblyName="|CrmWebResourcesUpdater.ServiceConsole;AssemblyName|" />
         <Asset d:Source="Project" Type="Microsoft.VisualStudio.Assembly" d:ProjectName="McTools.Xrm.Connection" Path="|McTools.Xrm.Connection|" AssemblyName="|McTools.Xrm.Connection;AssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="McTools.Xrm.Connection.WinForms" Path="|McTools.Xrm.Connection.WinForms|" AssemblyName="|McTools.Xrm.Connection.WinForms;AssemblyName|" />
-        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="CrmWebResourceUpdater.ServiceConsole" Path="|CrmWebResourceUpdater.ServiceConsole|" AssemblyName="|CrmWebResourceUpdater.ServiceConsole;AssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="McTools.Xrm.Connection.ConnectionManager" Path="|McTools.Xrm.Connection.ConnectionManager|" AssemblyName="|McTools.Xrm.Connection.ConnectionManager;AssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="System.Net.Http.dll" AssemblyName="System.Net.Http, Version=4.1.1.3, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Newtonsoft.Json.dll" AssemblyName="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed" />

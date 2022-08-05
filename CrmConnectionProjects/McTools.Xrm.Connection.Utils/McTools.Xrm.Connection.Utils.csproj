@@ -132,11 +132,11 @@
     <Folder Include="Extensions\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CrmConnectionProjects\McTools.Xrm.Connection\McTools.Xrm.Connection.csproj">
+    <ProjectReference Include="..\McTools.Xrm.Connection\McTools.Xrm.Connection.csproj">
       <Project>{c3824c2c-6e2e-4fde-a2aa-229bbc7c3b1f}</Project>
       <Name>McTools.Xrm.Connection</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CrmWebResourcesUpdater.DataModels\CrmWebResourcesUpdater.DataModels.csproj">
+    <ProjectReference Include="..\..\CrmWebResourcesUpdater.DataModels\CrmWebResourcesUpdater.DataModels.csproj">
       <Project>{524CD4FE-3293-4A68-88F1-6C6A62FB112A}</Project>
       <Name>CrmWebResourcesUpdater.DataModels</Name>
     </ProjectReference>

@@ -4,14 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A70B272B-B402-40E8-A003-8E44D8B8467C}</ProjectGuid>
+    <ProjectGuid>{2775BB70-B234-475B-A933-CF671AA3981A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CrmWebResourcesUpdater.Client</RootNamespace>
-    <AssemblyName>CrmWebResourcesUpdater.Client</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <RootNamespace>McTools.Xrm.Connection.ConnectionManager</RootNamespace>
+    <AssemblyName>McTools.Xrm.Connection.ConnectionManager</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,6 +31,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -41,8 +48,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CrmWebResourcesUpdaterClient.cs" />
+    <Compile Include="ConnectionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\McTools.Xrm.Connection\McTools.Xrm.Connection.csproj">
+      <Project>{C3824C2C-6E2E-4FDE-A2AA-229BBC7C3B1F}</Project>
+      <Name>McTools.Xrm.Connection</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\CrmWebResourcesUpdater.Service.Client\CrmWebResourcesUpdater.Service.Client.csproj">
+      <Project>{6A1F6EAB-03D8-45C5-AA8D-9C53F609639B}</Project>
+      <Name>CrmWebResourcesUpdater.Service.Client</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="key.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

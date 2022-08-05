@@ -898,5 +898,11 @@ namespace McTools.Xrm.Connection.WinForms
         }
 
         public CrmConnections ConnectionList { get; set; }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var aboutForm = new AboutForm();
+            aboutForm.ShowDialog();
+        }
     }
 }
