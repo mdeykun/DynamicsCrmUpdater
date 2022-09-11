@@ -5,11 +5,8 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
-using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,43 +29,35 @@ namespace Cwru.Common.Services
         public async Task<ProjectInfo> GetSelectedProjectInfoAsync()
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var project = await GetSelectedProjectAsync();
-
-            try
+            if (project == null)
             {
-                return new ProjectInfo()
-                {
-                    Root = Path.GetDirectoryName(project.FullName).ToLower(),
-                    Guid = await GetProjectGuidAsync(project),
-                    Files = await ExtractProjectFilesAsync(ToEnumerable(project.ProjectItems)),
-                    SelectedFiles = await GetSelectedFilesAsync()
-                };
+                return null;
             }
-            catch (Exception ex)
-            {
-                await logger.WriteLineAsync(JsonConvert.SerializeObject(project));
-                throw;
-            }
-        }
 
-        public OleMenuCommand GetMenuCommand(Guid comandSet, int commandID, EventHandler invokeHandler)
-        {
-            CommandID menuCommandID = new CommandID(comandSet, commandID);
-            return new OleMenuCommand(invokeHandler, menuCommandID);
+            var projectGuid = await GetProjectGuidAsync(project);
+            if (projectGuid == Guid.Empty)
+            {
+                throw new Exception("Project guid can't be retrived");
+            }
+
+            return new ProjectInfo()
+            {
+                Root = Path.GetDirectoryName(project.FullName).ToLower(),
+                Guid = projectGuid,
+                Files = await GetFilePathsAsync(await GetProjectItemsAsync(project)),
+                SelectedFiles = await GetFilePathsAsync(await GetSelectedItemsAsync())
+            };
         }
 
         public async Task SetStatusBarAsync(string message, object icon = null)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            var svsStatusbar = await serviceProvider.GetServiceAsync(typeof(SVsStatusbar));
-            if (svsStatusbar == null)
-            {
-                await logger.WriteLineAsync("Failed to access status bar");
-                return;
-            }
-            var statusBar = svsStatusbar as IVsStatusbar;
-            int frozen;
-            statusBar.IsFrozen(out frozen);
+
+            var statusBar = await GetStatusBarServiceAsync();
+
+            statusBar.IsFrozen(out var frozen);
             if (frozen == 0)
             {
                 if (icon != null)
@@ -81,95 +70,8 @@ namespace Cwru.Common.Services
 
         public async Task SaveAllAsync()
         {
-            var dte = await GetDteAsync();
+            var dte = await GetDteServiceAsync();
             dte.ExecuteCommand("File.SaveAll");
-        }
-
-        private async Task<Project> GetSelectedProjectAsync()
-        {
-            var dte = await GetDteAsync();
-
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            //UIHierarchyItem uiHierarchyItem = Enumerable.FirstOrDefault<UIHierarchyItem>(Enumerable.OfType<UIHierarchyItem>((IEnumerable)(object[])dte.ToolWindows.SolutionExplorer.SelectedItems));
-
-            var selectedItems = (object[])dte.ToolWindows.SolutionExplorer.SelectedItems;
-            var uiHierarchyItem = Enumerable.FirstOrDefault<UIHierarchyItem>(Enumerable.OfType<UIHierarchyItem>((IEnumerable)selectedItems));
-
-            //Microsoft.VisualStudio.PlatformUI.UIHierarchyMarshaler
-
-
-            var project = uiHierarchyItem.Object as Project;
-            if (project != null)
-            {
-                return project;
-            }
-            var item = uiHierarchyItem.Object as ProjectItem;
-            if (item != null)
-            {
-                return item.ContainingProject;
-            }
-
-            Document doc = dte.ActiveDocument;
-            if (doc != null && doc.ProjectItem != null)
-            {
-                return doc.ProjectItem.ContainingProject;
-            }
-            return null;
-        }
-
-        private async Task<IEnumerable<ProjectItem>> GetSelectedItemsAsync()
-        {
-            var dte = await GetDteAsync();
-
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            var uiHierarchyItems = Enumerable.OfType<UIHierarchyItem>((IEnumerable)(object[])dte.ToolWindows.SolutionExplorer.SelectedItems);
-            var items = new List<ProjectItem>();
-            foreach (var uiItem in uiHierarchyItems)
-            {
-                var item = uiItem.Object as ProjectItem;
-                if (item != null)
-                {
-                    items.Add(item);
-                }
-            }
-            if (items.Count == 0)
-            {
-                Document doc = dte.ActiveDocument;
-                if (doc != null && doc.ProjectItem != null)
-                {
-                    items.Add(doc.ProjectItem);
-                }
-            }
-            return items;
-        }
-
-        private async Task<IEnumerable<string>> ExtractProjectFilesAsync(IEnumerable<ProjectItem> list)
-        {
-            if (list == null)
-            {
-                return null;
-            }
-
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            var files = new List<string>();
-            foreach (ProjectItem item in list)
-            {
-                if (item.Kind.ToLower() == Consts.FileKindGuid.ToLower())
-                {
-                    var path = Path.GetDirectoryName(item.FileNames[0]).ToLower();
-                    var fileName = Path.GetFileName(item.FileNames[0]);
-                    files.Add(path + "\\" + fileName);
-                }
-
-                if (item.ProjectItems != null)
-                {
-                    var childItems = await ExtractProjectFilesAsync(ToEnumerable(item.ProjectItems));
-                    files.AddRange(childItems);
-                }
-            }
-
-            return files;
         }
 
         public async Task AddFromFileAsync(Guid projectGuid, string filePath)
@@ -185,23 +87,133 @@ namespace Cwru.Common.Services
             project.ProjectItems.AddFromFile(filePath);
         }
 
-        private async Task<IEnumerable<string>> GetSelectedFilesAsync()
+        public async Task OpenFileAndPlaceContentAsync(Guid projectGuid, string file, string content)
         {
-            var selectedItems = await GetSelectedItemsAsync();
-            return await ExtractProjectFilesAsync(selectedItems);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var project = await GetProjectByGuidAsync(projectGuid);
+            if (project == null)
+            {
+                throw new InvalidOperationException("Failed to load project by guid");
+            }
+
+            var projectItems = await GetProjectItemsAsync(project);
+            var projectItem = projectItems.FirstOrDefault(x => string.Compare(x.FileNames[0].ToLower(), file, true) == 0);
+            if (projectItem != null)
+            {
+                projectItem.Open(EnvDTE.Constants.vsViewKindCode);
+                projectItem.Document.ActiveWindow.Activate();
+
+                var textDocument = (TextDocument)projectItem.Document.Object("TextDocument");
+
+                var startPoint = textDocument.CreateEditPoint(textDocument.StartPoint);
+                startPoint.Delete(textDocument.EndPoint);
+                startPoint.Insert(content);
+            }
+        }
+
+        private async Task<Project> GetSelectedProjectAsync()
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var selectedItems = await GetSelectedHierarchyItemsAsync();
+            var selectedItem = selectedItems.FirstOrDefault();
+
+            var project = selectedItem?.Object as Project;
+            if (project != null)
+            {
+                return project;
+            }
+
+            var item = selectedItem?.Object as ProjectItem;
+            if (item != null)
+            {
+                return item.ContainingProject;
+            }
+
+            var dte = await GetDteServiceAsync();
+            Document doc = dte.ActiveDocument;
+            if (doc != null && doc.ProjectItem != null)
+            {
+                return doc.ProjectItem.ContainingProject;
+            }
+            return null;
+        }
+
+        private async Task<IEnumerable<ProjectItem>> GetSelectedItemsAsync()
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var selectedItems = await GetSelectedHierarchyItemsAsync();
+            var projectItems = new List<ProjectItem>();
+
+            foreach (var uiItem in selectedItems)
+            {
+                var item = uiItem.Object as ProjectItem;
+                if (item != null)
+                {
+                    projectItems.Add(item);
+                }
+            }
+
+            if (projectItems.Count == 0)
+            {
+                var dte = await GetDteServiceAsync();
+                Document doc = dte.ActiveDocument;
+                if (doc != null && doc.ProjectItem != null)
+                {
+                    projectItems.Add(doc.ProjectItem);
+                }
+            }
+
+            return await GetProjectItemsAsync(projectItems);
+        }
+
+        private async Task<IEnumerable<ProjectItem>> GetProjectItemsAsync(Project project)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (project == null)
+            {
+                return Enumerable.Empty<ProjectItem>();
+            }
+
+            return await GetProjectItemsAsync(ToEnumerable(project.ProjectItems));
+        }
+
+        private async Task<IEnumerable<ProjectItem>> GetProjectItemsAsync(IEnumerable<ProjectItem> itemsToCheck)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (itemsToCheck == null || itemsToCheck.Count() == 0)
+            {
+                return Enumerable.Empty<ProjectItem>();
+            }
+
+            var result = new List<ProjectItem>();
+
+            foreach (var item in itemsToCheck)
+            {
+                if (item.Kind.ToLower() == Consts.FileKindGuid.ToLower())
+                {
+                    result.Add(item);
+                }
+
+                if (item.ProjectItems != null)
+                {
+                    var childItems = await GetProjectItemsAsync(ToEnumerable(item.ProjectItems));
+                    result.AddRange(childItems);
+                }
+            }
+
+            return result;
         }
 
         private async Task<Project> GetProjectByGuidAsync(Guid projectGuid)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var svsSolution = await serviceProvider.GetServiceAsync(typeof(SVsSolution));
-            var solution = svsSolution as IVsSolution;
-            if (solution == null)
-            {
-                return null;
-            }
-
+            var solution = await GetSolutionServiceAsync();
             var result = solution.GetProjectOfGuid(projectGuid, out IVsHierarchy hierarchy);
             if (!ErrorHandler.Succeeded(result))
             {
@@ -225,20 +237,21 @@ namespace Cwru.Common.Services
 
         private async Task<Guid> GetProjectGuidAsync(Project project)
         {
-            Guid projectGuid = Guid.Empty;
-            IVsHierarchy hierarchy;
-            var svsSolution = await serviceProvider.GetServiceAsync(typeof(SVsSolution));
-            if (svsSolution == null)
-            {
-                throw new InvalidOperationException("Failed to load project guid");
-            }
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            var solution = svsSolution as IVsSolution;
-            solution.GetProjectOfUniqueName(project.FullName, out hierarchy);
-            if (hierarchy != null)
+
+            var solution = await GetSolutionServiceAsync();
+            var result = solution.GetProjectOfUniqueName(project.FullName, out IVsHierarchy hierarchy);
+            if (!ErrorHandler.Succeeded(result) || hierarchy == null)
             {
-                solution.GetGuidOfProject(hierarchy, out projectGuid);
+                return Guid.Empty;
             }
+
+            result = solution.GetGuidOfProject(hierarchy, out Guid projectGuid);
+            if (!ErrorHandler.Succeeded(result))
+            {
+                return Guid.Empty;
+            }
+
             return projectGuid;
         }
 
@@ -253,9 +266,36 @@ namespace Cwru.Common.Services
             return list;
         }
 
-        private async Task<EnvDTE80.DTE2> GetDteAsync()
+        private async Task<IEnumerable<UIHierarchyItem>> GetSelectedHierarchyItemsAsync()
         {
-            var dte = await serviceProvider.GetServiceAsync(typeof(DTE)) as EnvDTE80.DTE2;
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var dte = await GetDteServiceAsync();
+            var selectedItems = (object[])dte.ToolWindows.SolutionExplorer.SelectedItems;
+            var result = selectedItems != null ? selectedItems.AsEnumerable().OfType<UIHierarchyItem>() : Enumerable.Empty<UIHierarchyItem>();
+
+            return result;
+        }
+
+        private async Task<IEnumerable<string>> GetFilePathsAsync(IEnumerable<ProjectItem> projectItems)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            return projectItems.Select(x => x.FileNames[0].ToLower()).ToList();
+            //var path = Path.GetDirectoryName(item.FileNames[0]).ToLower();
+            //var fileName = Path.GetFileName(item.FileNames[0]);
+            //files.Add(path + "\\" + fileName);
+
+        }
+
+        private EnvDTE80.DTE2 dte = null;
+        private async Task<EnvDTE80.DTE2> GetDteServiceAsync()
+        {
+            if (dte != null)
+            {
+                return dte;
+            }
+
+            dte = await serviceProvider.GetServiceAsync(typeof(DTE)) as EnvDTE80.DTE2;
             if (dte == null)
             {
                 await logger.WriteLineAsync("Failed to get DTE service.");
@@ -265,28 +305,43 @@ namespace Cwru.Common.Services
             return dte;
         }
 
-        //public async Task<string> GetProjectRootAsync(Project project)
-        //{
-        //    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-        //    return Path.GetDirectoryName(project.FullName).ToLower();
-        //}
+        private IVsStatusbar statusBar = null;
+        private async Task<IVsStatusbar> GetStatusBarServiceAsync()
+        {
+            if (statusBar != null)
+            {
+                return statusBar;
+            }
 
-        //private async Task<string> GetSelectedFilePathAsync()
-        //{
-        //    var files = await GetSelectedFilesAsync();
-        //    return files.FirstOrDefault();
-        //}
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-        //public async Task<IEnumerable<string>> GetProjectFilesAsync()
-        //{
-        //    var selectedProject = await GetSelectedProjectAsync();
-        //    if (selectedProject == null)
-        //    {
-        //        return null;
-        //    }
-        //    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-        //    var projectFiles = await GetProjectFilesAsync(selectedProject.ProjectItems);
-        //    return projectFiles;
-        //}
+            statusBar = await serviceProvider.GetServiceAsync(typeof(SVsStatusbar)) as IVsStatusbar;
+            if (statusBar == null)
+            {
+                await logger.WriteLineAsync("Failed to access status bar service");
+
+            }
+
+            return statusBar;
+        }
+
+        private IVsSolution solution = null;
+        private async Task<IVsSolution> GetSolutionServiceAsync()
+        {
+            if (solution != null)
+            {
+                return solution;
+            }
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            solution = await serviceProvider.GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
+            if (solution == null)
+            {
+                throw new InvalidOperationException("Failed to load solution service");
+            }
+
+            return solution;
+        }
     }
 }

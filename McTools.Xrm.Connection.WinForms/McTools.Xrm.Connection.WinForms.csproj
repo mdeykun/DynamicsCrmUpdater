@@ -451,6 +451,10 @@
     <Content Include="Resources\ico_16_7100.gif" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Cwru.Common.Services\Cwru.Common.Services.csproj">
+      <Project>{578EFB5A-3FCD-4B76-AA5A-650A6BE1B7F1}</Project>
+      <Name>Cwru.Common.Services</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Cwru.Common\Cwru.Common.csproj">
       <Project>{22260532-D32B-4762-86D9-6631E6F23FF4}</Project>
       <Name>Cwru.Common</Name>

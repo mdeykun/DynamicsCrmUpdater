@@ -1,5 +1,5 @@
 ﻿using Cwru.Common.Model;
-using Cwru.CrmRequests.Common.Contracts;
+using Cwru.Common.Services;
 using McTools.Xrm.Connection.WinForms.Extensions;
 using McTools.Xrm.Connection.WinForms.Model;
 using System;
@@ -11,10 +11,10 @@ namespace McTools.Xrm.Connection.WinForms
     public partial class UpdateSolutionForm : Form
     {
         private readonly ConnectionDetail connectionDetail;
-        private readonly ICrmRequests crmRequestsClient;
+        private readonly SolutionsService solutionsService;
 
         public UpdateSolutionForm(
-            ICrmRequests crmRequestsClient,
+            SolutionsService solutionsService,
             ConnectionDetail connectionDetail)
         {
             InitializeComponent();
@@ -24,7 +24,7 @@ namespace McTools.Xrm.Connection.WinForms
 
             this.connectionDetail = connectionDetail;
             lblHeaderDesc.Text = string.Format(lblHeaderDesc.Text, connectionDetail.ConnectionName);
-            this.crmRequestsClient = crmRequestsClient;
+            this.solutionsService = solutionsService;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -56,15 +56,10 @@ namespace McTools.Xrm.Connection.WinForms
             try
             {
                 var connectionInfo = connectionDetail.ToCrmConnectionString();
-                var getSolutionsListResponse = await crmRequestsClient.GetSolutionsListAsync(connectionInfo.BuildConnectionString());
+                var solutionsResponse = await solutionsService.GetSolutionsDetailsAsync(connectionInfo.BuildConnectionString(), connectionDetail.ConnectionId, true);
+                var solutions = solutionsResponse.ToArray();
 
-                if (getSolutionsListResponse.IsSuccessful == false)
-                {
-                    throw new Exception($"Failed to retrieve solution list: {getSolutionsListResponse.Error}");
-                }
-
-                var solutions = getSolutionsListResponse.Payload.ToList();
-                if (solutions.Count == 0)
+                if (solutions.Length == 0)
                 {
                     throw new Exception("Failed to load solutions");
                 }
@@ -75,7 +70,7 @@ namespace McTools.Xrm.Connection.WinForms
                     var selectedSolution = solutions.FirstOrDefault(x => x.SolutionId == connectionDetail.SelectedSolutionId);
                     if (selectedSolution != null)
                     {
-                        var index = solutions.IndexOf(selectedSolution);
+                        var index = Array.IndexOf(solutions, selectedSolution);
                         comboBoxSolutions.SelectedIndex = index;
                     }
                 }

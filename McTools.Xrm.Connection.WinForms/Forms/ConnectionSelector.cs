@@ -1,4 +1,5 @@
-﻿using Cwru.CrmRequests.Common.Contracts;
+﻿using Cwru.Common.Services;
+using Cwru.CrmRequests.Common.Contracts;
 using McTools.Xrm.Connection.WinForms.Extensions;
 using McTools.Xrm.Connection.WinForms.Misc;
 using McTools.Xrm.Connection.WinForms.Model;
@@ -12,15 +13,18 @@ namespace McTools.Xrm.Connection.WinForms
     public partial class ConnectionSelector : Form
     {
         public ConnectionDetailsList connectionsList;
-        private ICrmRequests crmRequests;
+        private readonly ICrmRequests crmRequests;
+        private readonly SolutionsService solutionsService;
 
         public ConnectionSelector(
             ICrmRequests crmRequests,
+            SolutionsService solutionsService,
             ConnectionDetailsList connectionsList)
         {
             InitializeComponent();
 
             this.crmRequests = crmRequests;
+            this.solutionsService = solutionsService;
             this.connectionsList = connectionsList;
 
             tsbDeleteConnection.Visible = true;
@@ -171,7 +175,7 @@ namespace McTools.Xrm.Connection.WinForms
 
         private void tsbNewConnection_Click(object sender, EventArgs e)
         {
-            var cForm = new ConnectionWizard(crmRequests)
+            var cForm = new ConnectionWizard(crmRequests, solutionsService)
             {
                 StartPosition = FormStartPosition.CenterParent
             };
@@ -200,7 +204,7 @@ namespace McTools.Xrm.Connection.WinForms
 
                 var cd = (ConnectionDetail)item.Tag;
 
-                var cForm = new ConnectionWizard(crmRequests, cd)
+                var cForm = new ConnectionWizard(crmRequests, solutionsService, cd)
                 {
                     StartPosition = FormStartPosition.CenterParent
                 };
@@ -226,8 +230,8 @@ namespace McTools.Xrm.Connection.WinForms
                 var item = lvConnections.SelectedItems[0];
                 var cd = (ConnectionDetail)item.Tag;
 
-                var upDialog = new UpdateSolutionForm(crmRequests, cd);
-                var result = upDialog.ShowDialog();
+                var dialog = new UpdateSolutionForm(solutionsService, cd);
+                var result = dialog.ShowDialog();
                 if (result == DialogResult.OK)
                 {
                     item.UpdateWith(cd);

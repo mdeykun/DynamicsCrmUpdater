@@ -1,5 +1,5 @@
 ﻿using Cwru.Common.Model;
-using Cwru.CrmRequests.Common.Contracts;
+using Cwru.Common.Services;
 using McTools.Xrm.Connection.WinForms.Extensions;
 using McTools.Xrm.Connection.WinForms.Model;
 using System;
@@ -10,11 +10,11 @@ namespace McTools.Xrm.Connection.WinForms.CustomControls
 {
     public partial class ConnectionSucceededControl : UserControl, IConnectionWizardControl
     {
-        private readonly ICrmRequests crmRequestsClient;
+        private readonly SolutionsService solutionsService;
 
-        public ConnectionSucceededControl(ICrmRequests crmRequestsClient)
+        public ConnectionSucceededControl(SolutionsService solutionsService)
         {
-            this.crmRequestsClient = crmRequestsClient;
+            this.solutionsService = solutionsService;
             InitializeComponent();
         }
 
@@ -34,22 +34,17 @@ namespace McTools.Xrm.Connection.WinForms.CustomControls
         private async void ConnectionSucceededControl_Load(object sender, System.EventArgs e)
         {
             var connectionInfo = ConnectionDetail.ToCrmConnectionString();
-            var solutionsResponse = await crmRequestsClient.GetSolutionsListAsync(connectionInfo.BuildConnectionString());
+            var solutionsResponse = await solutionsService.GetSolutionsDetailsAsync(connectionInfo.BuildConnectionString(), ConnectionDetail.ConnectionId, true);
+            var solutions = solutionsResponse.ToArray();
 
-            if (solutionsResponse.IsSuccessful == false)
-            {
-                throw new Exception($"Failed to retrieve solutions: {solutionsResponse.Error}");
-            }
-
-            var solutions = solutionsResponse.Payload.ToList();
-            comboBoxSolutions.Items.AddRange(solutions.ToArray());
+            comboBoxSolutions.Items.AddRange(solutions);
 
             if (ConnectionDetail != null && ConnectionDetail.SelectedSolutionId != null)
             {
                 var selectedSolution = solutions.FirstOrDefault(x => x.SolutionId == ConnectionDetail.SelectedSolutionId);
                 if (selectedSolution != null)
                 {
-                    var index = solutions.IndexOf(selectedSolution);
+                    var index = Array.IndexOf(solutions, selectedSolution);
                     comboBoxSolutions.SelectedIndex = index;
                 }
             }

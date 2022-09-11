@@ -18,62 +18,85 @@ namespace Cwru.Common.Services
             this.crmRequestsClient = crmRequestsClient;
         }
 
-        public async Task<SolutionDetail> GetSolutionDetailsAsync(EnvironmentConfig environmentConfig)
+        public async Task<IEnumerable<SolutionDetail>> GetSolutionsDetailsAsync(string connectionString, Guid? environmentId = null, bool updateCache = false)
         {
-            return await GetSolutionDetailsAsync(environmentConfig, environmentConfig.SelectedSolutionId);
-        }
-
-        public async Task<SolutionDetail> GetSolutionDetailsAsync(EnvironmentConfig environmentConfig, Guid solutionId)
-        {
-            var solutionDetail = FindSolutionDetails(environmentConfig.Id, solutionId);
-            if (solutionDetail != null)
+            if (environmentId == null)
             {
-                return solutionDetail;
+                return await LoadSolutionDetailsAsync(connectionString);
             }
 
-            await ReloadEnvironmentSolutionsAsync(environmentConfig);
-            return FindSolutionDetails(environmentConfig.Id, solutionId);
-        }
-
-        public async Task<List<SolutionDetail>> GetSolutionsDetailsAsync(EnvironmentConfig environmentConfig)
-        {
-            var solutionsDetails = FindSolutionsDetails(environmentConfig.Id);
-            if (solutionsDetails.Count > 0)
+            if (updateCache == true || !IsLoaded(environmentId.Value))
             {
-                return solutionsDetails;
+                return await LoadSolutionDetailsAsync(connectionString, environmentId.Value);
             }
 
-            await ReloadEnvironmentSolutionsAsync(environmentConfig);
-            return FindSolutionsDetails(environmentConfig.Id);
+            return GetFromCache(environmentId.Value);
         }
 
-        private List<SolutionDetail> FindSolutionsDetails(Guid environmentConfigId)
+        public async Task<SolutionDetail> GetSolutionDetailsAsync(EnvironmentConfig environmentConfig, bool updateCache = false)
         {
-            return solutionDetails.Where(x => x.EnvironmentId == environmentConfigId).ToList();
+            return await GetSolutionDetailsAsync(environmentConfig, environmentConfig.SelectedSolutionId, updateCache);
         }
 
-        private SolutionDetail FindSolutionDetails(Guid environmentConfigId, Guid solutionId)
+        private async Task<SolutionDetail> GetSolutionDetailsAsync(EnvironmentConfig environmentConfig, Guid solutionId, bool updateCache = false)
         {
-            return solutionDetails.FirstOrDefault(x => x.EnvironmentId == environmentConfigId && x.SolutionId == solutionId);
+            if (updateCache == true || !IsLoaded(environmentConfig.Id, solutionId))
+            {
+                await LoadSolutionDetailsAsync(environmentConfig);
+            }
+
+            return GetFromCache(environmentConfig.Id, solutionId);
         }
 
-        private async Task ReloadEnvironmentSolutionsAsync(EnvironmentConfig environmentConfig)
+        private bool IsLoaded(Guid environmentId, Guid solutionId)
         {
-            var solutionsResponse = await crmRequestsClient.GetSolutionsListAsync(environmentConfig.ConnectionString.BuildConnectionString());
+            return solutionDetails.Any(x => x.EnvironmentId == environmentId && x.SolutionId == solutionId);
+        }
+
+        private bool IsLoaded(Guid environmentId)
+        {
+            return solutionDetails.Any(x => x.EnvironmentId == environmentId);
+        }
+
+        private SolutionDetail GetFromCache(Guid environmentId, Guid solutionId)
+        {
+            return solutionDetails.FirstOrDefault(x => x.EnvironmentId == environmentId && x.SolutionId == solutionId);
+        }
+
+        private List<SolutionDetail> GetFromCache(Guid environmentId)
+        {
+            return solutionDetails.Where(x => x.EnvironmentId == environmentId).ToList();
+        }
+
+        private async Task<List<SolutionDetail>> LoadSolutionDetailsAsync(EnvironmentConfig environmentConfig)
+        {
+            return await LoadSolutionDetailsAsync(environmentConfig.ConnectionString.BuildConnectionString(), environmentConfig.Id);
+        }
+
+        private async Task<List<SolutionDetail>> LoadSolutionDetailsAsync(string connectionString, Guid environmentId)
+        {
+            var solutionDetails = await LoadSolutionDetailsAsync(connectionString);
+
+            foreach (var solution in solutionDetails)
+            {
+                solution.EnvironmentId = environmentId;
+                if (this.solutionDetails.Contains(solution))
+                {
+                    this.solutionDetails.Remove(solution);
+                }
+
+                this.solutionDetails.Add(solution);
+            }
+
+            return solutionDetails;
+        }
+
+        private async Task<List<SolutionDetail>> LoadSolutionDetailsAsync(string connectionString)
+        {
+            var solutionsResponse = await crmRequestsClient.GetSolutionsListAsync(connectionString);
             if (solutionsResponse.IsSuccessful)
             {
-                var solutions = solutionsResponse.Payload;
-
-                foreach (var solution in solutions)
-                {
-                    solution.EnvironmentId = environmentConfig.Id;
-                    if (solutionDetails.Contains(solution))
-                    {
-                        continue;
-                    }
-
-                    solutionDetails.Add(solution);
-                }
+                return solutionsResponse.Payload.ToList();
             }
             else
             {

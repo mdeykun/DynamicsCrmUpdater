@@ -5,15 +5,20 @@ namespace Cwru.Common.Extensions
 {
     public static class ProjectConfigExtensions
     {
-        public static EnvironmentConfig GetSelectedEnvironment(this ProjectConfig projectConfig)
+        public static EnvironmentConfig GetDefaultEnvironment(this ProjectConfig projectConfig)
         {
-            if (projectConfig.SelectedEnvironmentId == null)
+            if (projectConfig.DafaultEnvironmentId == null)
             {
                 return null;
             }
 
-            var result = projectConfig.Environments.Where(x => x.Id == projectConfig.SelectedEnvironmentId).FirstOrDefault();
+            var result = projectConfig.Environments.Where(x => x.Id == projectConfig.DafaultEnvironmentId).FirstOrDefault();
             return result;
+        }
+
+        public static string GetDefaultConnectionString(this ProjectConfig projectConfig)
+        {
+            return projectConfig.GetDefaultEnvironment()?.ConnectionString?.BuildConnectionString();
         }
     }
 }

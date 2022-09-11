@@ -1,5 +1,6 @@
 ﻿using Cwru.Common.Extensions;
 using Cwru.Common.Model;
+using Cwru.Common.Services;
 using Cwru.CrmRequests.Common.Contracts;
 using McTools.Xrm.Connection.WinForms.CustomControls;
 using McTools.Xrm.Connection.WinForms.Extensions;
@@ -22,9 +23,10 @@ namespace McTools.Xrm.Connection.WinForms
         private ConnectionDetail originalDetail;
         private ConnectionType type;
 
-        private readonly ICrmRequests crmWebResourceUpdaterClient;
+        private readonly ICrmRequests crmRequests;
+        private readonly SolutionsService solutionsService;
 
-        public ConnectionWizard(ICrmRequests crmWebResourcesUpdaterClient, ConnectionDetail detail = null)
+        public ConnectionWizard(ICrmRequests crmRequests, SolutionsService solutionsService, ConnectionDetail detail = null)
         {
             InitializeComponent();
 
@@ -37,7 +39,8 @@ namespace McTools.Xrm.Connection.WinForms
             btnBack.Visible = false;
             btnReset.Visible = false;
 
-            crmWebResourceUpdaterClient = crmWebResourcesUpdaterClient;
+            this.crmRequests = crmRequests;
+            this.solutionsService = solutionsService;
         }
 
         public ConnectionDetail CrmConnectionDetail { get; private set; }
@@ -407,7 +410,7 @@ namespace McTools.Xrm.Connection.WinForms
                 var currentDetail = CrmConnectionDetail;
 
                 var crmConnectionString = currentDetail.ToCrmConnectionString();
-                var validationResponse = await crmWebResourceUpdaterClient.ValidateConnectionAsync(crmConnectionString.BuildConnectionString());
+                var validationResponse = await crmRequests.ValidateConnectionAsync(crmConnectionString.BuildConnectionString());
                 if (validationResponse.IsSuccessful == false)
                 {
                     throw new Exception($"Failed to validate connection: {validationResponse.Error}");
@@ -583,7 +586,7 @@ namespace McTools.Xrm.Connection.WinForms
                 pnlFooter.Visible = true;
                 lblHeader.Text = @"Connection validated!";
 
-                ctrl = new ConnectionSucceededControl(crmWebResourceUpdaterClient)
+                ctrl = new ConnectionSucceededControl(solutionsService)
                 {
                     ConnectionName = CrmConnectionDetail.ConnectionName,
                     ConnectionDetail = CrmConnectionDetail

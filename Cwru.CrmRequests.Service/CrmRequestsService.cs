@@ -21,37 +21,34 @@ namespace Cwru.CrmRequests.Service
         {
             return await Task.Factory.StartNew(() => ValidateConnection(crmConnectionString), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
-
         public async Task<Response<bool>> UploadWebresourceAsync(string crmConnectionString, WebResource webResource)
         {
             return await Task.Factory.StartNew(() => UploadWebresource(crmConnectionString, webResource), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
-
         public async Task<Response<bool>> CreateWebresourceAsync(string crmConnectionString, WebResource webResource, string solution)
         {
             return await Task.Factory.StartNew(() => CreateWebresource(crmConnectionString, webResource, solution), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
-
         public async Task<Response<IEnumerable<SolutionDetail>>> GetSolutionsListAsync(string crmConnectionString)
         {
             return await Task.Factory.StartNew(() => GetSolutionsList(crmConnectionString), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
-
-        public async Task<Response<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(string crmConnectionString, Guid solutionId, List<string> webResourceNames)
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
             return await Task.Factory.StartNew(() => RetrieveWebResources(crmConnectionString, solutionId, webResourceNames), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
-
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(string crmConnectionString, IEnumerable<string> webResourceNames)
+        {
+            return await Task.Factory.StartNew(() => RetrieveWebResources(crmConnectionString, webResourceNames), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
+        }
         public async Task<Response<bool>> PublishWebResourcesAsync(string crmConnectionString, IEnumerable<Guid> webResourcesIds)
         {
             return await Task.Factory.StartNew(() => PublishWebResources(crmConnectionString, webResourcesIds), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
-
         public async Task<Response<bool>> IsWebResourceExistsAsync(string crmConnectionString, string webResourceName)
         {
             return await Task.Factory.StartNew(() => IsWebResourceExists(crmConnectionString, webResourceName), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
-
         private Response<ConnectionResult> ValidateConnection(string crmConnectionString)
         {
             try
@@ -81,7 +78,6 @@ namespace Cwru.CrmRequests.Service
                 });
             }
         }
-
         private Response<bool> UploadWebresource(string crmConnectionString, WebResource webResource)
         {
             try
@@ -109,7 +105,6 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<bool>(ex);
             }
         }
-
         private Response<bool> CreateWebresource(string crmConnectionString, WebResource webResource, string solution)
         {
             try
@@ -148,7 +143,6 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<bool>(ex);
             }
         }
-
         private Response<IEnumerable<SolutionDetail>> GetSolutionsList(string crmConnectionString)
         {
             try
@@ -199,8 +193,7 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<IEnumerable<SolutionDetail>>(ex);
             }
         }
-
-        private Response<IEnumerable<WebResource>> RetrieveWebResources(string crmConnectionString, Guid solutionId, List<string> webResourceNames)
+        private Response<IEnumerable<WebResource>> RetrieveWebResources(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
             var response = new Response<IEnumerable<WebResource>>();
             try
@@ -226,7 +219,7 @@ namespace Cwru.CrmRequests.Service
                     }
                 };
 
-                if (webResourceNames != null && webResourceNames.Count > 0)
+                if (webResourceNames != null && webResourceNames.Count() > 0)
                 {
                     query.Criteria = new FilterExpression(LogicalOperator.Or);
                     query.Criteria.Conditions.AddRange(webResourceNames.Select(x => new ConditionExpression("name", ConditionOperator.Equal, x)));
@@ -251,7 +244,47 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<IEnumerable<WebResource>>(ex);
             }
         }
+        private Response<IEnumerable<WebResource>> RetrieveWebResources(string crmConnectionString, IEnumerable<string> webResourceNames)
+        {
+            var response = new Response<IEnumerable<WebResource>>();
+            try
+            {
+                Console.WriteLine("Requesting WR retrieve");
 
+                if (webResourceNames == null || webResourceNames.Count() == 0)
+                {
+                    return response;
+                }
+
+                var client = CreateOrganizationService(crmConnectionString);
+
+                var query = new QueryExpression("webresource")
+                {
+                    ColumnSet = new ColumnSet("name", "content"),
+                    Criteria = new FilterExpression(LogicalOperator.Or)
+                };
+
+                query.Criteria.Conditions.AddRange(webResourceNames.Select(x => new ConditionExpression("name", ConditionOperator.Equal, x)));
+
+                var retrieveWebresourcesResponse = client.RetrieveMultiple(query);
+
+                return new Response<IEnumerable<WebResource>>()
+                {
+                    IsSuccessful = true,
+                    Payload = retrieveWebresourcesResponse.Entities.Select(x => new WebResource()
+                    {
+                        Id = x.Id,
+                        Name = x.GetAttributeValue<string>("name"),
+                        Content = x.GetAttributeValue<string>("content")
+                    })
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return GetFailedResponse<IEnumerable<WebResource>>(ex);
+            }
+        }
         private Response<bool> PublishWebResources(string crmConnectionString, IEnumerable<Guid> webResourcesIds)
         {
             try
@@ -288,7 +321,6 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<bool>(ex);
             }
         }
-
         private Response<bool> IsWebResourceExists(string crmConnectionString, string webResourceName)
         {
             try
@@ -325,7 +357,6 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<bool>(ex);
             }
         }
-
         private Response<T> GetFailedResponse<T>(Exception ex, T payload = default(T))
         {
             return new Response<T>()
@@ -335,7 +366,6 @@ namespace Cwru.CrmRequests.Service
                 Payload = payload
             };
         }
-
         private CrmServiceClient CreateOrganizationService(string connectionString)
         {
             var сrmServiceClient = new CrmServiceClient(connectionString);

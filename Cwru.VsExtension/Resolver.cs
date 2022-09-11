@@ -46,22 +46,22 @@ namespace Cwru.VsExtension
             ConfigsConversionService = new Lazy<ConfigsConversionService>(() => new ConfigsConversionService(Logger.Value, CryptoService.Value, XmlSerializerService.Value, SettingsStore.Value));
             ConfigurationService = new Lazy<ConfigurationService>(() =>
             {
-                return new ConfigurationService(SettingsStore.Value, VsDteService.Value, ConfigsConversionService.Value);
+                return new ConfigurationService(Logger.Value, SettingsStore.Value, VsDteService.Value, ConfigsConversionService.Value);
             });
 
-            MappingService = new Lazy<MappingService>(() => new MappingService(VsDteService.Value, ConfigurationService.Value));
+            MappingService = new Lazy<MappingService>(() => new MappingService(VsDteService.Value));
 
             PublishService = new Lazy<PublishService>(() => new PublishService(
                 Logger.Value,
                 CrmRequestsClient.Value,
-                VsDteService.Value,
                 MappingService.Value,
-                ConfigurationService.Value,
-                SolutionsService.Value));
+                SolutionsService.Value,
+                VsDteService.Value));
 
             ConnectionService = new Lazy<ConnectionService>(() => new ConnectionService(
                 Logger.Value,
                 CrmRequestsClient.Value,
+                SolutionsService.Value,
                 VsDteService.Value,
                 MappingService.Value,
                 ConfigurationService.Value));
@@ -76,10 +76,11 @@ namespace Cwru.VsExtension
                     "Cwru.ServiceConsole");
             });
 
-            CreateWebResourceCommand = new Lazy<CreateWebResourceCommand>(() => new CreateWebResourceCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
+            CreateWebResourceCommand = new Lazy<CreateWrCommand>(() => new CreateWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
             UpdaterOptionsCommand = new Lazy<UpdaterOptionsCommand>(() => new UpdaterOptionsCommand(Logger.Value, ConnectionService.Value));
-            UpdateSelectedWebResourcesCommand = new Lazy<UpdateSelectedWebResourcesCommand>(() => new UpdateSelectedWebResourcesCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
-            UpdateWebResourcesCommand = new Lazy<UpdateWebResourcesCommand>(() => new UpdateWebResourcesCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
+            UpdateSelectedWebResourcesCommand = new Lazy<UpdateSelectedWrCommand>(() => new UpdateSelectedWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
+            UpdateWebResourcesCommand = new Lazy<UpdateWrCommand>(() => new UpdateWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
+            DownloadSelectedWrCommand = new Lazy<DownloadSelectedWrCommand>(() => new DownloadSelectedWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
         }
 
         public static Lazy<WritableSettingsStore> SettingsStore { get; private set; }
@@ -88,16 +89,17 @@ namespace Cwru.VsExtension
         public static Lazy<VsDteService> VsDteService { get; private set; }
         public static Lazy<MappingService> MappingService { get; private set; }
         public static Lazy<ConfigurationService> ConfigurationService { get; private set; }
+        public static Lazy<ConfigsConversionService> ConfigsConversionService { get; private set; }
         public static Lazy<PublishService> PublishService { get; private set; }
         public static Lazy<ConnectionService> ConnectionService { get; private set; }
         public static Lazy<CryptoService> CryptoService { get; private set; }
         public static Lazy<SolutionsService> SolutionsService { get; private set; }
         public static Lazy<Logger> Logger { get; private set; }
         public static Lazy<WatchdogService> WatchdogService { get; private set; }
-        public static Lazy<CreateWebResourceCommand> CreateWebResourceCommand { get; private set; }
+        public static Lazy<CreateWrCommand> CreateWebResourceCommand { get; private set; }
         public static Lazy<UpdaterOptionsCommand> UpdaterOptionsCommand { get; private set; }
-        public static Lazy<UpdateSelectedWebResourcesCommand> UpdateSelectedWebResourcesCommand { get; private set; }
-        public static Lazy<UpdateWebResourcesCommand> UpdateWebResourcesCommand { get; private set; }
-        public static Lazy<ConfigsConversionService> ConfigsConversionService { get; private set; }
+        public static Lazy<UpdateSelectedWrCommand> UpdateSelectedWebResourcesCommand { get; private set; }
+        public static Lazy<UpdateWrCommand> UpdateWebResourcesCommand { get; private set; }
+        public static Lazy<DownloadSelectedWrCommand> DownloadSelectedWrCommand { get; private set; }
     }
 }

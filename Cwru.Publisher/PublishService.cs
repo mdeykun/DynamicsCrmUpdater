@@ -5,378 +5,75 @@ using Cwru.Common.Model;
 using Cwru.Common.Services;
 using Cwru.CrmRequests.Common.Contracts;
 using Cwru.Forms;
+using Cwru.Publisher.Extensions;
+using Cwru.Publisher.Model;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Task = System.Threading.Tasks.Task;
 
 namespace Cwru.Publisher
 {
-    /// <summary>
-    /// Provides methods for uploading and publishing web resources
-    /// </summary>
     public class PublishService
     {
-        private readonly VsDteService vsDteHelper;
-        private readonly MappingService mappingHelper;
-        private readonly ICrmRequests crmWebResourcesUpdaterClient;
-        private readonly ConfigurationService settingsService;
+        private readonly MappingService mappingService;
+        private readonly ICrmRequests crmRequest;
         private readonly SolutionsService solutionsService;
         private readonly Logger logger;
+        private readonly VsDteService vsDteService;
 
-        /// <summary>
-        /// Publisher constructor
-        /// </summary>
-        /// <param name="connection">Connection to CRM that will be used to upload webresources</param>
-        /// <param name="autoPublish">Perform publishing or not</param>
-        /// <param name="ignoreExtensions">Try to upload without extension if item not found with it</param>
-        /// <param name="extendedLog">Print extended uploading process information</param>
         public PublishService(
             Logger logger,
             ICrmRequests crmWebResourcesUpdaterClient,
-            VsDteService vsDteHelper,
             MappingService mappingHelper,
-            ConfigurationService settingsService,
-            SolutionsService solutionsService)
+            SolutionsService solutionsService,
+            VsDteService vsDteService)
         {
-            this.crmWebResourcesUpdaterClient = crmWebResourcesUpdaterClient;
-            this.vsDteHelper = vsDteHelper;
-            this.mappingHelper = mappingHelper;
-            this.settingsService = settingsService;
+            this.crmRequest = crmWebResourcesUpdaterClient;
+            this.mappingService = mappingHelper;
             this.solutionsService = solutionsService;
             this.logger = logger;
+            this.vsDteService = vsDteService;
         }
 
-        /// <summary>
-        /// Uploads and publishes files to CRM
-        /// </summary>
-        public async Task PublishWebResourcesAsync(bool uploadSelectedItems)
+        public async Task UploadWrToDefaultEnvironmentAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
         {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-            var selectedEnvironmentConfig = projectConfig.GetSelectedEnvironment();
+            await OperationStart("Uploading web resources...", "Uploading...");
 
-            var extendedLog = projectConfig.ExtendedLog;
-            var publishAfterUpload = projectConfig.PublishAfterUpload;
-
-            await vsDteHelper.SaveAllAsync();
-            await logger.ClearAsync();
-
-            await vsDteHelper.SetStatusBarAsync("Uploading...");
-
-            if (publishAfterUpload)
+            var filesToPublish = await GetProjectFilesAsync(projectInfo, selectedItemsOnly, projectConfig.ExtendedLog);
+            if (filesToPublish.Count() == 0)
             {
-                await logger.WriteLineWithTimeAsync("Publishing web resources...");
-            }
-            else
-            {
-                await logger.WriteLineWithTimeAsync("Uploading web resources...");
-            }
-
-            await logger.WriteLineAsync("Connecting to CRM...");
-            await logger.WriteLineAsync("URL: " + selectedEnvironmentConfig.ConnectionString.ServiceUri);
-
-            var selectedSolution = await solutionsService.GetSolutionDetailsAsync(selectedEnvironmentConfig);
-            await logger.WriteLineAsync("Solution Name: " + selectedSolution.FriendlyName);
-            await logger.WriteLineAsync("--------------------------------------------------------------");
-
-            await logger.WriteLineAsync("Loading files' paths", extendedLog);
-            var selectedFiles = await GetSelectedFilesAsync(uploadSelectedItems);
-            if (selectedFiles == null || selectedFiles.Count() == 0)
-            {
-                await logger.WriteLineAsync("Failed to load files' paths", extendedLog);
                 return;
             }
 
-            await logger.WriteLineAsync(selectedFiles.Count() + " path" + (selectedFiles.Count() == 1 ? " was" : "s were") + " loaded", extendedLog);
-            try
+            var result = await UploadWrAsync(projectConfig, projectConfig.GetDefaultEnvironment(), projectInfo, filesToPublish);
+
+            if (result.Exception == null)
             {
-                await logger.WriteLineAsync("Starting uploading process", extendedLog);
-                var webresources = await UploadWebResourcesAsync(selectedFiles);
-                await logger.WriteLineAsync("Uploading process was finished", extendedLog);
-
-                if (webresources.Count > 0)
-                {
-                    await logger.WriteLineAsync("--------------------------------------------------------------");
-                    foreach (var name in webresources.Values)
-                    {
-                        await logger.WriteLineAsync(name + " successfully uploaded");
-                    }
-                }
-                await logger.WriteLineAsync("--------------------------------------------------------------");
-                await logger.WriteLineWithTimeAsync(webresources.Count + " file" + (webresources.Count == 1 ? " was" : "s were") + " uploaded");
-
-                if (webresources.Count > 0 && publishAfterUpload)
-                {
-                    await vsDteHelper.SetStatusBarAsync("Publishing...");
-                    await PublishWebResourcesAsync(webresources.Keys);
-                }
-
-                if (publishAfterUpload)
-                {
-                    await vsDteHelper.SetStatusBarAsync(webresources.Count + " web resource" + (webresources.Count == 1 ? " was" : "s were") + " published");
-                }
-                else
-                {
-                    await vsDteHelper.SetStatusBarAsync(webresources.Count + " web resource" + (webresources.Count == 1 ? " was" : "s were") + " uploaded");
-                }
-
-            }
-            catch (Exception ex)
-            {
-                await vsDteHelper.SetStatusBarAsync("Failed to publish script" + (selectedFiles.Count() == 1 ? "" : "s"));
-                await logger.WriteLineAsync("Failed to publish script" + (selectedFiles.Count() == 1 ? "." : "s."));
-                await logger.WriteLineAsync(ex.Message);
-                await logger.WriteLineAsync(ex.StackTrace, extendedLog);
-            }
-            await logger.WriteLineWithTimeAsync("Done.");
-        }
-
-        public async Task<IEnumerable<string>> GetSelectedFilesAsync(bool uploadSelectedItems)
-        {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-            var projectInfo = await vsDteHelper.GetSelectedProjectInfoAsync();
-
-            if (uploadSelectedItems)
-            {
-                await logger.WriteLineAsync("Loading selected files' paths", projectConfig.ExtendedLog);
-                return projectInfo.SelectedFiles;
+                await OperationEnd("Done.", $"{result.Processed} web resource{result.Processed.Select(" was", "s were")} uploaded");
             }
             else
             {
-                await logger.WriteLineAsync("Loading all files' paths", projectConfig.ExtendedLog);
-                return projectInfo.Files;
+                await OperationEnd("Done.", $"Failed to upload script{filesToPublish.Count().Select("", "s")}");
             }
         }
 
-        /// <summary>
-        /// Uploads web resources
-        /// </summary>
-        /// <returns>List of guids of web resources that was updated</returns>
-        private async Task<Dictionary<Guid, string>> UploadWebResourcesAsync()
+        public async Task CreateWrAsync(ProjectInfo projectInfo, ProjectConfig projectConfig)
         {
-            var projectFiles = await GetSelectedFilesAsync(true);
+            var environmentConfig = projectConfig.GetDefaultEnvironment();
 
-            if (projectFiles == null || projectFiles.Count() == 0)
-            {
-                return null;
-            }
-
-            return await UploadWebResourcesAsync(projectFiles);
-        }
-
-        /// <summary>
-        /// Uploads web resources
-        /// </summary>
-        /// <param name="selectedFiles"></param>
-        /// <returns>List of guids of web resources that was updateds</returns>            
-        private async Task<Dictionary<Guid, string>> UploadWebResourcesAsync(IEnumerable<string> selectedFiles)
-        {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-
-            var ids = new Dictionary<Guid, string>();
-
-            var projectInfo = await vsDteHelper.GetSelectedProjectInfoAsync();
-            var mappings = await mappingHelper.LoadMappingsAsync(projectInfo.Root, projectInfo.Files);
-
-            var filters = new List<string>();
-            foreach (var filePath in selectedFiles)
-            {
-                var webResourceName = Path.GetFileName(filePath);
-                var lowerFilePath = filePath.ToLower();
-
-                if (webResourceName.ToLower() == MappingService.MappingFileName.ToLower())
-                {
-                    continue;
-                }
-
-                if (mappings != null && mappings.ContainsKey(lowerFilePath))
-                {
-                    webResourceName = mappings[lowerFilePath];
-                }
-                else if (projectConfig.IgnoreExtensions)
-                {
-                    filters.Add(Path.GetFileNameWithoutExtension(filePath));
-                }
-                filters.Add(webResourceName);
-            }
-            var webResources = await RetrieveWebResourcesAsync(filters);
-
-            foreach (var filePath in selectedFiles)
-            {
-                var webResourceName = Path.GetFileName(filePath);
-                var lowerFilePath = filePath.ToLower();
-
-                if (webResourceName.ToLower() == MappingService.MappingFileName.ToLower())
-                {
-                    continue;
-                }
-
-                var relativePath = lowerFilePath.Replace(projectInfo.Root + "\\", "");
-
-                if (mappings != null && mappings.ContainsKey(lowerFilePath))
-                {
-                    webResourceName = mappings[lowerFilePath];
-                    await logger.WriteLineAsync("Mapping found: " + relativePath + " to " + webResourceName, projectConfig.ExtendedLog);
-                }
-
-                var webResource = webResources.FirstOrDefault(x => x.Name == webResourceName);
-                if (webResource == null && projectConfig.IgnoreExtensions)
-                {
-                    await logger.WriteLineAsync(webResourceName + " does not exists in selected solution", projectConfig.ExtendedLog);
-                    webResourceName = Path.GetFileNameWithoutExtension(filePath);
-                    await logger.WriteLineAsync("Searching for " + webResourceName, projectConfig.ExtendedLog);
-                    webResource = webResources.FirstOrDefault(x => x.Name == webResourceName);
-                }
-                if (webResource == null)
-                {
-                    await logger.WriteLineAsync("Uploading of " + webResourceName + " was skipped: web resource does not exists in selected solution", projectConfig.ExtendedLog);
-                    await logger.WriteLineAsync(webResourceName + " does not exists in selected solution", !projectConfig.ExtendedLog);
-                    continue;
-                }
-                if (!File.Exists(lowerFilePath))
-                {
-                    await logger.WriteLineAsync("Warning: File not found: " + lowerFilePath);
-                    continue;
-                }
-                var isUpdated = await UpdateWebResourceByFileAsync(webResource, filePath, relativePath);
-                if (isUpdated)
-                {
-                    ids.Add(webResource.Id.Value, webResourceName);
-                }
-            }
-            return ids;
-        }
-
-        /// <summary>
-        /// Uploads web resource
-        /// </summary>
-        /// <param name="webResource">Web resource to be updated</param>
-        /// <param name="filePath">File with a content to be set for web resource</param>
-        /// <returns>Returns true if web resource is updated</returns>
-        private async Task<bool> UpdateWebResourceByFileAsync(WebResource webResource, string filePath, string relativePath)
-        {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-
-            var webResourceName = Path.GetFileName(filePath);
-            await logger.WriteLineAsync("Uploading " + webResourceName, projectConfig.ExtendedLog);
-
-            //var projectRootPath = await projectHelper.GetSelectedProjectRootAsync();
-
-            var localContent = GetEncodedFileContent(filePath);
-            var remoteContent = webResource.Content;
-            if (remoteContent.Length != localContent.Length || remoteContent != localContent)
-            {
-                await UpdateWebResourceByContentAsync(webResource, localContent);
-                //var relativePath = filePath.Replace(projectRootPath + "\\", "");
-                await logger.WriteLineAsync(webResource.Name + " uploaded from " + relativePath, !projectConfig.ExtendedLog);
-                return true;
-            }
-            else
-            {
-                await logger.WriteLineAsync("Uploading of " + webResourceName + " was skipped: there aren't any change in the web resource", projectConfig.ExtendedLog);
-                await logger.WriteLineAsync(webResourceName + " has no changes", !projectConfig.ExtendedLog);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Uploads web resource
-        /// </summary>
-        /// <param name="webResource">Web resource to be updated</param>
-        /// <param name="content">Content to be set for web resource</param>
-        private async Task UpdateWebResourceByContentAsync(WebResource webResource, string content)
-        {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-
-            var name = webResource.Name;
-            webResource.Content = content;
-            var selectedEnvironment = projectConfig.GetSelectedEnvironment();
-            await crmWebResourcesUpdaterClient.UploadWebresourceAsync(selectedEnvironment.ConnectionString.BuildConnectionString(), webResource);
-
-            await logger.WriteLineAsync(name + " was successfully uploaded", projectConfig.ExtendedLog);
-        }
-
-        /// <summary>
-        /// Retrieves web resources for selected items
-        /// </summary>
-        /// <returns>List of web resources</returns>
-        private async Task<IEnumerable<WebResource>> RetrieveWebResourcesAsync(List<string> webResourceNames = null)
-        {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-
-            await logger.WriteLineAsync("Retrieving existing web resources", projectConfig.ExtendedLog);
-            var selectedEnvironment = projectConfig.GetSelectedEnvironment();
-            var retrieveWebResourceResponse = await crmWebResourcesUpdaterClient.RetrieveWebResourcesAsync(selectedEnvironment.ConnectionString.BuildConnectionString(), selectedEnvironment.SelectedSolutionId, webResourceNames);
-            if (retrieveWebResourceResponse.IsSuccessful == false)
-            {
-                throw new Exception($"Failed to retrieve web resource: {retrieveWebResourceResponse.Error}");
-            }
-            return retrieveWebResourceResponse.Payload;
-        }
-
-        /// <summary>
-        /// Publishes webresources changes
-        /// </summary>
-        /// <param name="webresourcesIds">List of webresource IDs to publish</param>
-        private async Task PublishWebResourcesAsync(IEnumerable<Guid> webresourcesIds)
-        {
-            await logger.WriteLineWithTimeAsync("Publishing...");
-
-            if (webresourcesIds == null || !webresourcesIds.Any())
-            {
-                throw new ArgumentNullException("webresourcesId");
-            }
-            if (webresourcesIds.Any())
-            {
-                var projectConfig = await settingsService.GetProjectConfigAsync();
-                var selectedEnvironment = projectConfig.GetSelectedEnvironment();
-                await crmWebResourcesUpdaterClient.PublishWebResourcesAsync(selectedEnvironment.ConnectionString.BuildConnectionString(), webresourcesIds);
-            }
-            var count = webresourcesIds.Count();
-            await logger.WriteLineWithTimeAsync(count + " file" + (count == 1 ? " was" : "s were") + " published");
-        }
-
-        private async Task CreateWebResourceAsync(EnvironmentConfig connectionInfo, WebResource webResource, string solution)
-        {
-            if (webResource == null)
-            {
-                throw new ArgumentNullException("Web resource can not be null");
-            }
-            await crmWebResourcesUpdaterClient.CreateWebresourceAsync(connectionInfo.ConnectionString.BuildConnectionString(), webResource, solution);
-        }
-
-        public async Task CreateWebResourceAsync()
-        {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-            var selectedEnvironmentConfig = projectConfig.GetSelectedEnvironment();
-            var selectedSolution = await solutionsService.GetSolutionDetailsAsync(selectedEnvironmentConfig);
+            var selectedSolution = await solutionsService.GetSolutionDetailsAsync(environmentConfig, true);
             if (selectedSolution == null)
             {
                 await logger.WriteLineAsync("Solution is not selected. Please check parameters");
                 return;
             }
-            await OpenCreateWebResourceFormAsync();
-        }
 
-        private async Task OpenCreateWebResourceFormAsync()
-        {
-            var projectConfig = await settingsService.GetProjectConfigAsync();
-            var selectedEnvironmentConfig = projectConfig.GetSelectedEnvironment();
-            if (selectedEnvironmentConfig == null)
-            {
-                await logger.WriteLineAsync("Environment (connection) is not selected or not found");
-            }
-            var selectedSolution = await solutionsService.GetSolutionDetailsAsync(selectedEnvironmentConfig);
-            if (selectedSolution == null)
-            {
-                await logger.WriteLineAsync("Solution is not selected or not found");
-            }
-
-            var projectInfo = await vsDteHelper.GetSelectedProjectInfoAsync();
             var dialog = new CreateWebResourceForm(logger, projectInfo.SelectedFile, selectedSolution.PublisherPrefix);
 
             dialog.OnCreate = async (WebResource webResource) =>
@@ -385,7 +82,7 @@ namespace Cwru.Publisher
 
                 var webresourceName = webResource.Name;
 
-                var isWebResourceExistsResponse = await crmWebResourcesUpdaterClient.IsWebResourceExistsAsync(selectedEnvironmentConfig.ConnectionString.BuildConnectionString(), webresourceName);
+                var isWebResourceExistsResponse = await crmRequest.IsWebResourceExistsAsync(environmentConfig.ConnectionString.BuildConnectionString(), webresourceName);
                 if (isWebResourceExistsResponse.IsSuccessful == false)
                 {
                     MessageBox.Show($"Failed to validate webresource existance: {isWebResourceExistsResponse.Error}", "Error.", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -399,13 +96,14 @@ namespace Cwru.Publisher
 
                 try
                 {
-                    var isMappingRequired = await mappingHelper.IsMappingRequiredAsync(
+                    var isMappingRequired = mappingService.IsMappingRequired(
                         projectInfo.Root,
-                        projectInfo.SelectedFiles,
+                        projectInfo.Files,
                         projectInfo.SelectedFile,
-                        webresourceName);
+                        webresourceName,
+                        projectConfig.IgnoreExtensions);
 
-                    var isMappingFileReadOnly = await mappingHelper.IsMappingFileReadOnlyAsync(projectInfo.SelectedFiles);
+                    var isMappingFileReadOnly = mappingService.IsMappingFileReadOnly(projectInfo.Files);
                     if (isMappingRequired && isMappingFileReadOnly)
                     {
                         Cursor.Current = Cursors.Arrow;
@@ -423,15 +121,15 @@ namespace Cwru.Publisher
                     Cursor.Current = Cursors.WaitCursor;
                     if (isMappingRequired && !isMappingFileReadOnly)
                     {
-                        await mappingHelper.CreateMappingAsync(
+                        await mappingService.CreateMappingAsync(
                             projectInfo.Guid,
                             projectInfo.Root,
-                            projectInfo.SelectedFiles,
+                            projectInfo.Files,
                             projectInfo.SelectedFile,
                             webresourceName);
                     }
 
-                    await this.CreateWebResourceAsync(selectedEnvironmentConfig, webResource, selectedSolution.UniqueName);
+                    await crmRequest.CreateWebresourceAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResource, selectedSolution.UniqueName);
                     await logger.WriteLineAsync("Webresource '" + webresourceName + "' was successfully created");
                     dialog.Close();
                 }
@@ -445,14 +143,359 @@ namespace Cwru.Publisher
             dialog.ShowDialog();
         }
 
-        public string GetEncodedFileContent(String filePath)
+        public async Task DownloadSelectedWrAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
         {
-            FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            byte[] binaryData = new byte[fs.Length];
-            long bytesRead = fs.Read(binaryData, 0, (int)fs.Length);
-            fs.Close();
-            return System.Convert.ToBase64String(binaryData, 0, binaryData.Length);
+            await OperationStart("Downloading web resources...", "Downloading...");
+
+            var filesToDownload = await GetProjectFilesAsync(projectInfo, selectedItemsOnly, projectConfig.ExtendedLog);
+            if (filesToDownload.Count() == 0)
+            {
+                return;
+            }
+
+            var result = await DownloadWrAsync(projectConfig, projectConfig.GetDefaultEnvironment(), projectInfo, filesToDownload);
+
+            if (result.Exception == null)
+            {
+                await OperationEnd("Done.", $"{result.Processed} web resource{result.Processed.Select(" was", "s were")} downloaded");
+            }
+            else
+            {
+                await OperationEnd("Done.", $"Failed to download script{filesToDownload.Count().Select("", "s")}");
+            }
+        }
+
+        private async Task<Result> DownloadWrAsync(ProjectConfig projectConfig, EnvironmentConfig environmentConfig, ProjectInfo projectInfo, IEnumerable<string> filesToDownload)
+        {
+            var downloaded = 0;
+
+            try
+            {
+                await logger.WriteEnvironmentInfoAsync(environmentConfig);
+
+                var mappings = mappingService.LoadMappings(projectInfo.Root, projectInfo.Files);
+
+                await logger.WriteLineAsync("Starting downloading process", projectConfig.ExtendedLog);
+                await logger.WriteLineAsync("--------------------------------------------------------------");
+
+                var webResources = await RetrieveWrsAsync(environmentConfig, filesToDownload, mappings, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
+                var fileToWrMapping = await GetFileToWrMappingAsync(projectInfo, filesToDownload, mappings, webResources, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
+
+                foreach (var filePath in fileToWrMapping.Keys)
+                {
+                    var webResource = fileToWrMapping[filePath];
+                    var localContent = GetEncodedFileContent(filePath);
+                    var remoteContent = webResource.Content;
+
+                    if (string.IsNullOrEmpty(remoteContent))
+                    {
+                        await logger.WriteLineAsync(webResource.Name + " is empty");
+                    }
+                    else if (string.Compare(localContent, remoteContent) != 0)
+                    {
+                        var weresourceContent = Encoding.UTF8.GetString(Convert.FromBase64String(remoteContent));
+                        await vsDteService.OpenFileAndPlaceContentAsync(projectInfo.Guid, filePath, weresourceContent);
+
+                        var relativePath = filePath.Replace(projectInfo.Root + "\\", "");
+                        await logger.WriteLineAsync($"{webResource.Name} was downloaded to " + relativePath);
+                        downloaded += 1;
+                    }
+                    else
+                    {
+                        await logger.WriteLineAsync(webResource.Name + " has no changes");
+                    }
+                }
+
+                await logger.WriteLineAsync("--------------------------------------------------------------");
+                await logger.WriteLineAsync("Downloading process was completed", projectConfig.ExtendedLog);
+
+                return new Result(total: filesToDownload.Count(), processed: downloaded, failed: 0);
+            }
+            catch (Exception ex)
+            {
+                await logger.WriteLineAsync($"Failed to download script{filesToDownload.Count().Select("", "s")}.");
+                await logger.WriteAsync(ex, projectConfig.ExtendedLog);
+
+                return new Result(total: filesToDownload.Count(), processed: downloaded, failed: 0, ex);
+            }
+        }
+
+        private async Task<Result> UploadWrAsync(ProjectConfig projectConfig, EnvironmentConfig environmentConfig, ProjectInfo projectInfo, IEnumerable<string> filesToUpload)
+        {
+            var updatedWrs = new List<WebResource>();
+
+            try
+            {
+                await logger.WriteEnvironmentInfoAsync(environmentConfig);
+
+                var selectedSolution = await solutionsService.GetSolutionDetailsAsync(environmentConfig);
+                await logger.WriteSolutionInfoAsync(selectedSolution);
+
+                await logger.WriteLineAsync("Starting uploading process", projectConfig.ExtendedLog);
+                await logger.WriteLineAsync("--------------------------------------------------------------");
+
+                var mappings = mappingService.LoadMappings(projectInfo.Root, projectInfo.Files);
+
+                var webResources = await RetrieveSelectedSolutionWrsAsync(environmentConfig, filesToUpload, mappings, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
+                var fileToWrMapping = await GetFileToWrMappingAsync(projectInfo, filesToUpload, mappings, webResources, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
+
+                foreach (var filePath in fileToWrMapping.Keys)
+                {
+                    var webResource = fileToWrMapping[filePath];
+
+                    var relativePath = filePath.Replace(projectInfo.Root + "\\", "");
+                    var isUpdated = await UpdateWrByFileAsync(environmentConfig, webResource, filePath, relativePath, projectConfig.ExtendedLog);
+                    if (isUpdated)
+                    {
+                        updatedWrs.Add(webResource);
+                    }
+                }
+
+                await logger.WriteLineAsync("--------------------------------------------------------------");
+                await logger.WriteLineAsync("Uploading process was completed", projectConfig.ExtendedLog);
+
+                await logger.WriteLineWithTimeAsync(updatedWrs.Count + " file" + (updatedWrs.Count == 1 ? " was" : "s were") + " uploaded");
+
+
+                if (updatedWrs.Count > 0 && projectConfig.PublishAfterUpload)
+                {
+                    await PublishWrAsync(environmentConfig, updatedWrs.Select(x => x.Id.Value).ToList());
+                }
+
+                return new Result(total: filesToUpload.Count(), processed: updatedWrs.Count, failed: 0);
+            }
+            catch (Exception ex)
+            {
+                await logger.WriteLineAsync($"Failed to upload script{filesToUpload.Count().Select("", "s")}.");
+                await logger.WriteAsync(ex, projectConfig.ExtendedLog);
+
+                return new Result(total: filesToUpload.Count(), processed: updatedWrs.Count, failed: 0, ex);
+            }
+        }
+
+        private async Task<IEnumerable<string>> GetProjectFilesAsync(ProjectInfo projectInfo, bool selectedItemsOnly, bool extendedLog)
+        {
+            await logger.WriteLineAsync(selectedItemsOnly ? "Loading selected files' paths" : "Loading all files' paths", extendedLog);
+            var files = selectedItemsOnly ? projectInfo.SelectedFiles : projectInfo.Files;
+
+            if (files == null || files.Count() == 0)
+            {
+                await logger.WriteLineAsync("Failed to load files' paths", extendedLog);
+                return Enumerable.Empty<string>();
+            }
+
+            await logger.WriteLineAsync(files.Count() + " path" + (files.Count() == 1 ? " was" : "s were") + " loaded", extendedLog);
+
+            files = files.ExcludeFile(MappingService.MappingFileName);
+            return files;
+        }
+
+        private async Task<Dictionary<string, WebResource>> GetFileToWrMappingAsync(ProjectInfo projectInfo, IEnumerable<string> files, Dictionary<string, string> mappings, IEnumerable<WebResource> webResources, bool ignoreExtensions, bool extendedLog)
+        {
+            var result = new Dictionary<string, WebResource>();
+
+            foreach (var filePath in files)
+            {
+                var webResourceName = Path.GetFileName(filePath);
+                if (mappings != null && mappings.ContainsKey(filePath))
+                {
+                    webResourceName = mappings[filePath];
+
+                    var relativePath = filePath.Replace(projectInfo.Root + "\\", "");
+                    await logger.WriteLineAsync($"Mapping found: {relativePath} to {webResourceName}", extendedLog);
+                }
+
+                var webResource = webResources.FirstOrDefault(x => x.Name == webResourceName);
+                if (webResource == null && ignoreExtensions)
+                {
+                    await logger.WriteLineAsync(webResourceName + " does not exist or not added to selected solution", extendedLog);
+                    webResourceName = Path.GetFileNameWithoutExtension(filePath);
+                    await logger.WriteLineAsync("Searching for " + webResourceName, extendedLog);
+                    webResource = webResources.FirstOrDefault(x => x.Name == webResourceName);
+                }
+
+                if (webResource == null)
+                {
+                    await logger.WriteLineAsync("Uploading of " + webResourceName + " was skipped: web resource does not exist or not added to selected solution", extendedLog);
+                    await logger.WriteLineAsync(webResourceName + " does not exist or not added to selected solution", !extendedLog);
+                    continue;
+                }
+
+                if (!File.Exists(filePath))
+                {
+                    await logger.WriteLineAsync("Warning: File not found: " + filePath);
+                    continue;
+                }
+
+                result.Add(filePath, webResource);
+            }
+
+            return result;
+        }
+
+        private async Task<bool> UpdateWrByFileAsync(EnvironmentConfig environmentConfig, WebResource webResource, string filePath, string relativePath, bool extendedLog)
+        {
+            var webResourceName = Path.GetFileName(filePath);
+            await logger.WriteLineAsync("Uploading " + webResourceName, extendedLog);
+
+            var localContent = GetEncodedFileContent(filePath);
+            var remoteContent = webResource.Content;
+            if (remoteContent.Length != localContent.Length || remoteContent != localContent)
+            {
+                webResource.Content = localContent;
+                await crmRequest.UploadWebresourceAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResource);
+                await logger.WriteLineAsync($"{webResource.Name} uploaded from " + relativePath);
+                return true;
+            }
+            else
+            {
+                await logger.WriteLineAsync(webResourceName + " has no changes");
+                return false;
+            }
+        }
+
+        private async Task<IEnumerable<WebResource>> RetrieveSelectedSolutionWrsAsync(EnvironmentConfig environmentConfig, IEnumerable<string> selectedFiles, Dictionary<string, string> mappings, bool ignoreExtensions, bool extendedLog)
+        {
+            await logger.WriteLineAsync("Retrieving existing web resources", extendedLog);
+
+            var webResourceNames = new List<string>();
+
+            foreach (var filePath in selectedFiles)
+            {
+                var webResourceName = Path.GetFileName(filePath);
+                var lowerFilePath = filePath.ToLower();
+
+                if (mappings != null && mappings.ContainsKey(lowerFilePath))
+                {
+                    webResourceName = mappings[lowerFilePath];
+                }
+                else if (ignoreExtensions)
+                {
+                    webResourceNames.Add(Path.GetFileNameWithoutExtension(filePath));
+                }
+                webResourceNames.Add(webResourceName);
+            }
+
+            var retrieveWebResourceResponse = await crmRequest.RetrieveSolutionWebResourcesAsync(environmentConfig.ConnectionString.BuildConnectionString(), environmentConfig.SelectedSolutionId, webResourceNames);
+            if (retrieveWebResourceResponse.IsSuccessful == false)
+            {
+                throw new Exception($"Failed to retrieve web resource: {retrieveWebResourceResponse.Error}");
+            }
+
+            return retrieveWebResourceResponse.Payload;
+        }
+
+        private async Task<IEnumerable<WebResource>> RetrieveWrsAsync(EnvironmentConfig environmentConfig, IEnumerable<string> selectedFiles, Dictionary<string, string> mappings, bool ignoreExtensions, bool extendedLog)
+        {
+            await logger.WriteLineAsync("Retrieving existing web resources", extendedLog);
+
+            var webResourceNames = GetWrNames(selectedFiles, mappings, ignoreExtensions);
+
+            var retrieveWebResourceResponse = await crmRequest.RetrieveWebResourcesAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResourceNames);
+            if (retrieveWebResourceResponse.IsSuccessful == false)
+            {
+                throw new Exception($"Failed to retrieve web resource: {retrieveWebResourceResponse.Error}");
+            }
+
+            return retrieveWebResourceResponse.Payload;
+        }
+
+        private IEnumerable<string> GetWrNames(IEnumerable<string> filesPathes, Dictionary<string, string> mappings, bool ignoreExtensions)
+        {
+            var webResourceNames = new List<string>();
+            foreach (var filePath in filesPathes)
+            {
+                var webResourceName = Path.GetFileName(filePath);
+                var lowerFilePath = filePath.ToLower();
+
+                if (mappings != null && mappings.ContainsKey(lowerFilePath))
+                {
+                    webResourceName = mappings[lowerFilePath];
+                }
+                else if (ignoreExtensions)
+                {
+                    webResourceNames.Add(Path.GetFileNameWithoutExtension(filePath));
+                }
+                webResourceNames.Add(webResourceName);
+            }
+
+            return webResourceNames;
+        }
+
+        private async Task PublishWrAsync(EnvironmentConfig environmentConfig, IEnumerable<Guid> webresourcesIds)
+        {
+            await logger.WriteLineWithTimeAsync("Publishing...");
+            await vsDteService.SetStatusBarAsync("Publishing...");
+
+            if (webresourcesIds == null || !webresourcesIds.Any())
+            {
+                throw new ArgumentNullException("webresourcesId");
+            }
+            if (webresourcesIds.Any())
+            {
+                await crmRequest.PublishWebResourcesAsync(environmentConfig.ConnectionString.BuildConnectionString(), webresourcesIds);
+            }
+            var count = webresourcesIds.Count();
+            await logger.WriteLineWithTimeAsync(count + " file" + (count == 1 ? " was" : "s were") + " published");
+        }
+
+        private string GetEncodedFileContent(string filePath)
+        {
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                byte[] binaryData = new byte[fs.Length];
+                fs.Read(binaryData, 0, (int)fs.Length);
+                fs.Close();
+
+                return Convert.ToBase64String(binaryData, 0, binaryData.Length);
+            }
+        }
+
+        private string GetFileContent(string filePath)
+        {
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                var binaryData = new byte[fs.Length];
+                fs.Read(binaryData, 0, (int)fs.Length);
+                fs.Close();
+
+                return Encoding.UTF8.GetString(binaryData);
+            }
+        }
+
+        private async Task OperationStart(string message, string statusBarMessage = null)
+        {
+            await vsDteService.SaveAllAsync();
+            await logger.ClearAsync();
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                await logger.WriteLineWithTimeAsync(message);
+            }
+
+            if (!string.IsNullOrEmpty(statusBarMessage))
+            {
+                await vsDteService.SetStatusBarAsync(statusBarMessage);
+            }
+        }
+
+        private async Task OperationEnd(string message, string statusBarMessage = null)
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                await logger.WriteLineWithTimeAsync(message);
+            }
+
+            if (!string.IsNullOrEmpty(statusBarMessage))
+            {
+                await vsDteService.SetStatusBarAsync(statusBarMessage);
+            }
         }
     }
+
+    //public async Task PublishWrToEnvironmentsAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, IEnumerable<EnvironmentConfig> environmentsConfigs, bool selectedItemsOnly)
+    //{
+
+    //}
 }
 

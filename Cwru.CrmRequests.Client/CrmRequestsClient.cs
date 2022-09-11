@@ -36,33 +36,37 @@ namespace Cwru.CrmRequests.Client
             }
         }
 
-        public async Task<Response<IEnumerable<SolutionDetail>>> GetSolutionsListAsync(string crmConnection)
+        public async Task<Response<IEnumerable<SolutionDetail>>> GetSolutionsListAsync(string crmConnectionString)
         {
-            return await Client.GetSolutionsListAsync(crmConnection);
+            return await Client.GetSolutionsListAsync(crmConnectionString);
         }
-        public async Task<Response<ConnectionResult>> ValidateConnectionAsync(string crmConnection)
+        public async Task<Response<ConnectionResult>> ValidateConnectionAsync(string crmConnectionString)
         {
-            return await Client.ValidateConnectionAsync(crmConnection);
+            return await Client.ValidateConnectionAsync(crmConnectionString);
         }
-        public async Task<Response<bool>> CreateWebresourceAsync(string crmConnection, WebResource webResource, string solution)
+        public async Task<Response<bool>> CreateWebresourceAsync(string crmConnectionString, WebResource webResource, string solution)
         {
-            return await Client.CreateWebresourceAsync(crmConnection, webResource, solution);
+            return await Client.CreateWebresourceAsync(crmConnectionString, webResource, solution);
         }
-        public async Task<Response<bool>> UploadWebresourceAsync(string crmConnection, WebResource webResource)
+        public async Task<Response<bool>> UploadWebresourceAsync(string crmConnectionString, WebResource webResource)
         {
-            return await Client.UploadWebresourceAsync(crmConnection, webResource);
+            return await Client.UploadWebresourceAsync(crmConnectionString, webResource);
         }
-        public async Task<Response<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(string crmConnection, Guid solutionId, List<string> webResourceNames)
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
-            return await Client.RetrieveWebResourcesAsync(crmConnection, solutionId, webResourceNames);
+            return await Client.RetrieveSolutionWebResourcesAsync(crmConnectionString, solutionId, webResourceNames);
         }
-        public async Task<Response<bool>> PublishWebResourcesAsync(string crmConnection, IEnumerable<Guid> webResourcesIds)
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(string crmConnectionString, IEnumerable<string> webResourceNames)
         {
-            return await Client.PublishWebResourcesAsync(crmConnection, webResourcesIds);
+            return await Client.RetrieveWebResourcesAsync(crmConnectionString, webResourceNames);
         }
-        public async Task<Response<bool>> IsWebResourceExistsAsync(string crmConnection, string webResourceName)
+        public async Task<Response<bool>> PublishWebResourcesAsync(string crmConnectionString, IEnumerable<Guid> webResourcesIds)
         {
-            return await Client.IsWebResourceExistsAsync(crmConnection, webResourceName);
+            return await Client.PublishWebResourcesAsync(crmConnectionString, webResourcesIds);
+        }
+        public async Task<Response<bool>> IsWebResourceExistsAsync(string crmConnectionString, string webResourceName)
+        {
+            return await Client.IsWebResourceExistsAsync(crmConnectionString, webResourceName);
         }
     }
 }

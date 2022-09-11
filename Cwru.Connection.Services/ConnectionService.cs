@@ -3,6 +3,7 @@ using Cwru.Common.Config;
 using Cwru.Common.Extensions;
 using Cwru.Common.Model;
 using Cwru.Common.Services;
+using Cwru.Connection.Services.Model;
 using Cwru.CrmRequests.Common.Contracts;
 using McTools.Xrm.Connection.WinForms;
 using McTools.Xrm.Connection.WinForms.Extensions;
@@ -19,30 +20,134 @@ namespace Cwru.Connection.Services
         private readonly Logger logger;
         private readonly VsDteService vsDteHelper;
         private readonly MappingService mappingHelper;
-        private readonly ICrmRequests crmRequestsClient;
+        private readonly ICrmRequests crmRequests;
         private readonly ConfigurationService configurationService;
+        private readonly SolutionsService solutionsService;
 
         public ConnectionService(
             Logger logger,
-            ICrmRequests crmRequestsClient,
+            ICrmRequests crmRequests,
+            SolutionsService solutionsService,
             VsDteService vsDteHelper,
             MappingService mappingHelper,
             ConfigurationService configurationService)
         {
             this.logger = logger;
-            this.crmRequestsClient = crmRequestsClient;
+            this.crmRequests = crmRequests;
+            this.solutionsService = solutionsService;
             this.vsDteHelper = vsDteHelper;
             this.mappingHelper = mappingHelper;
             this.configurationService = configurationService;
         }
 
+        public async Task<ConnectionData> GetAndValidateConnectionAsync()
+        {
+            var projectInfo = await vsDteHelper.GetSelectedProjectInfoAsync();
+            if (projectInfo == null)
+            {
+                return GetFailed("Project is not selected or selected project can't be identified");
+            }
+
+            var projectConfig = await configurationService.GetProjectConfigAsync(projectInfo.Guid);
+            if (projectConfig == null)
+            {
+                return GetFailed("Failed to load project config.");
+            }
+
+            if (projectConfig.DafaultEnvironmentId == null)
+            {
+                return GetFailed("Error: Connection is not selected");
+            }
+
+            var environmentConfig = projectConfig.GetDefaultEnvironment();
+            if (environmentConfig == null || environmentConfig.ConnectionString == null)
+            {
+                if (ShowErrorDialog() == DialogResult.Yes)
+                {
+                    var result = await ShowConfigurationDialogAsync();
+                    if (result != DialogResult.OK)
+                    {
+                        return GetFailed();
+                    }
+                }
+                else
+                {
+                    return GetFailed();
+                }
+            }
+
+            if (environmentConfig.ConnectionString.IntegratedSecurity != true &&
+                environmentConfig.ConnectionString.AuthenticationType != AuthenticationType.Certificate &&
+                environmentConfig.ConnectionString.UserName != null)
+            {
+                if (environmentConfig.ConnectionString.Password != null)
+                {
+                    return new ConnectionData()
+                    {
+                        IsValid = true,
+                        ProjectConfig = projectConfig,
+                        ProjectInfo = projectInfo,
+                    };
+                }
+                else
+                {
+                    var result = ShowUpdatePasswordDialogAsync(projectConfig);
+                    if (result == DialogResult.OK)
+                    {
+                        return new ConnectionData()
+                        {
+                            IsValid = true,
+                            ProjectConfig = projectConfig,
+                            ProjectInfo = projectInfo,
+                        };
+                    }
+                }
+            }
+
+            if (environmentConfig.ConnectionString.AuthenticationType == AuthenticationType.ClientSecret &&
+                environmentConfig.ConnectionString.ClientId != null)
+            {
+                if (environmentConfig.ConnectionString.ClientSecret != null)
+                {
+                    return new ConnectionData()
+                    {
+                        IsValid = true,
+                        ProjectConfig = projectConfig,
+                        ProjectInfo = projectInfo,
+                    };
+                }
+                else
+                {
+                    var result = ShowUpdateClientSecretDialogAsync(projectConfig);
+                    if (result == DialogResult.OK)
+                    {
+                        return new ConnectionData()
+                        {
+                            IsValid = true,
+                            ProjectConfig = projectConfig,
+                            ProjectInfo = projectInfo,
+                        };
+                    }
+                }
+            }
+
+            return GetFailed();
+        }
+
         public async Task<DialogResult> ShowConfigurationDialogAsync()
         {
-            var projectConfig = await configurationService.GetProjectConfigAsync();
             var project = await vsDteHelper.GetSelectedProjectInfoAsync();
+            if (project == null)
+            {
+                await logger.WriteLineAsync("Project is not selected or selected project can't be identified");
+                return DialogResult.Cancel;
+            }
+
+            var projectConfig = await configurationService.GetProjectConfigAsync(project.Guid);
 
             var selector = new ConnectionSelector(
-                crmRequestsClient,
+                crmRequests,
+                solutionsService,
                 ConvertToXrmConnectionDetail(projectConfig));
 
             selector.OnCreateMappingFile = async () =>
@@ -59,7 +164,7 @@ namespace Cwru.Connection.Services
                 projectConfig.ExtendedLog = selector.connectionsList.ExtendedLog;
                 projectConfig.PublishAfterUpload = selector.connectionsList.PublishAfterUpload;
                 projectConfig.IgnoreExtensions = selector.connectionsList.IgnoreExtensions;
-                projectConfig.SelectedEnvironmentId = selector.connectionsList.SelectedConnectionId;
+                projectConfig.DafaultEnvironmentId = selector.connectionsList.SelectedConnectionId;
 
                 configurationService.Save(projectConfig);
             }
@@ -100,77 +205,9 @@ namespace Cwru.Connection.Services
             return environmentConfigs;
         }
 
-        public async Task<bool> EnsurePasswordIsSet()
+        private DialogResult ShowUpdatePasswordDialogAsync(ProjectConfig projectConfig)
         {
-            var projectConfig = await configurationService.GetProjectConfigAsync();
-            var environmentConfig = projectConfig.GetSelectedEnvironment();
-
-            if (environmentConfig == null || environmentConfig.ConnectionString == null)
-            {
-                if (ShowErrorDialog() == DialogResult.Yes)
-                {
-                    var result = await ShowConfigurationDialogAsync();
-                    if (result != DialogResult.OK)
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            if (projectConfig.SelectedEnvironmentId == null)
-            {
-                await logger.WriteLineAsync("Error: Connection is not selected");
-                return false;
-            }
-
-            environmentConfig = projectConfig.GetSelectedEnvironment();
-
-            if (environmentConfig.ConnectionString.IntegratedSecurity != true &&
-                environmentConfig.ConnectionString.AuthenticationType != AuthenticationType.Certificate &&
-                environmentConfig.ConnectionString.UserName != null)
-            {
-                if (environmentConfig.ConnectionString.Password != null)
-                {
-                    return true;
-                }
-                else
-                {
-                    var result = await ShowUpdatePasswordDialogAsync();
-                    if (result == DialogResult.OK)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            if (environmentConfig.ConnectionString.AuthenticationType == AuthenticationType.ClientSecret &&
-                environmentConfig.ConnectionString.ClientId != null)
-            {
-                if (environmentConfig.ConnectionString.ClientSecret != null)
-                {
-                    return true;
-                }
-                else
-                {
-                    var result = await ShowUpdateClientSecretDialogAsync();
-                    if (result == DialogResult.OK)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public async Task<DialogResult> ShowUpdatePasswordDialogAsync()
-        {
-            var projectConfig = await configurationService.GetProjectConfigAsync();
-            var environmentConfig = projectConfig.GetSelectedEnvironment();
+            var environmentConfig = projectConfig.GetDefaultEnvironment();
 
             var dialog = new PasswordForm(environmentConfig.Name)
             {
@@ -191,10 +228,9 @@ namespace Cwru.Connection.Services
             return dialog.DialogResult;
         }
 
-        public async Task<DialogResult> ShowUpdateClientSecretDialogAsync()
+        private DialogResult ShowUpdateClientSecretDialogAsync(ProjectConfig projectConfig)
         {
-            var projectConfig = await configurationService.GetProjectConfigAsync();
-            var environmentConfig = projectConfig.GetSelectedEnvironment();
+            var environmentConfig = projectConfig.GetDefaultEnvironment();
             var dialog = new SecretForm(environmentConfig.Name)
             {
                 ClientId = environmentConfig.ConnectionString.ClientId?.ToString("B")
@@ -260,17 +296,26 @@ namespace Cwru.Connection.Services
                 ExtendedLog = projectConfig.ExtendedLog,
                 IgnoreExtensions = projectConfig.IgnoreExtensions,
                 PublishAfterUpload = projectConfig.PublishAfterUpload,
-                SelectedConnectionId = projectConfig.SelectedEnvironmentId
+                SelectedConnectionId = projectConfig.DafaultEnvironmentId
             };
         }
 
-        public DialogResult ShowErrorDialog()
+        private DialogResult ShowErrorDialog()
         {
             var title = "Configuration error";
             var text = "It seems that Publisher has not been configured yet or connection is not selected.\r\n\r\n" +
             "We can open configuration window for you now or you can do it later by clicking \"Publish options\" in the context menu of the project.\r\n\r\n" +
             "Do you want to open configuration window now?";
             return MessageBox.Show(text, title, MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
+        }
+
+        private ConnectionData GetFailed(string message = null)
+        {
+            return new ConnectionData()
+            {
+                IsValid = false,
+                Message = message,
+            };
         }
     }
 }

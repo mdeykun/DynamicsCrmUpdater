@@ -27,10 +27,6 @@ namespace Cwru.Common
             pane.Clear();
         }
 
-        /// <summary>
-        /// Writes message to output window
-        /// </summary>
-        /// <param name="message">Text message to write</param>
         public async Task WriteAsync(string message)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -40,34 +36,22 @@ namespace Cwru.Common
             pane.OutputStringThreadSafe(message);
         }
 
-        /// <summary>
-        /// Writes message to output window
-        /// </summary>
-        /// <param name="message">Text message to write</param>
-        public async Task WriteAsync(Exception ex)
+        public async Task WriteAsync(Exception ex, bool printStackTrace = false)
         {
-            await WriteLineAsync("An error occured: " + ex.Message + "\r\n" + ex.StackTrace);
+            await WriteLineAsync("An error occured: " + ex.Message);
+            await WriteLineAsync(ex.StackTrace, printStackTrace);
         }
 
-        /// <summary>
-        /// Writes message to output window
-        /// </summary>
-        /// <param name="message">Text message to write</param>
-        public async Task WriteAsync(string message, Exception ex)
+        public async Task WriteAsync(string message, Exception ex, bool printStackTrace = false)
         {
             if (!string.IsNullOrWhiteSpace(message))
             {
                 await WriteLineAsync(message);
             }
 
-            await WriteLineAsync("An error occured: " + ex.Message + "\r\n" + ex.StackTrace);
+            await WriteAsync(ex, printStackTrace);
         }
 
-        /// <summary>
-        /// Adds line feed to message and writes it to output window
-        /// </summary>
-        /// <param name="message">text message to write</param>
-        /// <param name="print">print or ignore call using for extended logging</param>
         public async Task WriteLineAsync(string message, bool print = true)
         {
             if (print)
@@ -80,33 +64,6 @@ namespace Cwru.Common
         {
             await WriteLineAsync(DateTime.Now.ToString("HH:mm") + ": " + message, print);
         }
-
-        ///// <summary>
-        ///// Writes message to output window
-        ///// </summary>
-        ///// <param name="message">Text message to write</param>
-        //public async Task Write(string message)
-        //{
-        //    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-        //    var windowGuid = new Guid(ProjectGuids.OutputWindowGuidString);
-        //    IVsOutputWindowPane pane;
-        //    (await GetOutputAsync()).GetPane(ref windowGuid, out pane);
-        //    pane.Activate();
-        //    pane.OutputString(message);
-        //}
-
-        //private async Task<IVsOutputWindow> GetOutputAsync()
-        //{
-        //    if (outputWindow != null)
-        //    {
-        //        return outputWindow;
-        //    }
-
-        //    await SetOutputsAsync();
-
-        //    return outputWindow;
-        //}
 
         private async Task<IVsOutputWindowPane> GetOutputPaneAsync()
         {

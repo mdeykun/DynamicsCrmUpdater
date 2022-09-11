@@ -76,7 +76,7 @@ namespace Cwru.Common.Services
                     {
                         ProjectId = projectId,
                         Environments = environmentsConfigs.ToList(),
-                        SelectedEnvironmentId = settingsStore.GetGuid(collectionPath, SelectedConnectionIdPropertyName),
+                        DafaultEnvironmentId = settingsStore.GetGuid(collectionPath, SelectedConnectionIdPropertyName),
                         PublishAfterUpload = settingsStore.GetBoolOrDefault(collectionPath, AutoPublishPropertyName),
                         IgnoreExtensions = settingsStore.GetBoolean(collectionPath, IgnoreExtensionsPropertyName),
                         ExtendedLog = settingsStore.GetBoolean(collectionPath, ExtendedLogPropertyName),
@@ -106,24 +106,6 @@ namespace Cwru.Common.Services
             }
 
             return null;
-        }
-
-        //DEPLOY: not for production use:
-        internal void UploadOldConfig(Guid projectGuid)
-        {
-            var collectionPath = GetCollectionPath(projectGuid);
-            if (settingsStore.CollectionExists(collectionPath))
-            {
-                settingsStore.DeleteCollection(collectionPath);
-                settingsStore.CreateCollection(collectionPath);
-            }
-
-            settingsStore.SetString(collectionPath, SettingsVersionPropertyName, "1");
-            settingsStore.SetString(collectionPath, ConnectionsPropertyName, configXml);
-            settingsStore.SetString(collectionPath, SelectedConnectionIdPropertyName, "bc68cbb7-8f5b-4976-8f24-f1a905ede08f");
-            settingsStore.SetBoolean(collectionPath, AutoPublishPropertyName, true);
-            settingsStore.SetBoolean(collectionPath, IgnoreExtensionsPropertyName, true);
-            settingsStore.SetBoolean(collectionPath, ExtendedLogPropertyName, false);
         }
 
         public async Task<List<EnvironmentConfig>> ConvertFromXrmCrmConnectionsAsync(string connectionsXml)
@@ -269,7 +251,6 @@ namespace Cwru.Common.Services
                 }
             }
 
-            //TODO: test IFD and AD with Integrated security and without
             var cs = new CrmConnectionString()
             {
                 AuthenticationType = AuthenticationType.AD,
@@ -332,111 +313,5 @@ namespace Cwru.Common.Services
         {
             return CollectionBasePath + "_" + projectId.ToString();
         }
-
-        private const string configXml = @"<?xml version=""1.0"" encoding=""utf-16""?>
-<ArrayOfConnectionDetail xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-  <ConnectionDetail>
-    <AuthType>None</AuthType>
-    <AzureAdAppId>00000000-0000-0000-0000-000000000000</AzureAdAppId>
-    <ConnectionId>bc68cbb7-8f5b-4976-8f24-f1a905ede08f</ConnectionId>
-    <ConnectionName>notal-us-dev</ConnectionName>
-    <ConnectionString>authtype=ClientSecret;url=https://notaldev1.crm.dynamics.com/;clientid=707f5e78-cdf6-4e04-a678-36d16cee861a;clientsecret=eIslNhtXhjsyeyj5gSsNucR6HixPhwJ+tQt2CuYfk77I6fe6xj1rZ92Qvz7AkorI</ConnectionString>
-    <EnvironmentId>d4b38a4d-e688-4e9b-abcc-12292549265d</EnvironmentId>
-    <IsCustomAuth>false</IsCustomAuth>
-    <IsFromSdkLoginCtrl>false</IsFromSdkLoginCtrl>
-    <LastUsedOn>0001-01-01 00:00:00</LastUsedOn>
-    <NewAuthType>AD</NewAuthType>
-    <Organization>orgb5f49dde</Organization>
-    <OrganizationDataServiceUrl>https://notaldev1.api.crm.dynamics.com/XRMServices/2011/OrganizationData.svc</OrganizationDataServiceUrl>
-    <OrganizationFriendlyName>NotalDev1</OrganizationFriendlyName>
-    <OrganizationServiceUrl>https://notaldev1.api.crm.dynamics.com/XRMServices/2011/Organization.svc</OrganizationServiceUrl>
-    <OrganizationVersion>9.2.22073.190</OrganizationVersion>
-    <OriginalUrl>https://notaldev1.crm.dynamics.com/</OriginalUrl>
-    <SavePassword>false</SavePassword>
-    <ServerName>notaldev1.crm.dynamics.com</ServerName>
-    <ServerPort>443</ServerPort>
-    <TenantId>29014319-16b0-40a0-bcd4-fcfcbd8c1a3a</TenantId>
-    <Timeout />
-    <TimeoutTicks>0</TimeoutTicks>
-    <UseIfd>false</UseIfd>
-    <UseMfa>false</UseMfa>
-    <UserName>707f5e78-cdf6-4e04-a678-36d16cee861a</UserName>
-    <WebApplicationUrl>https://notaldev1.crm.dynamics.com/</WebApplicationUrl>
-    <SelectedSolution>
-      <SolutionId>fd140aaf-4df4-11dd-bd17-0019b9312238</SolutionId>
-      <FriendlyName>Default Solution</FriendlyName>
-      <UniqueName>Default</UniqueName>
-      <PublisherPrefix>new</PublisherPrefix>
-    </SelectedSolution>
-  </ConnectionDetail>
-  <ConnectionDetail>
-    <AuthType>None</AuthType>
-    <AzureAdAppId>00000000-0000-0000-0000-000000000000</AzureAdAppId>
-    <ConnectionId>f02d59e2-08b4-4738-8f63-bfb122bd6b4f</ConnectionId>
-    <ConnectionName>notal-us-uat</ConnectionName>
-    <ConnectionString>authtype=ClientSecret;url=https://notaluat.crm.dynamics.com/;clientid=307bc0a5-ec04-4eb4-ae8b-18accfb1fc99;clientsecret=EbbcG09FSonApFY95GNNyTDg494Ahjv9+lDYcrXP65O5B5lgCgDKyrELPBNWieGb</ConnectionString>
-    <EnvironmentId>8df75b46-8998-4022-a3f7-fd254265a3ed</EnvironmentId>
-    <IsCustomAuth>false</IsCustomAuth>
-    <IsFromSdkLoginCtrl>false</IsFromSdkLoginCtrl>
-    <LastUsedOn>0001-01-01 00:00:00</LastUsedOn>
-    <NewAuthType>AD</NewAuthType>
-    <Organization>org1cdbb188</Organization>
-    <OrganizationDataServiceUrl>https://notaluat.api.crm.dynamics.com/XRMServices/2011/OrganizationData.svc</OrganizationDataServiceUrl>
-    <OrganizationFriendlyName>Notal UAT</OrganizationFriendlyName>
-    <OrganizationServiceUrl>https://notaluat.api.crm.dynamics.com/XRMServices/2011/Organization.svc</OrganizationServiceUrl>
-    <OrganizationVersion>9.2.22073.190</OrganizationVersion>
-    <OriginalUrl>https://notaluat.crm.dynamics.com/</OriginalUrl>
-    <SavePassword>false</SavePassword>
-    <ServerName>notaluat.crm.dynamics.com</ServerName>
-    <ServerPort>443</ServerPort>
-    <TenantId>29014319-16b0-40a0-bcd4-fcfcbd8c1a3a</TenantId>
-    <Timeout />
-    <TimeoutTicks>0</TimeoutTicks>
-    <UseIfd>false</UseIfd>
-    <UseMfa>false</UseMfa>
-    <UserName>307bc0a5-ec04-4eb4-ae8b-18accfb1fc99</UserName>
-    <WebApplicationUrl>https://notaluat.crm.dynamics.com/</WebApplicationUrl>
-    <SelectedSolution>
-      <SolutionId>fd140aaf-4df4-11dd-bd17-0019b9312238</SolutionId>
-      <FriendlyName>Default Solution</FriendlyName>
-      <UniqueName>Default</UniqueName>
-      <PublisherPrefix>new</PublisherPrefix>
-    </SelectedSolution>
-  </ConnectionDetail>
-  <ConnectionDetail>
-    <AuthType>None</AuthType>
-    <AzureAdAppId>00000000-0000-0000-0000-000000000000</AzureAdAppId>
-    <ConnectionId>9901d5a1-4ca3-447a-84c8-d69bae851674</ConnectionId>
-    <ConnectionName>notal-us-prod</ConnectionName>
-    <IsCustomAuth>true</IsCustomAuth>
-    <IsFromSdkLoginCtrl>false</IsFromSdkLoginCtrl>
-    <LastUsedOn>0001-01-01 00:00:00</LastUsedOn>
-    <NewAuthType>AD</NewAuthType>
-    <Organization>org8f7ae095</Organization>
-    <OrganizationDataServiceUrl>https://notal.api.crm.dynamics.com/api/data/v9.2/</OrganizationDataServiceUrl>
-    <OrganizationFriendlyName>NotalVisionProd</OrganizationFriendlyName>
-    <OrganizationServiceUrl>https://notal.api.crm.dynamics.com/XRMServices/2011/Organization.svc</OrganizationServiceUrl>
-    <OrganizationUrlName>notal</OrganizationUrlName>
-    <OrganizationVersion>9.2.22073.190</OrganizationVersion>
-    <OriginalUrl>https://notal.crm.dynamics.com</OriginalUrl>
-    <SavePassword>false</SavePassword>
-    <ServerName>notal.crm.dynamics.com</ServerName>
-    <ServerPort>443</ServerPort>
-    <TenantId>00000000-0000-0000-0000-000000000000</TenantId>
-    <Timeout />
-    <TimeoutTicks>1200000000</TimeoutTicks>
-    <UseIfd>false</UseIfd>
-    <UseMfa>false</UseMfa>
-    <UserDomain />
-    <UserName>MDeykun@notalvision.com</UserName>
-    <WebApplicationUrl>https://notal.crm.dynamics.com</WebApplicationUrl>
-    <SelectedSolution>
-      <SolutionId>fd140aaf-4df4-11dd-bd17-0019b9312238</SolutionId>
-      <FriendlyName>Default Solution</FriendlyName>
-      <UniqueName>Default</UniqueName>
-      <PublisherPrefix>new</PublisherPrefix>
-    </SelectedSolution>
-  </ConnectionDetail>
-</ArrayOfConnectionDetail>";
     }
 }

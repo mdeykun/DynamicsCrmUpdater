@@ -292,6 +292,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\IntExtensions.cs" />
+    <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Extensions\LoggerExtensions.cs" />
+    <Compile Include="Model\PublishResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublishService.cs" />
   </ItemGroup>

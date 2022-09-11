@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\ConnectionData.cs" />
     <Compile Include="Model\ConnectionResult.cs" />
     <Compile Include="ConnectionService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

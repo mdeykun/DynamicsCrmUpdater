@@ -16,7 +16,7 @@ namespace Cwru.Common.Config
         public bool PublishAfterUpload { get; set; }
         public bool IgnoreExtensions { get; set; }
         public bool ExtendedLog { get; set; }
-        public Guid? SelectedEnvironmentId { get; set; }
+        public Guid? DafaultEnvironmentId { get; set; }
         public List<EnvironmentConfig> Environments { get; set; }
 
         public object Clone()
@@ -28,7 +28,7 @@ namespace Cwru.Common.Config
                 PublishAfterUpload = PublishAfterUpload,
                 IgnoreExtensions = IgnoreExtensions,
                 ExtendedLog = ExtendedLog,
-                SelectedEnvironmentId = SelectedEnvironmentId,
+                DafaultEnvironmentId = DafaultEnvironmentId,
                 Environments = Environments?.Select(x => (EnvironmentConfig)x.Clone()).ToList()
             };
         }

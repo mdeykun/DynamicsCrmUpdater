@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 
 namespace Cwru.VsExtension.Commands
 {
-    internal sealed class UpdateSelectedWebResourcesCommand : IBaseCommand
+
+    internal sealed class UpdateWrEnvironmentsCommand : IBaseCommand
     {
         private readonly Logger logger;
         private readonly ConnectionService connectionService;
         private readonly PublishService publishService;
 
-        public UpdateSelectedWebResourcesCommand(Logger logger, ConnectionService connectionService, PublishService publishService)
+        public UpdateWrEnvironmentsCommand(Logger logger, ConnectionService connectionService, PublishService publishService)
         {
             this.logger = logger;
             this.connectionService = connectionService;
@@ -24,10 +25,17 @@ namespace Cwru.VsExtension.Commands
         {
             try
             {
-                var result = await connectionService.EnsurePasswordIsSet();
-                if (result)
+                var result = await connectionService.GetAndValidateConnectionAsync();
+                if (result.IsValid)
                 {
-                    await publishService.PublishWebResourcesAsync(true);
+                    //await publishService.PublishWrToEnvironmentsAsync(result.ProjectInfo, result.ProjectConfig, null, true);
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(result.Message))
+                    {
+                        await logger.WriteLineAsync(result.Message);
+                    }
                 }
             }
             catch (Exception ex)

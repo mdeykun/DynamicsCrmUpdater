@@ -34,7 +34,7 @@ namespace Cwru.CrmRequests.Client
             }
         };
 
-        public async Task<Response<IEnumerable<SolutionDetail>>> GetSolutionsListAsync(string crmConnection)
+        public async Task<Response<IEnumerable<SolutionDetail>>> GetSolutionsListAsync(string crmConnectionString)
         {
             return new Response<IEnumerable<SolutionDetail>>()
             {
@@ -42,8 +42,7 @@ namespace Cwru.CrmRequests.Client
                 Payload = solutions
             };
         }
-
-        public async Task<Response<ConnectionResult>> ValidateConnectionAsync(string crmConnection)
+        public async Task<Response<ConnectionResult>> ValidateConnectionAsync(string crmConnectionString)
         {
             return new Response<ConnectionResult>()
             {
@@ -57,8 +56,7 @@ namespace Cwru.CrmRequests.Client
                 }
             };
         }
-
-        public async Task<Response<bool>> CreateWebresourceAsync(string crmConnection, WebResource webResource, string solution)
+        public async Task<Response<bool>> CreateWebresourceAsync(string crmConnectionString, WebResource webResource, string solution)
         {
             return new Response<bool>()
             {
@@ -66,7 +64,7 @@ namespace Cwru.CrmRequests.Client
                 Payload = true
             };
         }
-        public async Task<Response<bool>> UploadWebresourceAsync(string crmConnection, WebResource webResource)
+        public async Task<Response<bool>> UploadWebresourceAsync(string crmConnectionString, WebResource webResource)
         {
             return new Response<bool>()
             {
@@ -74,8 +72,7 @@ namespace Cwru.CrmRequests.Client
                 Payload = true
             };
         }
-
-        public async Task<Response<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(string crmConnection, Guid solutionId, List<string> webResourceNames)
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
             return new Response<IEnumerable<WebResource>>()
             {
@@ -94,8 +91,24 @@ namespace Cwru.CrmRequests.Client
                 }
             };
         }
-
-        public async Task<Response<bool>> PublishWebResourcesAsync(string crmConnection, IEnumerable<Guid> webResourcesIds)
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(string crmConnectionString, IEnumerable<string> webResourceNames)
+        {
+            return new Response<IEnumerable<WebResource>>()
+            {
+                IsSuccessful = true,
+                Payload = new List<WebResource>()
+                {
+                    new WebResource()
+                    {
+                        Content = "qqqqqqq",
+                        Description = "Descr",
+                        DisplayName = "displayName",
+                        Name = "new_wr.js"
+                    }
+                }
+            };
+        }
+        public async Task<Response<bool>> PublishWebResourcesAsync(string crmConnectionString, IEnumerable<Guid> webResourcesIds)
         {
             return new Response<bool>()
             {
@@ -103,8 +116,7 @@ namespace Cwru.CrmRequests.Client
                 Payload = true
             };
         }
-
-        public async Task<Response<bool>> IsWebResourceExistsAsync(string crmConnection, string webResourceName)
+        public async Task<Response<bool>> IsWebResourceExistsAsync(string crmConnectionString, string webResourceName)
         {
             return new Response<bool>()
             {

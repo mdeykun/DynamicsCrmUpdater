@@ -44,6 +44,7 @@ namespace Cwru.VsExtension
             await AddCommandAsync(0x0200, () => Resolver.UpdaterOptionsCommand.Value, Consts.ProjectCommandSet);
             await AddCommandAsync(0x0300, () => Resolver.UpdateSelectedWebResourcesCommand.Value, Consts.ItemCommandSet);
             await AddCommandAsync(0x0400, () => Resolver.CreateWebResourceCommand.Value, Consts.ItemCommandSet);
+            await AddCommandAsync(0x0500, () => Resolver.DownloadSelectedWrCommand.Value, Consts.ItemCommandSet);
 
             await InitializeDTEAsync(cancellationToken);
         }
@@ -77,6 +78,10 @@ namespace Cwru.VsExtension
                         commandService.AddCommand(menuItem);
                     }
                 }
+                else
+                {
+                    await Resolver.Logger.Value.WriteLineAsync("Warning: IMenuCommandService service is null.");
+                }
             }
             catch (Exception ex)
             {
@@ -89,15 +94,9 @@ namespace Cwru.VsExtension
             try
             {
                 var dteObj = (EnvDTE80.DTE2)await this.GetServiceAsync(typeof(EnvDTE.DTE));
-
                 if (dteObj == null)
                 {
                     await Resolver.Logger.Value.WriteLineAsync("Warning: DTE service is null. Seems that VisualStudio is not fully initialized.");
-                }
-                else
-                {
-                    var extendedLog = await Resolver.ConfigurationService.Value.IsExtendedLoggingAsync();
-                    await Resolver.Logger.Value.WriteLineAsync("DTE service found.", extendedLog);
                 }
             }
             catch (Exception ex)
