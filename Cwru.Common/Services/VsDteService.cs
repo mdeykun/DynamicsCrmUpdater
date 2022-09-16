@@ -1,5 +1,4 @@
-﻿using Cwru.Common.Config;
-using Cwru.Common.Model;
+﻿using Cwru.Common.Model;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -17,6 +16,9 @@ namespace Cwru.Common.Services
 {
     public class VsDteService
     {
+        public const string FileKindGuid = "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
+        public const string ProjectKindGuid = "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
+
         private readonly IAsyncServiceProvider serviceProvider;
         private readonly Logger logger;
 
@@ -42,12 +44,14 @@ namespace Cwru.Common.Services
                 throw new Exception("Project guid can't be retrived");
             }
 
+            var selectedFiles = await GetFilePathsAsync(await GetSelectedItemsAsync());
             return new ProjectInfo()
             {
                 Root = Path.GetDirectoryName(project.FullName).ToLower(),
                 Guid = projectGuid,
                 Files = await GetFilePathsAsync(await GetProjectItemsAsync(project)),
-                SelectedFiles = await GetFilePathsAsync(await GetSelectedItemsAsync())
+                SelectedFiles = selectedFiles,
+                SelectedFile = selectedFiles.FirstOrDefault()
             };
         }
 
@@ -194,7 +198,7 @@ namespace Cwru.Common.Services
 
             foreach (var item in itemsToCheck)
             {
-                if (item.Kind.ToLower() == Consts.FileKindGuid.ToLower())
+                if (item.Kind.ToLower() == FileKindGuid.ToLower())
                 {
                     result.Add(item);
                 }

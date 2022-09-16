@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Cwru.Common.Config
 {
-    [DebuggerDisplay("Name")]
+    [DebuggerDisplay("{Name}")]
     public class EnvironmentConfig : ICloneable
     {
         public Guid Id { get; set; }
@@ -40,6 +40,11 @@ namespace Cwru.Common.Config
                 SelectedSolutionId = SelectedSolutionId,
                 TimeoutTicks = TimeoutTicks
             };
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

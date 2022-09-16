@@ -100,7 +100,7 @@ namespace Cwru.Common.Services
             }
             else
             {
-                throw new Exception($"Failed to retrieve solutions list: {solutionsResponse.Error}");
+                throw new Exception($"Failed to retrieve solutions list: {solutionsResponse.ErrorMessage}");
             }
         }
     }

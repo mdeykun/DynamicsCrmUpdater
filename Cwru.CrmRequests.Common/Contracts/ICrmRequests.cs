@@ -22,6 +22,9 @@ namespace Cwru.CrmRequests.Common.Contracts
         Task<Response<IEnumerable<SolutionDetail>>> GetSolutionsListAsync(string crmConnectionString);
 
         [OperationContract]
+        Task<Response<IEnumerable<WebResource>>> RetrieveAllSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId);
+
+        [OperationContract]
         Task<Response<IEnumerable<WebResource>>> RetrieveSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames);
 
         [OperationContract]

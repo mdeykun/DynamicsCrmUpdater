@@ -33,6 +33,10 @@ namespace Cwru.CrmRequests.Service
         {
             return await Task.Factory.StartNew(() => GetSolutionsList(crmConnectionString), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
         }
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveAllSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId)
+        {
+            return await Task.Factory.StartNew(() => RetrieveWebResources(crmConnectionString, solutionId, null, false), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
+        }
         public async Task<Response<IEnumerable<WebResource>>> RetrieveSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
             return await Task.Factory.StartNew(() => RetrieveWebResources(crmConnectionString, solutionId, webResourceNames), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
@@ -82,7 +86,7 @@ namespace Cwru.CrmRequests.Service
         {
             try
             {
-                Console.WriteLine("Requesting WR update");
+                Console.WriteLine("Wr updating requested");
                 var client = CreateOrganizationService(crmConnectionString);
 
                 client.Update(new Entity("webresource", webResource.Id.Value)
@@ -109,27 +113,32 @@ namespace Cwru.CrmRequests.Service
         {
             try
             {
-                Console.WriteLine("Requesting WR create");
+                Console.WriteLine("Wr creation requested");
                 var client = CreateOrganizationService(crmConnectionString);
 
-                client.Execute(new CreateRequest()
+                var target = new Entity("webresource")
                 {
-                    Target = new Entity("webresource")
+                    Attributes =
                     {
-                        Attributes =
-                        {
-                            { "name", webResource.Name },
-                            { "displayname", webResource.DisplayName },
-                            { "description", webResource.Description },
-                            { "content", webResource.Content },
-                            { "webresourcetype", new OptionSetValue(webResource.Type) },
-                        }
-                    },
+                        { "name", webResource.Name },
+                        { "displayname", webResource.DisplayName },
+                        { "description", webResource.Description },
+                        { "content", webResource.Content },
+                        { "webresourcetype", new OptionSetValue(webResource.Type) },
+                    }
+                };
+
+                var request = new CreateRequest()
+                {
                     Parameters = new ParameterCollection
                     {
                         { "SolutionUniqueName", solution }
                     }
-                });
+                };
+
+                request.Target = target;
+
+                client.Execute(request);
 
                 return new Response<bool>()
                 {
@@ -147,13 +156,13 @@ namespace Cwru.CrmRequests.Service
         {
             try
             {
-                Console.WriteLine("Solution list requested");
+                Console.WriteLine("Solutions list requested");
                 var client = CreateOrganizationService(crmConnectionString);
 
                 var response = client.RetrieveMultiple(new QueryExpression
                 {
                     EntityName = "solution",
-                    ColumnSet = new ColumnSet(new string[] { "friendlyname", "uniquename", "publisherid" }),
+                    ColumnSet = new ColumnSet("friendlyname", "uniquename", "publisherid"),
                     Criteria = new FilterExpression()
                     {
                         Conditions =
@@ -193,17 +202,22 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<IEnumerable<SolutionDetail>>(ex);
             }
         }
-        private Response<IEnumerable<WebResource>> RetrieveWebResources(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
+        private Response<IEnumerable<WebResource>> RetrieveWebResources(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames, bool downloadContent = true)
         {
-            var response = new Response<IEnumerable<WebResource>>();
             try
             {
-                Console.WriteLine("Requesting WR retrieve");
+                Console.WriteLine("Wr requested");
+
+                var columnSet = new ColumnSet("name");
+                if (downloadContent)
+                {
+                    columnSet.AddColumn("content");
+                }
 
                 var client = CreateOrganizationService(crmConnectionString);
                 var query = new QueryExpression("webresource")
                 {
-                    ColumnSet = new ColumnSet("name", "content"),
+                    ColumnSet = columnSet,
                     LinkEntities =
                     {
                         new LinkEntity("webresource", "solutioncomponent", "webresourceid", "objectid", JoinOperator.Inner)
@@ -246,14 +260,13 @@ namespace Cwru.CrmRequests.Service
         }
         private Response<IEnumerable<WebResource>> RetrieveWebResources(string crmConnectionString, IEnumerable<string> webResourceNames)
         {
-            var response = new Response<IEnumerable<WebResource>>();
             try
             {
-                Console.WriteLine("Requesting WR retrieve");
+                Console.WriteLine("Wr requested");
 
                 if (webResourceNames == null || webResourceNames.Count() == 0)
                 {
-                    return response;
+                    return new Response<IEnumerable<WebResource>>() { IsSuccessful = true, Payload = Enumerable.Empty<WebResource>() };
                 }
 
                 var client = CreateOrganizationService(crmConnectionString);
@@ -289,7 +302,7 @@ namespace Cwru.CrmRequests.Service
         {
             try
             {
-                Console.WriteLine("Requesting WR publish");
+                Console.WriteLine("Wr publishing requested");
 
                 var client = CreateOrganizationService(crmConnectionString);
                 if (webResourcesIds == null || !webResourcesIds.Any())
@@ -325,7 +338,7 @@ namespace Cwru.CrmRequests.Service
         {
             try
             {
-                Console.WriteLine("Requesting IsWebResourceExists");
+                Console.WriteLine("IsWebResourceExists requested");
 
                 var client = CreateOrganizationService(crmConnectionString);
 
@@ -361,14 +374,21 @@ namespace Cwru.CrmRequests.Service
         {
             return new Response<T>()
             {
-                Error = ex.ToString(),
+                ErrorMessage = ex.Message,
                 IsSuccessful = false,
-                Payload = payload
+                Payload = payload,
+                Exception = ex
             };
         }
         private CrmServiceClient CreateOrganizationService(string connectionString)
         {
             var сrmServiceClient = new CrmServiceClient(connectionString);
+
+            if (сrmServiceClient == null || сrmServiceClient.IsReady == false)
+            {
+                throw сrmServiceClient.LastCrmException ?? new Exception("Crm connection is not ready");
+            }
+
             return сrmServiceClient;
         }
     }

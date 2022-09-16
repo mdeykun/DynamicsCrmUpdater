@@ -34,6 +34,17 @@ namespace Cwru.CrmRequests.Client
             }
         };
 
+        private List<WebResource> webResources = new List<WebResource>()
+        {
+            new WebResource()
+            {
+                Content = "qqqqqqq",
+                Description = "Descr",
+                DisplayName = "displayName",
+                Name = "new_wr.js"
+            }
+        };
+
         public async Task<Response<IEnumerable<SolutionDetail>>> GetSolutionsListAsync(string crmConnectionString)
         {
             return new Response<IEnumerable<SolutionDetail>>()
@@ -72,23 +83,21 @@ namespace Cwru.CrmRequests.Client
                 Payload = true
             };
         }
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveAllSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId)
+        {
+            return new Response<IEnumerable<WebResource>>()
+            {
+                IsSuccessful = true,
+                Payload = webResources
+            };
+        }
         public async Task<Response<IEnumerable<WebResource>>> RetrieveSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
             return new Response<IEnumerable<WebResource>>()
             {
 
                 IsSuccessful = true,
-                Payload = new List<WebResource>()
-                {
-                    new WebResource()
-                    {
-                        Content = "qqqqqqq",
-                        Description = "Descr",
-                        DisplayName = "displayName",
-                        Id = solutionId,
-                        Name = "new_wr.js"
-                    }
-                }
+                Payload = webResources
             };
         }
         public async Task<Response<IEnumerable<WebResource>>> RetrieveWebResourcesAsync(string crmConnectionString, IEnumerable<string> webResourceNames)
@@ -96,16 +105,7 @@ namespace Cwru.CrmRequests.Client
             return new Response<IEnumerable<WebResource>>()
             {
                 IsSuccessful = true,
-                Payload = new List<WebResource>()
-                {
-                    new WebResource()
-                    {
-                        Content = "qqqqqqq",
-                        Description = "Descr",
-                        DisplayName = "displayName",
-                        Name = "new_wr.js"
-                    }
-                }
+                Payload = webResources
             };
         }
         public async Task<Response<bool>> PublishWebResourcesAsync(string crmConnectionString, IEnumerable<Guid> webResourcesIds)

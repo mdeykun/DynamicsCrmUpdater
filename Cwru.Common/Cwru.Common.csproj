@@ -60,19 +60,13 @@
   <ItemGroup>
     <Compile Include="Attributes\ConnectionStringAliases.cs" />
     <Compile Include="Config\Certificate.cs" />
-    <Compile Include="Config\Consts.cs" />
     <Compile Include="Config\Depricated\ConnectionDetail.cs" />
     <Compile Include="Config\ProjectConfig.cs" />
+    <Compile Include="Extensions\IntExtensions.cs" />
     <Compile Include="Extensions\ProjectConfigExtensions.cs" />
     <Compile Include="Extensions\SecureStringExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\WritableSettingsStoreExtensions.cs" />
-    <Compile Include="Forms\CreateWebResourceForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\CreateWebResourceForm.Designer.cs">
-      <DependentUpon>CreateWebResourceForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Contracts\ILogger.cs" />
     <Compile Include="JsonConverters\AuthenticationTypeConverter.cs" />
     <Compile Include="JsonConverters\SecureStringConverter.cs" />
@@ -113,11 +107,6 @@
     <PackageReference Include="System.Security.Cryptography.X509Certificates">
       <Version>4.3.2</Version>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Forms\CreateWebResourceForm.resx">
-      <DependentUpon>CreateWebResourceForm.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

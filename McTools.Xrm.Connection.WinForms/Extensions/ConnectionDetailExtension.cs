@@ -8,7 +8,6 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
     public static class ConnectionDetailExtensions
     {
         //TODO: Review from AuthenticationTypes perspective
-        //TODO: При скачивании нужно расшифровывать веб ресурс
         public static CrmConnectionString ToCrmConnectionString(this ConnectionDetail connectionDetail, bool? forceNewService = null)
         {
             if (connectionDetail.Certificate != null)

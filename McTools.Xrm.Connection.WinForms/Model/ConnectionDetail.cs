@@ -76,10 +76,6 @@ namespace McTools.Xrm.Connection.WinForms.Model
                 ConnectionString = ConnectionString,
                 HomeRealmUrl = HomeRealmUrl,
                 Organization = Organization,
-                //OrganizationFriendlyName = OrganizationFriendlyName,
-                //OrganizationServiceUrl = OrganizationServiceUrl,
-                //OrganizationDataServiceUrl = OrganizationDataServiceUrl,
-                //OrganizationUrlName = OrganizationUrlName,
                 OrganizationVersion = OrganizationVersion,
                 SavePassword = SavePassword,
                 ServerName = ServerName,
@@ -87,7 +83,6 @@ namespace McTools.Xrm.Connection.WinForms.Model
                 UseIfd = UseIfd,
                 UserDomain = UserDomain,
                 UserName = UserName,
-                //WebApplicationUrl = WebApplicationUrl,
                 OriginalUrl = OriginalUrl,
                 Timeout = Timeout,
                 UseMfa = UseMfa,
@@ -141,12 +136,26 @@ namespace McTools.Xrm.Connection.WinForms.Model
         public int CompareTo(object obj)
         {
             var detail = (ConnectionDetail)obj;
-
             return String.Compare(ConnectionName, detail.ConnectionName, StringComparison.Ordinal);
         }
         public override string ToString()
         {
-            return ConnectionName;
+            var name = this.ConnectionName ?? this.Organization;
+            if (name != null)
+            {
+                return name;
+            }
+            else if (!string.IsNullOrEmpty(this.OriginalUrl))
+            {
+                var uri = new Uri(this.OriginalUrl);
+                return uri.Host;
+            }
+            else if (ConnectionId != null)
+            {
+                return ConnectionId?.ToString("B");
+            }
+
+            return "Connection name is not set";
         }
     }
 }

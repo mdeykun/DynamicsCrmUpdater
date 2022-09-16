@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Cwru.Forms
+namespace Cwru.Publisher.Forms
 {
     public partial class CreateWebResourceForm : Form
     {

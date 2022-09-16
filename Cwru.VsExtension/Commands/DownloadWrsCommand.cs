@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace Cwru.VsExtension.Commands
 {
-    internal sealed class UpdateSelectedWrCommand : PublisherCommandBase
+    internal class DownloadWrsCommand : PublisherCommandBase
     {
         private readonly PublishService publishService;
 
-        public UpdateSelectedWrCommand(Logger logger, ConnectionService connectionService, PublishService publishService) : base(logger, connectionService)
+        public DownloadWrsCommand(Logger logger, ConnectionService connectionService, PublishService publishService) : base(logger, connectionService)
         {
             this.publishService = publishService;
         }
 
         protected override async Task ExecutePublisherLogicAsync(ProjectInfo projectInfo, ProjectConfig projectConfig)
         {
-            await publishService.UploadWrToDefaultEnvironmentAsync(projectInfo, projectConfig, true);
+            await publishService.DownloadWrsAsync(projectInfo, projectConfig);
         }
     }
 }

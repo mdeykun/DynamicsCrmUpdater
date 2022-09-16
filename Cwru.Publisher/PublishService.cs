@@ -4,8 +4,8 @@ using Cwru.Common.Extensions;
 using Cwru.Common.Model;
 using Cwru.Common.Services;
 using Cwru.CrmRequests.Common.Contracts;
-using Cwru.Forms;
 using Cwru.Publisher.Extensions;
+using Cwru.Publisher.Forms;
 using Cwru.Publisher.Model;
 using Microsoft.VisualStudio.Shell;
 using System;
@@ -41,6 +41,11 @@ namespace Cwru.Publisher
             this.vsDteService = vsDteService;
         }
 
+        public Task UploadWrToEnvironmentsAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task UploadWrToDefaultEnvironmentAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
         {
             await OperationStart("Uploading web resources...", "Uploading...");
@@ -74,18 +79,24 @@ namespace Cwru.Publisher
                 return;
             }
 
-            var dialog = new CreateWebResourceForm(logger, projectInfo.SelectedFile, selectedSolution.PublisherPrefix);
+            var selectedFile = projectInfo.SelectedFile;
+            if (selectedFile == null)
+            {
+                throw new Exception("File was not selected");
+            }
+
+            var dialog = new CreateWebResourceForm(logger, selectedFile, selectedSolution.PublisherPrefix);
 
             dialog.OnCreate = async (WebResource webResource) =>
             {
-                webResource.Content = GetEncodedFileContent(projectInfo.SelectedFile);
+                webResource.Content = GetEncodedFileContent(selectedFile);
 
                 var webresourceName = webResource.Name;
 
                 var isWebResourceExistsResponse = await crmRequest.IsWebResourceExistsAsync(environmentConfig.ConnectionString.BuildConnectionString(), webresourceName);
                 if (isWebResourceExistsResponse.IsSuccessful == false)
                 {
-                    MessageBox.Show($"Failed to validate webresource existance: {isWebResourceExistsResponse.Error}", "Error.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Failed to validate webresource existance: {isWebResourceExistsResponse.ErrorMessage}", "Error.", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 if (isWebResourceExistsResponse.Payload)
@@ -99,7 +110,7 @@ namespace Cwru.Publisher
                     var isMappingRequired = mappingService.IsMappingRequired(
                         projectInfo.Root,
                         projectInfo.Files,
-                        projectInfo.SelectedFile,
+                        selectedFile,
                         webresourceName,
                         projectConfig.IgnoreExtensions);
 
@@ -125,11 +136,13 @@ namespace Cwru.Publisher
                             projectInfo.Guid,
                             projectInfo.Root,
                             projectInfo.Files,
-                            projectInfo.SelectedFile,
+                            selectedFile,
                             webresourceName);
                     }
 
-                    await crmRequest.CreateWebresourceAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResource, selectedSolution.UniqueName);
+                    var createWebResourceResponse = await crmRequest.CreateWebresourceAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResource, selectedSolution.UniqueName);
+                    createWebResourceResponse.EnsureSuccess();
+
                     await logger.WriteLineAsync("Webresource '" + webresourceName + "' was successfully created");
                     dialog.Close();
                 }
@@ -143,11 +156,39 @@ namespace Cwru.Publisher
             dialog.ShowDialog();
         }
 
-        public async Task DownloadSelectedWrAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
+        public async Task DownloadSelectedWrAsync(ProjectInfo projectInfo, ProjectConfig projectConfig)
         {
             await OperationStart("Downloading web resources...", "Downloading...");
 
-            var filesToDownload = await GetProjectFilesAsync(projectInfo, selectedItemsOnly, projectConfig.ExtendedLog);
+            var filesToDownload = await GetProjectFilesAsync(projectInfo, true, projectConfig.ExtendedLog);
+            if (filesToDownload.Count() == 0)
+            {
+                return;
+            }
+
+            var result = await DownloadWrAsync(projectConfig, projectConfig.GetDefaultEnvironment(), projectInfo, filesToDownload);
+
+            if (result.Exception == null)
+            {
+                await OperationEnd("Done.", $"{result.Processed} web resource{result.Processed.Select(" was", "s were")} downloaded");
+            }
+            else
+            {
+                await OperationEnd("Done.", $"Failed to download script{filesToDownload.Count().Select("", "s")}");
+            }
+        }
+
+        public async Task DownloadWrsAsync(ProjectInfo projectInfo, ProjectConfig projectConfig)
+        {
+            await OperationStart("Downloading web resources...", "Downloading...");
+
+            var dialog = new SelectWebResourcesForm(logger, projectConfig, crmRequest, solutionsService);
+            dialog.ShowDialog();
+
+            return;
+
+            //TODO
+            var filesToDownload = Enumerable.Empty<string>(); //await (projectInfo, true, projectConfig.ExtendedLog);
             if (filesToDownload.Count() == 0)
             {
                 return;
@@ -343,7 +384,10 @@ namespace Cwru.Publisher
             if (remoteContent.Length != localContent.Length || remoteContent != localContent)
             {
                 webResource.Content = localContent;
-                await crmRequest.UploadWebresourceAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResource);
+
+                var result = await crmRequest.UploadWebresourceAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResource);
+                result.EnsureSuccess();
+
                 await logger.WriteLineAsync($"{webResource.Name} uploaded from " + relativePath);
                 return true;
             }
@@ -379,7 +423,7 @@ namespace Cwru.Publisher
             var retrieveWebResourceResponse = await crmRequest.RetrieveSolutionWebResourcesAsync(environmentConfig.ConnectionString.BuildConnectionString(), environmentConfig.SelectedSolutionId, webResourceNames);
             if (retrieveWebResourceResponse.IsSuccessful == false)
             {
-                throw new Exception($"Failed to retrieve web resource: {retrieveWebResourceResponse.Error}");
+                throw new Exception($"Failed to retrieve web resource: {retrieveWebResourceResponse.ErrorMessage}");
             }
 
             return retrieveWebResourceResponse.Payload;
@@ -394,7 +438,7 @@ namespace Cwru.Publisher
             var retrieveWebResourceResponse = await crmRequest.RetrieveWebResourcesAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResourceNames);
             if (retrieveWebResourceResponse.IsSuccessful == false)
             {
-                throw new Exception($"Failed to retrieve web resource: {retrieveWebResourceResponse.Error}");
+                throw new Exception($"Failed to retrieve web resource: {retrieveWebResourceResponse.ErrorMessage}");
             }
 
             return retrieveWebResourceResponse.Payload;
@@ -433,7 +477,8 @@ namespace Cwru.Publisher
             }
             if (webresourcesIds.Any())
             {
-                await crmRequest.PublishWebResourcesAsync(environmentConfig.ConnectionString.BuildConnectionString(), webresourcesIds);
+                var result = await crmRequest.PublishWebResourcesAsync(environmentConfig.ConnectionString.BuildConnectionString(), webresourcesIds);
+                result.EnsureSuccess();
             }
             var count = webresourcesIds.Count();
             await logger.WriteLineWithTimeAsync(count + " file" + (count == 1 ? " was" : "s were") + " published");

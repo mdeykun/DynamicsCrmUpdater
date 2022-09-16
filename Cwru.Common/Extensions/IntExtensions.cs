@@ -1,4 +1,4 @@
-﻿namespace Cwru.Publisher.Extensions
+﻿namespace Cwru.Common.Extensions
 {
     public static class IntExtensions
     {

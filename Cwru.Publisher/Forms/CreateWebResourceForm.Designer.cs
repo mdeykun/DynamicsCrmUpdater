@@ -1,4 +1,4 @@
-﻿namespace Cwru.Forms
+﻿namespace Cwru.Publisher.Forms
 {
     partial class CreateWebResourceForm
     {

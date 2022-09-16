@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Security;
-using System.Text.RegularExpressions;
 
 namespace Cwru.Common.Extensions
 {
@@ -30,7 +29,17 @@ namespace Cwru.Common.Extensions
 
         public static string RemoveRoot(this string path, string rootPath)
         {
-            var result = Regex.Replace(path, rootPath, "", RegexOptions.IgnoreCase);
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+
+            if (string.IsNullOrEmpty(rootPath))
+            {
+                return path;
+            }
+
+            var result = path.ToLower().Replace(rootPath.ToLower(), "");
             return result.TrimStart('\\');
         }
 

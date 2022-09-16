@@ -54,20 +54,25 @@ namespace Cwru.Connection.Services
                 return GetFailed("Failed to load project config.");
             }
 
-            if (projectConfig.DafaultEnvironmentId == null)
-            {
-                return GetFailed("Error: Connection is not selected");
-            }
-
             var environmentConfig = projectConfig.GetDefaultEnvironment();
             if (environmentConfig == null || environmentConfig.ConnectionString == null)
             {
                 if (ShowErrorDialog() == DialogResult.Yes)
                 {
-                    var result = await ShowConfigurationDialogAsync();
-                    if (result != DialogResult.OK)
+                    environmentConfig = await ShowConfigurationDialogAsync();
+                    if (environmentConfig == null)
                     {
-                        return GetFailed();
+                        return GetFailed("Сonnection was not configured");
+                    }
+                    else
+                    {
+                        return new ConnectionData()
+                        {
+                            IsJustConfigured = true,
+                            IsValid = true,
+                            ProjectConfig = null,
+                            ProjectInfo = null,
+                        };
                     }
                 }
                 else
@@ -134,13 +139,13 @@ namespace Cwru.Connection.Services
             return GetFailed();
         }
 
-        public async Task<DialogResult> ShowConfigurationDialogAsync()
+        public async Task<EnvironmentConfig> ShowConfigurationDialogAsync()
         {
             var project = await vsDteHelper.GetSelectedProjectInfoAsync();
             if (project == null)
             {
                 await logger.WriteLineAsync("Project is not selected or selected project can't be identified");
-                return DialogResult.Cancel;
+                return null;
             }
 
             var projectConfig = await configurationService.GetProjectConfigAsync(project.Guid);
@@ -167,9 +172,11 @@ namespace Cwru.Connection.Services
                 projectConfig.DafaultEnvironmentId = selector.connectionsList.SelectedConnectionId;
 
                 configurationService.Save(projectConfig);
+
+                return projectConfig.GetDefaultEnvironment();
             }
 
-            return selector.DialogResult;
+            return null;
         }
 
         private List<EnvironmentConfig> ConvertFromXrmCrmConnections(ConnectionDetailsList connectionList)

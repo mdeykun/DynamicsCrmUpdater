@@ -52,6 +52,10 @@ namespace Cwru.CrmRequests.Client
         {
             return await Client.UploadWebresourceAsync(crmConnectionString, webResource);
         }
+        public async Task<Response<IEnumerable<WebResource>>> RetrieveAllSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId)
+        {
+            return await Client.RetrieveAllSolutionWebResourcesAsync(crmConnectionString, solutionId);
+        }
         public async Task<Response<IEnumerable<WebResource>>> RetrieveSolutionWebResourcesAsync(string crmConnectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
             return await Client.RetrieveSolutionWebResourcesAsync(crmConnectionString, solutionId, webResourceNames);

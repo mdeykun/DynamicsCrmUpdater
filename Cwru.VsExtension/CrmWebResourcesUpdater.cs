@@ -1,5 +1,4 @@
-﻿using Cwru.Common.Config;
-using Cwru.VsExtension.Commands.Base;
+﻿using Cwru.VsExtension.Commands.Base;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
@@ -18,10 +17,16 @@ namespace Cwru.VsExtension
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
-    [Guid(Consts.PackageGuidString)]
+    [Guid(PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class CrmWebResourcesUpdater : AsyncPackage
     {
+        public const string PackageGuidString = "944f3eda-3d74-49f0-a2d4-a25775f1ab36";
+        public static readonly Guid Package = new Guid("944f3eda-3d74-49f0-a2d4-a25775f1ab36");
+        public static readonly Guid ProjectCommandSet = new Guid("e51702bf-0cd0-413b-87ba-7d267eecc6c2");
+        public static readonly Guid ItemCommandSet = new Guid("AE7DC0B9-634A-46DB-A008-D6D15DD325E0");
+        public static readonly Guid FolderCommandSet = new Guid("18CFE3ED-8E6B-4BD0-BFE7-9AFF7BF02009");
+
         /// <summary>
         /// Initializes a new instance of the <see cref="CrmWebResourcesUpdater"/> class.
         /// </summary>
@@ -40,11 +45,13 @@ namespace Cwru.VsExtension
             Resolver.Initialize(this);
             Resolver.WatchdogService.Value.Start();
 
-            await AddCommandAsync(0x0100, () => Resolver.UpdateWebResourcesCommand.Value, Consts.ItemCommandSet, Consts.ProjectCommandSet);
-            await AddCommandAsync(0x0200, () => Resolver.UpdaterOptionsCommand.Value, Consts.ProjectCommandSet);
-            await AddCommandAsync(0x0300, () => Resolver.UpdateSelectedWebResourcesCommand.Value, Consts.ItemCommandSet);
-            await AddCommandAsync(0x0400, () => Resolver.CreateWebResourceCommand.Value, Consts.ItemCommandSet);
-            await AddCommandAsync(0x0500, () => Resolver.DownloadSelectedWrCommand.Value, Consts.ItemCommandSet);
+            //TODO: load more then 5000 Wr
+            await AddCommandAsync(0x0100, () => Resolver.UpdateWebResourcesCommand.Value, ItemCommandSet, ProjectCommandSet);
+            await AddCommandAsync(0x0200, () => Resolver.UpdaterOptionsCommand.Value, ProjectCommandSet);
+            await AddCommandAsync(0x0300, () => Resolver.UpdateSelectedWebResourcesCommand.Value, ItemCommandSet);
+            await AddCommandAsync(0x0400, () => Resolver.CreateWebResourceCommand.Value, ItemCommandSet);
+            await AddCommandAsync(0x0500, () => Resolver.DownloadSelectedWrCommand.Value, ItemCommandSet);
+            await AddCommandAsync(0x0600, () => Resolver.DownloadWrsCommand.Value, ProjectCommandSet, FolderCommandSet);
 
             await InitializeDTEAsync(cancellationToken);
         }

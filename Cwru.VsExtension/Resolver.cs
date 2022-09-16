@@ -81,6 +81,7 @@ namespace Cwru.VsExtension
             UpdateSelectedWebResourcesCommand = new Lazy<UpdateSelectedWrCommand>(() => new UpdateSelectedWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
             UpdateWebResourcesCommand = new Lazy<UpdateWrCommand>(() => new UpdateWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
             DownloadSelectedWrCommand = new Lazy<DownloadSelectedWrCommand>(() => new DownloadSelectedWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
+            DownloadWrsCommand = new Lazy<DownloadWrsCommand>(() => new DownloadWrsCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
         }
 
         public static Lazy<WritableSettingsStore> SettingsStore { get; private set; }
@@ -101,5 +102,6 @@ namespace Cwru.VsExtension
         public static Lazy<UpdateSelectedWrCommand> UpdateSelectedWebResourcesCommand { get; private set; }
         public static Lazy<UpdateWrCommand> UpdateWebResourcesCommand { get; private set; }
         public static Lazy<DownloadSelectedWrCommand> DownloadSelectedWrCommand { get; private set; }
+        public static Lazy<DownloadWrsCommand> DownloadWrsCommand { get; private set; }
     }
 }

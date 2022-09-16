@@ -64,7 +64,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Commands\Base\CommandBase.cs" />
     <Compile Include="Commands\Base\IBaseCommand.cs" />
+    <Compile Include="Commands\Base\PublisherCommandBase.cs" />
     <Compile Include="Commands\CreateWrCommand.cs" />
     <Compile Include="Commands\DownloadSelectedWrCommand.cs" />
     <Compile Include="Commands\UpdaterOptionsCommand.cs" />
@@ -72,6 +74,7 @@
     <Compile Include="Commands\UpdateWrCommand.cs" />
     <Compile Include="Commands\UpdateWrEnvironmentsCommand.cs" />
     <Compile Include="CrmWebResourcesUpdater.cs" />
+    <Compile Include="Commands\DownloadWrsCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resolver.cs" />
   </ItemGroup>

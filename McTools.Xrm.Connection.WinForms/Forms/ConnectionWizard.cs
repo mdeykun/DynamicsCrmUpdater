@@ -413,7 +413,7 @@ namespace McTools.Xrm.Connection.WinForms
                 var validationResponse = await crmRequests.ValidateConnectionAsync(crmConnectionString.BuildConnectionString());
                 if (validationResponse.IsSuccessful == false)
                 {
-                    throw new Exception($"Failed to validate connection: {validationResponse.Error}");
+                    throw new Exception($"Failed to validate connection: {validationResponse.ErrorMessage}");
                 }
                 var connectionResult = validationResponse.Payload;
 

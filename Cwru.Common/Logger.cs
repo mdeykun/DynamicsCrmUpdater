@@ -1,5 +1,4 @@
-﻿using Cwru.Common.Config;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Threading.Tasks;
@@ -9,6 +8,8 @@ namespace Cwru.Common
 {
     public class Logger : ILogger
     {
+        public static readonly Guid OutputWindowGuid = new Guid("10B2DB3C-1CB4-43B4-80D4-A03204A616D4");
+
         private IVsOutputWindow outputWindow;
         private IVsOutputWindowPane outputWindowPane;
 
@@ -86,7 +87,7 @@ namespace Cwru.Common
                 throw new InvalidOperationException("Failed to initialize output window");
             }
             outputWindow = svsOutputWindow as IVsOutputWindow;
-            var windowGuid = new Guid(Consts.OutputWindowGuidString);
+            var windowGuid = OutputWindowGuid;
             var windowTitle = "Crm Publisher";
 
             outputWindow.CreatePane(ref windowGuid, windowTitle, 1, 1);
