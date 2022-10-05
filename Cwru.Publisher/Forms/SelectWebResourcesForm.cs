@@ -4,6 +4,7 @@ using Cwru.Common.Extensions;
 using Cwru.Common.Model;
 using Cwru.Common.Services;
 using Cwru.CrmRequests.Common.Contracts;
+using Cwru.Publisher.Extensions;
 using Cwru.Publisher.Forms.Controls;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ using System.Windows.Forms;
 
 namespace Cwru.Publisher.Forms
 {
+    //TODO: Test cases preparation
+
     public partial class SelectWebResourcesForm : Form
     {
         private readonly Logger logger;
@@ -21,29 +24,38 @@ namespace Cwru.Publisher.Forms
         private readonly ICrmRequests crmRequests;
         private readonly SolutionsService solutionsService;
         private readonly CustomProgressBar customProgressBar;
+        private readonly WebResourceTypesService webResourceTypesService;
+        private const string searchPlaceHolderText = "Search...";
+
+        private List<WebResource> allWebResources;
+        private string lastSerchString;
 
         public Guid? SelectedEnvironmentId { get; set; }
         public Guid? SelectedSolutionId { get; set; }
         public string SelectedSolutionName { get; set; }
-        public List<string> SelectedWebResources { get; set; }
+        public List<WebResource> SelectedWebResources { get; set; }
 
         public SelectWebResourcesForm(
             Logger logger,
             ProjectConfig projectConfig,
             ICrmRequests crmRequests,
-            SolutionsService solutionsService)
+            SolutionsService solutionsService,
+            WebResourceTypesService webResourceTypesService)
         {
+            this.SelectedWebResources = new List<WebResource>();
+
             this.logger = logger;
             this.projectConfig = projectConfig;
             this.crmRequests = crmRequests;
             this.solutionsService = solutionsService;
+            this.webResourceTypesService = webResourceTypesService;
 
             InitializeComponent();
 
             this.customProgressBar = new CustomProgressBar(progressBar);
         }
 
-        private async void SelectWebResourcesForm_Load(object sender, EventArgs e)
+        private async void selectWebResourcesForm_Load(object sender, EventArgs e)
         {
             try
             {
@@ -53,7 +65,8 @@ namespace Cwru.Publisher.Forms
                 var environment = projectConfig.GetDefaultEnvironment();
                 SelectedEnvironmentId = environment.Id;
                 SelectedSolutionId = environment.SelectedSolutionId;
-                SelectedWebResources = new List<string>();
+                SelectedWebResources = new List<WebResource>();
+                allWebResources = new List<WebResource>();
 
                 environvmentsComboBox.DisplayMember = nameof(EnvironmentConfig.Name);
                 solutionsComboBox.DisplayMember = nameof(SolutionDetail.FriendlyName);
@@ -75,6 +88,16 @@ namespace Cwru.Publisher.Forms
 
                 environvmentsComboBox.SelectedIndexChanged += environvmentsComboBox_SelectedIndexChanged;
                 solutionsComboBox.SelectedIndexChanged += solutionsComboBox_SelectedIndexChanged;
+
+                var webResourcesTypes = webResourceTypesService.GetTypesLabels();
+                wrTypesComboBox.Items.Add("All Types");
+                wrTypesComboBox.Items.AddRange(webResourcesTypes.Values.ToArray());
+                wrTypesComboBox.SelectedIndexChanged += wrTypesComboBox_SelectedIndexChanged;
+
+                wrSearchTextBox.ForeColor = Color.Gray;
+                wrSearchTextBox.Text = searchPlaceHolderText;
+                wrSearchTextBox.GotFocus += wrSearchTextBox_GotFocus;
+                wrSearchTextBox.LostFocus += wrSearchTextBox_LostFocus;
 
             }
             catch (Exception ex)
@@ -131,36 +154,125 @@ namespace Cwru.Publisher.Forms
 
         private void addButton_Click(object sender, EventArgs e)
         {
-            var selectedItems = new WebResource[allWrList.SelectedItems.Count];
-            allWrList.SelectedItems.CopyTo(selectedItems, 0);
+            var selectedItems = allWrList.SelectedItems.ToArray<WebResource>();
+            if (selectedItems.Length == 0)
+            {
+                return;
+            }
 
             selectedWrList.Items.AddRange(selectedItems);
-            foreach (var item in selectedItems)
-            {
-                allWrList.Items.Remove(item);
-            }
+
+            SelectedWebResources.Clear();
+            SelectedWebResources.AddRange(selectedWrList.Items.ToArray<WebResource>());
+
+            FilterAllItems(true);
         }
 
         private void removeButton_Click(object sender, EventArgs e)
         {
-            var selectedItems = new WebResource[selectedWrList.SelectedItems.Count];
-            selectedWrList.SelectedItems.CopyTo(selectedItems, 0);
-
-            allWrList.Items.AddRange(selectedItems);
-            foreach (var item in selectedItems)
+            var selectedItems = selectedWrList.SelectedItems.ToArray<WebResource>();
+            if (selectedItems.Length == 0)
             {
-                selectedWrList.Items.Remove(item);
+                return;
             }
+
+            selectedWrList.Items.RemoveRange(selectedItems);
+
+            SelectedWebResources.Clear();
+            SelectedWebResources.AddRange(selectedWrList.Items.ToArray<WebResource>());
+
+            FilterAllItems(true);
         }
 
         private void okButton_Click(object sender, EventArgs e)
         {
-
+            DialogResult = DialogResult.OK;
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
         {
+            DialogResult = DialogResult.Cancel;
+        }
 
+        private void wrSearchTextBox_TextChanged(object sender, EventArgs e)
+        {
+            FilterAllItems(false);
+        }
+
+        private void wrTypesComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            FilterAllItems(true);
+        }
+
+        private void wrSearchTextBox_LostFocus(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(wrSearchTextBox.Text))
+            {
+                wrSearchTextBox.Text = searchPlaceHolderText;
+                wrSearchTextBox.ForeColor = Color.Gray;
+            }
+        }
+
+        private void wrSearchTextBox_GotFocus(object sender, EventArgs e)
+        {
+            if (wrSearchTextBox.Text.IsEqualToLower(searchPlaceHolderText))
+            {
+                wrSearchTextBox.ForeColor = Color.Black;
+                wrSearchTextBox.Text = string.Empty;
+            }
+        }
+
+        private void FilterAllItems(bool force)
+        {
+            var itemsToShow = allWebResources.AsEnumerable();
+
+            var searchText = wrSearchTextBox.Text?.Trim();
+            if (searchText == null || searchText.IsEqualToLower(searchPlaceHolderText))
+            {
+                searchText = string.Empty;
+            }
+
+            if (lastSerchString.IsEqualToLower(searchText) && !force)
+            {
+                return;
+            }
+
+            lastSerchString = searchText;
+            var startWithStar = searchText.StartsWith("*");
+            searchText = startWithStar ? searchText.Substring(1) : searchText;
+
+            if (wrTypesComboBox.SelectedIndex != 0)
+            {
+                var wrTypeLabelToShow = (string)wrTypesComboBox.SelectedItem;
+                var wrTypeToShow = webResourceTypesService.GetTypeByLabel(wrTypeLabelToShow);
+                if (wrTypeToShow != null)
+                {
+                    itemsToShow = itemsToShow.Where(x => x.Type == wrTypeToShow);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                if (startWithStar)
+                {
+                    itemsToShow = itemsToShow.
+                        Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                }
+                else
+                {
+                    itemsToShow = itemsToShow.
+                        Where(x => x.Name.StartWithLower(searchText));
+                }
+            }
+
+            var selectedItems = selectedWrList.SelectedItems.ToArray<WebResource>();
+            if (selectedItems.Length > 0)
+            {
+                itemsToShow = itemsToShow.Where(x => !selectedItems.Contains(x));
+            }
+
+            allWrList.Items.Clear();
+            allWrList.Items.AddRange(itemsToShow.ToArray());
         }
 
         private async Task LoadWebResourcesAsync()
@@ -189,12 +301,13 @@ namespace Cwru.Publisher.Forms
             allWrList.Items.Clear();
             allWrList.Items.AddRange(webResources);
 
+            allWebResources.Clear();
+            allWebResources.AddRange(webResources);
+
             ShowStatus(webResources.Length > 0 ?
                 $"{webResources.Length} web resource{webResources.Length.Select(" was", "s were")} loaded" :
                 $"Solution dosn't have any web resource", Color.Green);
         }
-
-        //TODO: WR names are case sensetive now
 
         private async Task LoadSolutionsAsync()
         {
@@ -247,6 +360,8 @@ namespace Cwru.Publisher.Forms
             selectedWrList.Enabled = !lockForm;
             addButton.Enabled = !lockForm;
             removeButton.Enabled = !lockForm;
+            wrSearchTextBox.Enabled = !lockForm;
+            wrTypesComboBox.Enabled = !lockForm;
         }
 
         private void ShowStatus(string status)

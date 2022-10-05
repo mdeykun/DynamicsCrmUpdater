@@ -3,7 +3,7 @@ using Cwru.Common.Services;
 using Cwru.Connection.Services;
 using Cwru.CrmRequests.Client;
 using Cwru.CrmRequests.Common.Contracts;
-using Cwru.Publisher;
+using Cwru.Publisher.Services;
 using Cwru.VsExtension.Commands;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
@@ -40,6 +40,7 @@ namespace Cwru.VsExtension
                 return shellSettingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
             });
 
+            WebResourceTypesService = new Lazy<WebResourceTypesService>(() => new WebResourceTypesService(Logger.Value));
             CryptoService = new Lazy<CryptoService>(() => new CryptoService());
             SolutionsService = new Lazy<SolutionsService>(() => new SolutionsService(CrmRequestsClient.Value));
 
@@ -51,11 +52,27 @@ namespace Cwru.VsExtension
 
             MappingService = new Lazy<MappingService>(() => new MappingService(VsDteService.Value));
 
-            PublishService = new Lazy<PublishService>(() => new PublishService(
+            CreateWrService = new Lazy<CreateWrService>(() => new CreateWrService(
                 Logger.Value,
                 CrmRequestsClient.Value,
                 MappingService.Value,
                 SolutionsService.Value,
+                WebResourceTypesService.Value,
+                VsDteService.Value));
+
+            UpdateWrService = new Lazy<UpdateWrService>(() => new UpdateWrService(
+                Logger.Value,
+                CrmRequestsClient.Value,
+                MappingService.Value,
+                SolutionsService.Value,
+                VsDteService.Value));
+
+            DownloadWrService = new Lazy<DownloadWrService>(() => new DownloadWrService(
+                Logger.Value,
+                CrmRequestsClient.Value,
+                MappingService.Value,
+                SolutionsService.Value,
+                WebResourceTypesService.Value,
                 VsDteService.Value));
 
             ConnectionService = new Lazy<ConnectionService>(() => new ConnectionService(
@@ -76,12 +93,12 @@ namespace Cwru.VsExtension
                     "Cwru.ServiceConsole");
             });
 
-            CreateWebResourceCommand = new Lazy<CreateWrCommand>(() => new CreateWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
+            CreateWebResourceCommand = new Lazy<CreateWrCommand>(() => new CreateWrCommand(Logger.Value, ConnectionService.Value, CreateWrService.Value));
             UpdaterOptionsCommand = new Lazy<UpdaterOptionsCommand>(() => new UpdaterOptionsCommand(Logger.Value, ConnectionService.Value));
-            UpdateSelectedWebResourcesCommand = new Lazy<UpdateSelectedWrCommand>(() => new UpdateSelectedWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
-            UpdateWebResourcesCommand = new Lazy<UpdateWrCommand>(() => new UpdateWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
-            DownloadSelectedWrCommand = new Lazy<DownloadSelectedWrCommand>(() => new DownloadSelectedWrCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
-            DownloadWrsCommand = new Lazy<DownloadWrsCommand>(() => new DownloadWrsCommand(Logger.Value, ConnectionService.Value, PublishService.Value));
+            UpdateSelectedWebResourcesCommand = new Lazy<UpdateSelectedWrCommand>(() => new UpdateSelectedWrCommand(Logger.Value, ConnectionService.Value, UpdateWrService.Value));
+            UpdateWebResourcesCommand = new Lazy<UpdateWrCommand>(() => new UpdateWrCommand(Logger.Value, ConnectionService.Value, UpdateWrService.Value));
+            DownloadSelectedWrCommand = new Lazy<DownloadSelectedWrCommand>(() => new DownloadSelectedWrCommand(Logger.Value, ConnectionService.Value, DownloadWrService.Value));
+            DownloadWrsCommand = new Lazy<DownloadWrsCommand>(() => new DownloadWrsCommand(Logger.Value, ConnectionService.Value, DownloadWrService.Value));
         }
 
         public static Lazy<WritableSettingsStore> SettingsStore { get; private set; }
@@ -91,12 +108,17 @@ namespace Cwru.VsExtension
         public static Lazy<MappingService> MappingService { get; private set; }
         public static Lazy<ConfigurationService> ConfigurationService { get; private set; }
         public static Lazy<ConfigsConversionService> ConfigsConversionService { get; private set; }
-        public static Lazy<PublishService> PublishService { get; private set; }
+        public static Lazy<CreateWrService> CreateWrService { get; private set; }
+        public static Lazy<UpdateWrService> UpdateWrService { get; private set; }
+        public static Lazy<DownloadWrService> DownloadWrService { get; private set; }
         public static Lazy<ConnectionService> ConnectionService { get; private set; }
         public static Lazy<CryptoService> CryptoService { get; private set; }
         public static Lazy<SolutionsService> SolutionsService { get; private set; }
         public static Lazy<Logger> Logger { get; private set; }
         public static Lazy<WatchdogService> WatchdogService { get; private set; }
+        public static Lazy<WebResourceTypesService> WebResourceTypesService { get; private set; }
+
+
         public static Lazy<CreateWrCommand> CreateWebResourceCommand { get; private set; }
         public static Lazy<UpdaterOptionsCommand> UpdaterOptionsCommand { get; private set; }
         public static Lazy<UpdateSelectedWrCommand> UpdateSelectedWebResourcesCommand { get; private set; }

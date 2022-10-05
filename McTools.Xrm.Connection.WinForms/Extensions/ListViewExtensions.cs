@@ -1,4 +1,5 @@
 ﻿using McTools.Xrm.Connection.WinForms.Model;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListView;
 
@@ -34,6 +35,49 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                         connectionDetail.SolutionName
                     }
             });
+        }
+
+        public static void RemoveSelected(this ListView listView)
+        {
+            var toDelete = listView.SelectedItems.ToList();
+
+            foreach (var item in toDelete)
+            {
+                listView.Items.Remove(item);
+            }
+        }
+
+        public static List<T> GetTagValues<T>(this ListViewItemCollection collection)
+        {
+            var list = new List<T>();
+            foreach (ListViewItem item in collection)
+            {
+                list.Add((T)item.Tag);
+            }
+
+            return list;
+        }
+
+        public static List<T> GetTagValues<T>(this SelectedListViewItemCollection collection)
+        {
+            var list = new List<T>();
+            foreach (ListViewItem item in collection)
+            {
+                list.Add((T)item.Tag);
+            }
+
+            return list;
+        }
+
+        public static List<ListViewItem> ToList(this SelectedListViewItemCollection collection)
+        {
+            var list = new List<ListViewItem>();
+            foreach (ListViewItem item in collection)
+            {
+                list.Add(item);
+            }
+
+            return list;
         }
     }
 }

@@ -151,25 +151,22 @@ namespace Cwru.Connection.Services
             var projectConfig = await configurationService.GetProjectConfigAsync(project.Guid);
 
             var selector = new ConnectionSelector(
+                logger,
+                project,
+                mappingHelper,
                 crmRequests,
                 solutionsService,
                 ConvertToXrmConnectionDetail(projectConfig));
-
-            selector.OnCreateMappingFile = async () =>
-            {
-                await mappingHelper.CreateMappingFileAsync(project.Guid, project.Root, project.Files);
-                MessageBox.Show("UploaderMapping.config successfully created", "Microsoft Dynamics CRM Web Resources Updater", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            };
 
             selector.ShowDialog();
 
             if (selector.DialogResult == DialogResult.OK || selector.DialogResult == DialogResult.Yes)
             {
-                projectConfig.Environments = ConvertFromXrmCrmConnections(selector.connectionsList);
-                projectConfig.ExtendedLog = selector.connectionsList.ExtendedLog;
-                projectConfig.PublishAfterUpload = selector.connectionsList.PublishAfterUpload;
-                projectConfig.IgnoreExtensions = selector.connectionsList.IgnoreExtensions;
-                projectConfig.DafaultEnvironmentId = selector.connectionsList.SelectedConnectionId;
+                projectConfig.Environments = ConvertFromXrmCrmConnections(selector.ConnectionsList);
+                projectConfig.ExtendedLog = selector.ConnectionsList.ExtendedLog;
+                projectConfig.PublishAfterUpload = selector.ConnectionsList.PublishAfterUpload;
+                projectConfig.IgnoreExtensions = selector.ConnectionsList.IgnoreExtensions;
+                projectConfig.DafaultEnvironmentId = selector.ConnectionsList.SelectedConnectionId;
 
                 configurationService.Save(projectConfig);
 

@@ -1,4 +1,5 @@
 ﻿using Cwru.Common.Config;
+using System;
 using System.Linq;
 
 namespace Cwru.Common.Extensions
@@ -12,7 +13,12 @@ namespace Cwru.Common.Extensions
                 return null;
             }
 
-            var result = projectConfig.Environments.Where(x => x.Id == projectConfig.DafaultEnvironmentId).FirstOrDefault();
+            return projectConfig.GetEnvironment(projectConfig.DafaultEnvironmentId.Value);
+        }
+
+        public static EnvironmentConfig GetEnvironment(this ProjectConfig projectConfig, Guid environmentId)
+        {
+            var result = projectConfig.Environments.Where(x => x.Id == environmentId).FirstOrDefault();
             return result;
         }
 

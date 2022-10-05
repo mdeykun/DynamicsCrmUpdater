@@ -17,11 +17,12 @@ namespace Cwru.VsExtension.Commands.Base
         {
             try
             {
+                await logger.ClearAsync();
                 await ExecuteInternalAsync();
             }
             catch (Exception ex)
             {
-                await logger.WriteAsync(ex);
+                await logger.WriteLineAsync(ex);
             }
         }
 

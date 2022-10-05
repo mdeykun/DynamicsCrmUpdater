@@ -9,6 +9,6 @@ namespace Cwru.Common.Model
         public string Content { get; set; }
         public string DisplayName { get; set; }
         public string Description { get; set; }
-        public int Type { get; set; }
+        public WebResourceType? Type { get; set; }
     }
 }

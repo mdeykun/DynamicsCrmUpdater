@@ -43,6 +43,9 @@
             this.panel6 = new System.Windows.Forms.Panel();
             this.removeButton = new System.Windows.Forms.Button();
             this.addButton = new System.Windows.Forms.Button();
+            this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this.wrSearchTextBox = new System.Windows.Forms.TextBox();
+            this.wrTypesComboBox = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -53,6 +56,7 @@
             this.flowLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
             this.panel6.SuspendLayout();
+            this.tableLayoutPanel3.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -61,12 +65,13 @@
             // 
             // allWrList
             // 
+            this.tableLayoutPanel3.SetColumnSpan(this.allWrList, 2);
             this.allWrList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.allWrList.FormattingEnabled = true;
-            this.allWrList.Location = new System.Drawing.Point(3, 3);
+            this.allWrList.Location = new System.Drawing.Point(3, 28);
             this.allWrList.Name = "allWrList";
             this.allWrList.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.allWrList.Size = new System.Drawing.Size(347, 309);
+            this.allWrList.Size = new System.Drawing.Size(347, 284);
             this.allWrList.TabIndex = 4;
             // 
             // selectedWrList
@@ -86,7 +91,7 @@
             this.environvmentsComboBox.FormattingEnabled = true;
             this.environvmentsComboBox.Location = new System.Drawing.Point(3, 23);
             this.environvmentsComboBox.Name = "environvmentsComboBox";
-            this.environvmentsComboBox.Size = new System.Drawing.Size(167, 21);
+            this.environvmentsComboBox.Size = new System.Drawing.Size(170, 21);
             this.environvmentsComboBox.TabIndex = 0;
             // 
             // environmentLabel
@@ -101,7 +106,7 @@
             // solutionLabel
             // 
             this.solutionLabel.AutoSize = true;
-            this.solutionLabel.Location = new System.Drawing.Point(4, 5);
+            this.solutionLabel.Location = new System.Drawing.Point(0, 5);
             this.solutionLabel.Name = "solutionLabel";
             this.solutionLabel.Size = new System.Drawing.Size(45, 13);
             this.solutionLabel.TabIndex = 3;
@@ -112,9 +117,9 @@
             this.solutionsComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.solutionsComboBox.FormattingEnabled = true;
-            this.solutionsComboBox.Location = new System.Drawing.Point(7, 23);
+            this.solutionsComboBox.Location = new System.Drawing.Point(3, 23);
             this.solutionsComboBox.Name = "solutionsComboBox";
-            this.solutionsComboBox.Size = new System.Drawing.Size(167, 21);
+            this.solutionsComboBox.Size = new System.Drawing.Size(171, 21);
             this.solutionsComboBox.TabIndex = 2;
             // 
             // tableLayoutPanel2
@@ -174,7 +179,7 @@
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel4.Controls.Add(this.panel6, 1, 0);
             this.tableLayoutPanel4.Controls.Add(this.selectedWrList, 2, 0);
-            this.tableLayoutPanel4.Controls.Add(this.allWrList, 0, 0);
+            this.tableLayoutPanel4.Controls.Add(this.tableLayoutPanel3, 0, 0);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 63);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
@@ -214,6 +219,42 @@
             this.addButton.Text = ">";
             this.addButton.UseVisualStyleBackColor = true;
             this.addButton.Click += new System.EventHandler(this.addButton_Click);
+            // 
+            // tableLayoutPanel3
+            // 
+            this.tableLayoutPanel3.ColumnCount = 2;
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel3.Controls.Add(this.wrSearchTextBox, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.allWrList, 0, 1);
+            this.tableLayoutPanel3.Controls.Add(this.wrTypesComboBox, 1, 0);
+            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel3.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
+            this.tableLayoutPanel3.RowCount = 2;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(353, 315);
+            this.tableLayoutPanel3.TabIndex = 7;
+            // 
+            // wrSearchTextBox
+            // 
+            this.wrSearchTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.wrSearchTextBox.Location = new System.Drawing.Point(3, 3);
+            this.wrSearchTextBox.Name = "wrSearchTextBox";
+            this.wrSearchTextBox.Size = new System.Drawing.Size(170, 20);
+            this.wrSearchTextBox.TabIndex = 5;
+            this.wrSearchTextBox.TextChanged += new System.EventHandler(this.wrSearchTextBox_TextChanged);
+            // 
+            // wrTypesComboBox
+            // 
+            this.wrTypesComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.wrTypesComboBox.FormattingEnabled = true;
+            this.wrTypesComboBox.Location = new System.Drawing.Point(179, 3);
+            this.wrTypesComboBox.Name = "wrTypesComboBox";
+            this.wrTypesComboBox.Size = new System.Drawing.Size(171, 21);
+            this.wrTypesComboBox.TabIndex = 6;
             // 
             // tableLayoutPanel1
             // 
@@ -269,7 +310,7 @@
             // statusLabel
             // 
             this.statusLabel.AutoSize = true;
-            this.statusLabel.Location = new System.Drawing.Point(1, 5);
+            this.statusLabel.Location = new System.Drawing.Point(1, 6);
             this.statusLabel.Name = "statusLabel";
             this.statusLabel.Size = new System.Drawing.Size(37, 13);
             this.statusLabel.TabIndex = 1;
@@ -279,7 +320,7 @@
             // 
             this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(4, 20);
+            this.progressBar.Location = new System.Drawing.Point(4, 23);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(348, 23);
             this.progressBar.TabIndex = 0;
@@ -292,11 +333,13 @@
             this.Controls.Add(this.tableLayoutPanel2);
             this.Name = "SelectWebResourcesForm";
             this.Text = "SelectWebResourcesForm";
-            this.Load += new System.EventHandler(this.SelectWebResourcesForm_Load);
+            this.Load += new System.EventHandler(this.selectWebResourcesForm_Load);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel4.ResumeLayout(false);
             this.panel6.ResumeLayout(false);
+            this.tableLayoutPanel3.ResumeLayout(false);
+            this.tableLayoutPanel3.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
@@ -327,8 +370,11 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label statusLabel;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
+        private System.Windows.Forms.TextBox wrSearchTextBox;
+        private System.Windows.Forms.ComboBox wrTypesComboBox;
+        private System.Windows.Forms.Panel panel3;
     }
 }

@@ -1,9 +1,9 @@
-﻿using Cwru.Common.Model;
+﻿using Cwru.Common.Extensions;
+using Cwru.Common.Model;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,9 +16,6 @@ namespace Cwru.Common.Services
 {
     public class VsDteService
     {
-        public const string FileKindGuid = "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
-        public const string ProjectKindGuid = "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}";
-
         private readonly IAsyncServiceProvider serviceProvider;
         private readonly Logger logger;
 
@@ -44,17 +41,16 @@ namespace Cwru.Common.Services
                 throw new Exception("Project guid can't be retrived");
             }
 
-            var selectedFiles = await GetFilePathsAsync(await GetSelectedItemsAsync());
+            var elements = await GetSolutionElementsRecursiveAsync(project);
+
             return new ProjectInfo()
             {
                 Root = Path.GetDirectoryName(project.FullName).ToLower(),
                 Guid = projectGuid,
-                Files = await GetFilePathsAsync(await GetProjectItemsAsync(project)),
-                SelectedFiles = selectedFiles,
-                SelectedFile = selectedFiles.FirstOrDefault()
+                Elements = elements,
+                ElementsFlat = GetElementsFlatList(elements)
             };
         }
-
         public async Task SetStatusBarAsync(string message, object icon = null)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -71,13 +67,11 @@ namespace Cwru.Common.Services
                 statusBar.SetText(message);
             }
         }
-
         public async Task SaveAllAsync()
         {
             var dte = await GetDteServiceAsync();
             dte.ExecuteCommand("File.SaveAll");
         }
-
         public async Task AddFromFileAsync(Guid projectGuid, string filePath)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -90,8 +84,7 @@ namespace Cwru.Common.Services
 
             project.ProjectItems.AddFromFile(filePath);
         }
-
-        public async Task OpenFileAndPlaceContentAsync(Guid projectGuid, string file, string content)
+        public async Task OpenFileAndPlaceContentAsync(Guid projectGuid, string filePath, string content)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -101,21 +94,21 @@ namespace Cwru.Common.Services
                 throw new InvalidOperationException("Failed to load project by guid");
             }
 
-            var projectItems = await GetProjectItemsAsync(project);
-            var projectItem = projectItems.FirstOrDefault(x => string.Compare(x.FileNames[0].ToLower(), file, true) == 0);
-            if (projectItem != null)
+            var projectItem = await GetProjectItemByFileNameAsync(project, filePath);
+            if (projectItem == null)
             {
-                projectItem.Open(EnvDTE.Constants.vsViewKindCode);
-                projectItem.Document.ActiveWindow.Activate();
-
-                var textDocument = (TextDocument)projectItem.Document.Object("TextDocument");
-
-                var startPoint = textDocument.CreateEditPoint(textDocument.StartPoint);
-                startPoint.Delete(textDocument.EndPoint);
-                startPoint.Insert(content);
+                return;
             }
-        }
 
+            projectItem.Open(EnvDTE.Constants.vsViewKindCode);
+            projectItem.Document.ActiveWindow.Activate();
+
+            var textDocument = (TextDocument)projectItem.Document.Object("TextDocument");
+
+            var startPoint = textDocument.CreateEditPoint(textDocument.StartPoint);
+            startPoint.Delete(textDocument.EndPoint);
+            startPoint.Insert(content);
+        }
         private async Task<Project> GetSelectedProjectAsync()
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -135,84 +128,115 @@ namespace Cwru.Common.Services
                 return item.ContainingProject;
             }
 
-            var dte = await GetDteServiceAsync();
-            Document doc = dte.ActiveDocument;
-            if (doc != null && doc.ProjectItem != null)
-            {
-                return doc.ProjectItem.ContainingProject;
-            }
             return null;
         }
-
-        private async Task<IEnumerable<ProjectItem>> GetSelectedItemsAsync()
-        {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            var selectedItems = await GetSelectedHierarchyItemsAsync();
-            var projectItems = new List<ProjectItem>();
-
-            foreach (var uiItem in selectedItems)
-            {
-                var item = uiItem.Object as ProjectItem;
-                if (item != null)
-                {
-                    projectItems.Add(item);
-                }
-            }
-
-            if (projectItems.Count == 0)
-            {
-                var dte = await GetDteServiceAsync();
-                Document doc = dte.ActiveDocument;
-                if (doc != null && doc.ProjectItem != null)
-                {
-                    projectItems.Add(doc.ProjectItem);
-                }
-            }
-
-            return await GetProjectItemsAsync(projectItems);
-        }
-
-        private async Task<IEnumerable<ProjectItem>> GetProjectItemsAsync(Project project)
+        private async Task<IEnumerable<SolutionElement>> GetSolutionElementsRecursiveAsync(Project project)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             if (project == null)
             {
-                return Enumerable.Empty<ProjectItem>();
+                return Enumerable.Empty<SolutionElement>();
             }
 
-            return await GetProjectItemsAsync(ToEnumerable(project.ProjectItems));
+            var selectedItems = await GetSelectedElementsAsync();
+            return await GetSolutionElementsRecursiveAsync(ToEnumerable(project.ProjectItems), selectedItems);
         }
-
-        private async Task<IEnumerable<ProjectItem>> GetProjectItemsAsync(IEnumerable<ProjectItem> itemsToCheck)
+        private async Task<IEnumerable<SolutionElement>> GetSolutionElementsRecursiveAsync(IEnumerable<ProjectItem> itemsToCheck, IEnumerable<SolutionElement> selected)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             if (itemsToCheck == null || itemsToCheck.Count() == 0)
             {
-                return Enumerable.Empty<ProjectItem>();
+                return Enumerable.Empty<SolutionElement>();
             }
 
-            var result = new List<ProjectItem>();
+            var result = new List<SolutionElement>();
 
             foreach (var item in itemsToCheck)
             {
-                if (item.Kind.ToLower() == FileKindGuid.ToLower())
+                var solutionElement = await GetSolutionElementAsync(item);
+                if (solutionElement == null)
                 {
-                    result.Add(item);
+                    continue;
+                }
+
+                if (selected != null && selected.Any(x => x.FilePath.IsEqualToLower(solutionElement.FilePath)))
+                {
+                    solutionElement.IsSelected = true;
                 }
 
                 if (item.ProjectItems != null)
                 {
-                    var childItems = await GetProjectItemsAsync(ToEnumerable(item.ProjectItems));
-                    result.AddRange(childItems);
+                    var childItems = await GetSolutionElementsRecursiveAsync(ToEnumerable(item.ProjectItems), selected);
+                    solutionElement.Childs.AddRange(childItems);
                 }
+
+                result.Add(solutionElement);
             }
 
             return result;
         }
+        private async Task<IEnumerable<SolutionElement>> GetSelectedElementsAsync()
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+            var selectedItems = await GetSelectedHierarchyItemsAsync();
+            var elements = new List<SolutionElement>();
+
+            foreach (var uiItem in selectedItems)
+            {
+                var element = await GetSolutionElementAsync(uiItem.Object as ProjectItem);
+                if (element == null)
+                {
+                    continue;
+                }
+
+                elements.Add(element);
+            }
+
+            return elements;
+        }
+        private async Task<ProjectItem> GetProjectItemByFileNameAsync(Project project, string filePath)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (project == null)
+            {
+                return null;
+            }
+
+            return await GetProjectItemByFileNameAsync(ToEnumerable(project.ProjectItems), filePath);
+        }
+        private async Task<ProjectItem> GetProjectItemByFileNameAsync(IEnumerable<ProjectItem> itemsToCheck, string filePath)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (itemsToCheck == null || itemsToCheck.Count() == 0)
+            {
+                return null;
+            }
+
+            foreach (var item in itemsToCheck)
+            {
+                var currentItemfilePath = await GetPathAsync(item);
+                if (currentItemfilePath != null && currentItemfilePath.IsEqualToLower(filePath))
+                {
+                    return item;
+                }
+
+                if (item.ProjectItems != null)
+                {
+                    var foundItem = await GetProjectItemByFileNameAsync(ToEnumerable(item.ProjectItems), filePath);
+                    if (foundItem != null)
+                    {
+                        return foundItem;
+                    }
+                }
+            }
+
+            return null;
+        }
         private async Task<Project> GetProjectByGuidAsync(Guid projectGuid)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -238,7 +262,6 @@ namespace Cwru.Common.Services
 
             return project;
         }
-
         private async Task<Guid> GetProjectGuidAsync(Project project)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -258,7 +281,6 @@ namespace Cwru.Common.Services
 
             return projectGuid;
         }
-
         private static IEnumerable<ProjectItem> ToEnumerable(ProjectItems projectItems)
         {
             var list = new List<ProjectItem>();
@@ -279,16 +301,6 @@ namespace Cwru.Common.Services
             var result = selectedItems != null ? selectedItems.AsEnumerable().OfType<UIHierarchyItem>() : Enumerable.Empty<UIHierarchyItem>();
 
             return result;
-        }
-
-        private async Task<IEnumerable<string>> GetFilePathsAsync(IEnumerable<ProjectItem> projectItems)
-        {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            return projectItems.Select(x => x.FileNames[0].ToLower()).ToList();
-            //var path = Path.GetDirectoryName(item.FileNames[0]).ToLower();
-            //var fileName = Path.GetFileName(item.FileNames[0]);
-            //files.Add(path + "\\" + fileName);
-
         }
 
         private EnvDTE80.DTE2 dte = null;
@@ -346,6 +358,70 @@ namespace Cwru.Common.Services
             }
 
             return solution;
+        }
+        private static async Task<SolutionElement> GetSolutionElementAsync(ProjectItem item)
+        {
+            if (item == null)
+            {
+                return null;
+            }
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            SolutionElementType? type = null;
+            if (item.Kind.IsEqualToLower(EnvDTE.Constants.vsProjectItemKindPhysicalFile))
+            {
+                type = SolutionElementType.File;
+            }
+            else if (item.Kind.IsEqualToLower(EnvDTE.Constants.vsProjectItemKindPhysicalFolder))
+            {
+                type = SolutionElementType.Folder;
+            }
+            else
+            {
+                return null;
+            }
+
+            var filePath = await GetPathAsync(item);
+            if (filePath == null)
+            {
+                return null;
+            }
+
+            var solutionElement = new SolutionElement
+            {
+                FilePath = filePath,
+                Type = type.Value
+            };
+
+            return solutionElement;
+        }
+        private static IEnumerable<SolutionElement> GetElementsFlatList(IEnumerable<SolutionElement> solutionElements)
+        {
+            var result = new List<SolutionElement>();
+            if (solutionElements == null || !solutionElements.Any())
+            {
+                return result;
+            }
+
+            foreach (var element in solutionElements)
+            {
+                result.Add(element);
+                result.AddRange(GetElementsFlatList(element.Childs));
+            }
+
+            return result;
+        }
+        private static async Task<string> GetPathAsync(ProjectItem item)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (item == null)
+            {
+                return null;
+            }
+
+            return item.FileNames[0]?.ToLower();
         }
     }
 }

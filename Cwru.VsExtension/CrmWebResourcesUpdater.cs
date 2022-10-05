@@ -45,7 +45,6 @@ namespace Cwru.VsExtension
             Resolver.Initialize(this);
             Resolver.WatchdogService.Value.Start();
 
-            //TODO: load more then 5000 Wr
             await AddCommandAsync(0x0100, () => Resolver.UpdateWebResourcesCommand.Value, ItemCommandSet, ProjectCommandSet);
             await AddCommandAsync(0x0200, () => Resolver.UpdaterOptionsCommand.Value, ProjectCommandSet);
             await AddCommandAsync(0x0300, () => Resolver.UpdateSelectedWebResourcesCommand.Value, ItemCommandSet);
@@ -78,7 +77,7 @@ namespace Cwru.VsExtension
                             }
                             catch (Exception ex)
                             {
-                                await Resolver.Logger.Value.WriteAsync(ex);
+                                await Resolver.Logger.Value.WriteLineAsync(ex);
                             }
                         },
                         menuCommandID);
@@ -92,7 +91,7 @@ namespace Cwru.VsExtension
             }
             catch (Exception ex)
             {
-                await Resolver.Logger.Value.WriteAsync(ex);
+                await Resolver.Logger.Value.WriteLineAsync(ex);
             }
         }
 
@@ -108,7 +107,7 @@ namespace Cwru.VsExtension
             }
             catch (Exception ex)
             {
-                await Resolver.Logger.Value.WriteAsync(ex);
+                await Resolver.Logger.Value.WriteLineAsync(ex);
             }
         }
 

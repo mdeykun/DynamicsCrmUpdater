@@ -1,22 +1,30 @@
-﻿using Cwru.Common.Services;
+﻿using Cwru.Common;
+using Cwru.Common.Model;
+using Cwru.Common.Services;
 using Cwru.CrmRequests.Common.Contracts;
 using McTools.Xrm.Connection.WinForms.Extensions;
 using McTools.Xrm.Connection.WinForms.Misc;
 using McTools.Xrm.Connection.WinForms.Model;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace McTools.Xrm.Connection.WinForms
 {
     public partial class ConnectionSelector : Form
     {
-        public ConnectionDetailsList connectionsList;
+        private readonly Logger logger;
         private readonly ICrmRequests crmRequests;
         private readonly SolutionsService solutionsService;
+        private readonly ProjectInfo projectInfo;
+        private readonly MappingService mappingHelper;
+
+        private ConnectionDetailsList connectionsList;
 
         public ConnectionSelector(
+            Logger logger,
+            ProjectInfo projectInfo,
+            MappingService mappingHelper,
             ICrmRequests crmRequests,
             SolutionsService solutionsService,
             ConnectionDetailsList connectionsList)
@@ -26,54 +34,36 @@ namespace McTools.Xrm.Connection.WinForms
             this.crmRequests = crmRequests;
             this.solutionsService = solutionsService;
             this.connectionsList = connectionsList;
+            this.mappingHelper = mappingHelper;
+            this.logger = logger;
 
-            tsbDeleteConnection.Visible = true;
-            tsbUpdateConnection.Visible = true;
-            bValidate.Visible = true;
-            lvConnections.MultiSelect = false;
+            this.projectInfo = projectInfo;
+
             cbAutoPublish.Checked = connectionsList.PublishAfterUpload;
             cbIgnoreExtensions.Checked = connectionsList.IgnoreExtensions;
             cbExtendedLog.Checked = connectionsList.ExtendedLog;
 
             DisplayConnections();
             RefreshComboBoxSelectedConnection();
+            HideShowMenuItems();
         }
 
-        private void DisplayConnections()
-        {
-            lvConnections.Items.Clear();
-            lvConnections.Groups.Clear();
-            try
-            {
-                LoadImages();
-                foreach (ConnectionDetail detail in connectionsList.Connections)
-                {
-                    lvConnections.Items.Add(detail);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to display connections: {ex.Message}\r\n{ex.StackTrace}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        public ConnectionDetailsList ConnectionsList => connectionsList;
 
-        private void LoadImages()
-        {
-            lvConnections.SmallImageList = new ImageList();
-            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png"));
-            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.server_key.png"));
-            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.powerapps16.png"));
-        }
-
-        private void BCancelClick(object sender, EventArgs e)
+        private void bCancel_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
-            Close();
         }
 
-        private void BSaveClick(object sender, EventArgs e)
+        private async void bSave_Click(object sender, EventArgs e)
         {
             var selectedConnection = comboBoxSelectedConnection.SelectedItem as ConnectionDetail;
+            if (selectedConnection == null)
+            {
+                await logger.WriteLineAsync("Connection is not selected");
+                MessageBox.Show("Connection is not selected", "Microsoft Dynamics CRM Web Resources Updater", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             connectionsList = new ConnectionDetailsList(lvConnections.Items.Cast<ListViewItem>().Select(x => x.Tag as ConnectionDetail))
             {
@@ -86,13 +76,13 @@ namespace McTools.Xrm.Connection.WinForms
             DialogResult = DialogResult.OK;
         }
 
-        private void LvConnectionsColumnClick(object sender, ColumnClickEventArgs e)
+        private void lvConnectionsColumn_Click(object sender, ColumnClickEventArgs e)
         {
             lvConnections.Sorting = lvConnections.Sorting == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
             lvConnections.ListViewItemSorter = new ListViewItemComparer(e.Column, lvConnections.Sorting);
         }
 
-        private void ConnectionSelector_KeyDown(object sender, KeyEventArgs e)
+        private void connectionSelector_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.N)
             {
@@ -110,42 +100,22 @@ namespace McTools.Xrm.Connection.WinForms
             }
         }
 
-        private void RefreshComboBoxSelectedConnection()
-        {
-            comboBoxSelectedConnection.Items.Clear();
-            comboBoxSelectedConnection.SelectedText = "";
-            comboBoxSelectedConnection.Text = "";
-            if (connectionsList == null || connectionsList.Connections == null)
-            {
-                return;
-            }
-
-            foreach (ConnectionDetail detail in connectionsList.Connections)
-            {
-                comboBoxSelectedConnection.Items.Add(detail);
-            }
-            if (connectionsList.SelectedConnectionId != null)
-            {
-                comboBoxSelectedConnection.SelectedIndex = connectionsList.Connections.FindIndex(x => x.ConnectionId == connectionsList.SelectedConnectionId);
-            };
-        }
-
         private void lvConnections_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode != Keys.Enter || lvConnections.SelectedItems.Count == 0)
+            {
                 return;
+            }
 
-            BSaveClick(null, null);
+            bSave_Click(null, null);
         }
 
         private void lvConnections_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bValidate.Enabled = lvConnections.SelectedItems.Count > 0;
-            tsbUpdateConnection.Visible = lvConnections.SelectedItems.Count == 1;
-            tsbUpdateSolution.Visible = lvConnections.SelectedItems.Count == 1;
+            HideShowMenuItems();
         }
 
-        private void LvConnections_AfterLabelEdit(object sender, LabelEditEventArgs e)
+        private void lvConnections_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
             if (!e.CancelEdit)
             {
@@ -165,12 +135,14 @@ namespace McTools.Xrm.Connection.WinForms
                 }
             }
 
-            foreach (ListViewItem connectionItem in lvConnections.SelectedItems)
+            var selectedConnections = lvConnections.SelectedItems.GetTagValues<ConnectionDetail>();
+            selectedConnections.ForEach(connectionToDelete =>
             {
-                var detailToRemove = (ConnectionDetail)connectionItem.Tag;
-                lvConnections.Items.Remove(lvConnections.SelectedItems[0]);
-                connectionsList.Connections.RemoveAll(d => d.ConnectionId == detailToRemove.ConnectionId);
-            }
+                connectionsList.Connections.RemoveAll(c => c.ConnectionId == connectionToDelete.ConnectionId);
+            });
+
+            DisplayConnections();
+            RefreshComboBoxSelectedConnection();
         }
 
         private void tsbNewConnection_Click(object sender, EventArgs e)
@@ -196,7 +168,7 @@ namespace McTools.Xrm.Connection.WinForms
             }
         }
 
-        private async void tsbUpdateConnection_Click(object sender, EventArgs e)
+        private void tsbUpdateConnection_Click(object sender, EventArgs e)
         {
             if (lvConnections.SelectedItems.Count == 1)
             {
@@ -247,17 +219,77 @@ namespace McTools.Xrm.Connection.WinForms
                 }
             }
         }
-        public Func<Task> OnCreateMappingFile { get; set; }
 
-        private void bCreateMappingClick(object sender, EventArgs e)
+        private async void bCreateMapping_Click(object sender, EventArgs e)
         {
-            OnCreateMappingFile();
+            try
+            {
+                await mappingHelper.CreateMappingFileAsync(projectInfo);
+                MessageBox.Show("UploaderMapping.config successfully created", "Microsoft Dynamics CRM Web Resources Updater", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                await logger.WriteLineAsync("Error occured during mapping file creation", ex);
+                throw;
+            }
         }
 
         private void bAboutClick(object sender, EventArgs e)
         {
-            var aboutForm = new AboutForm();
-            aboutForm.ShowDialog();
+            new AboutForm().ShowDialog();
+        }
+
+        private void RefreshComboBoxSelectedConnection()
+        {
+            comboBoxSelectedConnection.Items.Clear();
+            comboBoxSelectedConnection.SelectedText = "";
+            comboBoxSelectedConnection.Text = "";
+            if (connectionsList == null || connectionsList.Connections == null)
+            {
+                return;
+            }
+
+            foreach (ConnectionDetail detail in connectionsList.Connections)
+            {
+                comboBoxSelectedConnection.Items.Add(detail);
+            }
+            if (connectionsList.SelectedConnectionId != null)
+            {
+                comboBoxSelectedConnection.SelectedIndex = connectionsList.Connections.FindIndex(x => x.ConnectionId == connectionsList.SelectedConnectionId);
+            };
+        }
+
+        private void HideShowMenuItems()
+        {
+            tsbUpdateConnection.Visible = lvConnections.SelectedItems.Count == 1;
+            tsbUpdateSolution.Visible = lvConnections.SelectedItems.Count == 1;
+            tsbDeleteConnection.Visible = lvConnections.SelectedItems.Count == 1;
+        }
+
+        private void DisplayConnections()
+        {
+            lvConnections.Items.Clear();
+            lvConnections.Groups.Clear();
+            try
+            {
+                LoadImages();
+                foreach (ConnectionDetail detail in connectionsList.Connections)
+                {
+                    lvConnections.Items.Add(detail);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to display connections: {ex.Message}\r\n{ex.StackTrace}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LoadImages()
+        {
+            lvConnections.SmallImageList = new ImageList();
+            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png"));
+            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.server_key.png"));
+            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.powerapps16.png"));
         }
     }
 }

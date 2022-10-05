@@ -37,20 +37,20 @@ namespace Cwru.Common
             pane.OutputStringThreadSafe(message);
         }
 
-        public async Task WriteAsync(Exception ex, bool printStackTrace = false)
+        public async Task WriteLineAsync(Exception ex, bool printStackTrace = false)
         {
             await WriteLineAsync("An error occured: " + ex.Message);
             await WriteLineAsync(ex.StackTrace, printStackTrace);
         }
 
-        public async Task WriteAsync(string message, Exception ex, bool printStackTrace = false)
+        public async Task WriteLineAsync(string message, Exception ex, bool printStackTrace = false)
         {
             if (!string.IsNullOrWhiteSpace(message))
             {
                 await WriteLineAsync(message);
             }
 
-            await WriteAsync(ex, printStackTrace);
+            await WriteLineAsync(ex, printStackTrace);
         }
 
         public async Task WriteLineAsync(string message, bool print = true)

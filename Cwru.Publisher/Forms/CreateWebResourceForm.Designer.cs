@@ -127,7 +127,7 @@
             this.bCreate.TabIndex = 3;
             this.bCreate.Text = "Create";
             this.bCreate.UseVisualStyleBackColor = true;
-            this.bCreate.Click += new System.EventHandler(this.bCreateClick);
+            this.bCreate.Click += new System.EventHandler(this.bCreate_Click);
             // 
             // bCancel
             // 
@@ -139,7 +139,7 @@
             this.bCancel.TabIndex = 3;
             this.bCancel.Text = "Cancel";
             this.bCancel.UseVisualStyleBackColor = true;
-            this.bCancel.Click += new System.EventHandler(this.bCancelClick);
+            this.bCancel.Click += new System.EventHandler(this.bCancel_Click);
             // 
             // tbPrefix
             // 
@@ -180,7 +180,7 @@
             this.Name = "CreateWebResourceForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Create Web Resource";
-            this.Load += new System.EventHandler(this.CreateWebResourceFormLoad);
+            this.Load += new System.EventHandler(this.CreateWebResourceForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

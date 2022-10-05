@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConnectionSelector));
-            this.bValidate = new System.Windows.Forms.Button();
+            this.bSave = new System.Windows.Forms.Button();
             this.bCancel = new System.Windows.Forms.Button();
             this.lvConnections = new System.Windows.Forms.ListView();
             this.chName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -57,17 +57,17 @@
             this.pnlMain.SuspendLayout();
             this.SuspendLayout();
             // 
-            // bValidate
+            // bSave
             // 
-            this.bValidate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.bValidate.Location = new System.Drawing.Point(580, 105);
-            this.bValidate.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
-            this.bValidate.Name = "bValidate";
-            this.bValidate.Size = new System.Drawing.Size(74, 23);
-            this.bValidate.TabIndex = 3;
-            this.bValidate.Text = "Save";
-            this.bValidate.UseVisualStyleBackColor = true;
-            this.bValidate.Click += new System.EventHandler(this.BSaveClick);
+            this.bSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.bSave.Location = new System.Drawing.Point(580, 105);
+            this.bSave.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+            this.bSave.Name = "bSave";
+            this.bSave.Size = new System.Drawing.Size(74, 23);
+            this.bSave.TabIndex = 3;
+            this.bSave.Text = "Save";
+            this.bSave.UseVisualStyleBackColor = true;
+            this.bSave.Click += new System.EventHandler(this.bSave_Click);
             // 
             // bCancel
             // 
@@ -80,7 +80,7 @@
             this.bCancel.TabIndex = 4;
             this.bCancel.Text = "Cancel";
             this.bCancel.UseVisualStyleBackColor = true;
-            this.bCancel.Click += new System.EventHandler(this.BCancelClick);
+            this.bCancel.Click += new System.EventHandler(this.bCancel_Click);
             // 
             // lvConnections
             // 
@@ -98,13 +98,14 @@
             this.lvConnections.LabelEdit = true;
             this.lvConnections.Location = new System.Drawing.Point(4, 4);
             this.lvConnections.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+            this.lvConnections.MultiSelect = false;
             this.lvConnections.Name = "lvConnections";
             this.lvConnections.Size = new System.Drawing.Size(736, 243);
             this.lvConnections.TabIndex = 2;
             this.lvConnections.UseCompatibleStateImageBehavior = false;
             this.lvConnections.View = System.Windows.Forms.View.Details;
-            this.lvConnections.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.LvConnections_AfterLabelEdit);
-            this.lvConnections.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvConnectionsColumnClick);
+            this.lvConnections.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.lvConnections_AfterLabelEdit);
+            this.lvConnections.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvConnectionsColumn_Click);
             this.lvConnections.SelectedIndexChanged += new System.EventHandler(this.lvConnections_SelectedIndexChanged);
             this.lvConnections.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lvConnections_KeyDown);
             // 
@@ -199,7 +200,7 @@
             this.pnlFooter.Controls.Add(this.bCreateMapping);
             this.pnlFooter.Controls.Add(this.comboBoxSelectedConnection);
             this.pnlFooter.Controls.Add(this.bCancel);
-            this.pnlFooter.Controls.Add(this.bValidate);
+            this.pnlFooter.Controls.Add(this.bSave);
             this.pnlFooter.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnlFooter.Location = new System.Drawing.Point(0, 276);
             this.pnlFooter.Margin = new System.Windows.Forms.Padding(2);
@@ -255,7 +256,7 @@
             this.bCreateMapping.TabIndex = 6;
             this.bCreateMapping.Text = "Create Mapping File";
             this.bCreateMapping.UseVisualStyleBackColor = true;
-            this.bCreateMapping.Click += new System.EventHandler(this.bCreateMappingClick);
+            this.bCreateMapping.Click += new System.EventHandler(this.bCreateMapping_Click);
             // 
             // comboBoxSelectedConnection
             // 
@@ -301,7 +302,7 @@
             this.Name = "ConnectionSelector";
             this.ShowIcon = false;
             this.Text = "Connection Manager";
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ConnectionSelector_KeyDown);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.connectionSelector_KeyDown);
             this.menu.ResumeLayout(false);
             this.menu.PerformLayout();
             this.pnlFooter.ResumeLayout(false);
@@ -314,7 +315,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Button bValidate;
+        private System.Windows.Forms.Button bSave;
         private System.Windows.Forms.Button bCancel;
         private System.Windows.Forms.ListView lvConnections;
         private System.Windows.Forms.ColumnHeader chName;

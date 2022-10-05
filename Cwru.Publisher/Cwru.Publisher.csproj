@@ -293,8 +293,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Services\Base\PublisherBaseService.cs" />
+    <Compile Include="Services\CreateWrService.cs" />
+    <Compile Include="Services\DownloadWrService.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\LoggerExtensions.cs" />
+    <Compile Include="Extensions\ObjectCollectionExtension.cs" />
     <Compile Include="Forms\Controls\CustomProgressBar.cs" />
     <Compile Include="Forms\CreateWebResourceForm.cs">
       <SubType>Form</SubType>
@@ -308,9 +312,10 @@
     <Compile Include="Forms\SelectWebResourcesForm.Designer.cs">
       <DependentUpon>SelectWebResourcesForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\FilesHelper.cs" />
     <Compile Include="Model\PublishResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PublishService.cs" />
+    <Compile Include="Services\UpdateWrService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Cwru.Common.Services\Cwru.Common.Services.csproj">

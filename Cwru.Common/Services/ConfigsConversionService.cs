@@ -89,7 +89,7 @@ namespace Cwru.Common.Services
                 }
                 catch (Exception ex)
                 {
-                    await logger.WriteAsync("Error occured during connections conversion", ex);
+                    await logger.WriteLineAsync("Error occured during connections conversion", ex);
                     return null;
                 }
                 finally
@@ -100,7 +100,7 @@ namespace Cwru.Common.Services
                     }
                     catch (Exception ex2)
                     {
-                        await logger.WriteAsync("Failed to cleanup settings store after unsuccessful conversion", ex2);
+                        await logger.WriteLineAsync("Failed to cleanup settings store after unsuccessful conversion", ex2);
                     }
                 }
             }
@@ -146,7 +146,7 @@ namespace Cwru.Common.Services
                 catch (Exception ex)
                 {
                     await logger.WriteAsync("Error occured during connection detail conversion:");
-                    await logger.WriteAsync(ex);
+                    await logger.WriteLineAsync(ex);
                 }
             }
 
@@ -279,7 +279,7 @@ namespace Cwru.Common.Services
             }
             catch (Exception ex)
             {
-                await logger.WriteAsync(ex);
+                await logger.WriteLineAsync(ex);
             }
 
             return null;

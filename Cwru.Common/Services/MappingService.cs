@@ -1,9 +1,11 @@
 ﻿using Cwru.Common.Extensions;
+using Cwru.Common.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml.Linq;
 
 namespace Cwru.Common.Services
@@ -18,19 +20,19 @@ namespace Cwru.Common.Services
             this.vsDteService = vsDteHelper;
         }
 
-        public Dictionary<string, string> LoadMappings(string projectRootPath, IEnumerable<string> projectFiles)
+        public Dictionary<string, string> LoadMappings(ProjectInfo projectInfo)
         {
             var mappingList = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
-            var mappingFilePath = GetMappingFilePath(projectFiles);
-            if (mappingFilePath == null)
+            var mappingFilePath = MappingFileName.AddRoot(projectInfo.Root);
+            if (!projectInfo.ContainsFile(mappingFilePath))
             {
                 return mappingList;
             }
 
             var doc = XDocument.Load(mappingFilePath);
             var mappings = doc.Descendants("Mapping");
-            var projectFilesToProcess = projectFiles.ToList();
+            var projectFilesToProcess = projectInfo.GetFilesPaths().ToList();
 
             foreach (var mapping in mappings)
             {
@@ -45,7 +47,7 @@ namespace Cwru.Common.Services
                     throw new ArgumentNullException("Mappings contains 'Mapping' tag without 'webResourceName' attribute");
                 }
 
-                var scriptPath = shortScriptPath.AddRoot(projectRootPath);
+                var scriptPath = shortScriptPath.AddRoot(projectInfo.Root);
                 if (mappingList.ContainsKey(scriptPath))
                 {
                     throw new ArgumentException($"Mappings contains dublicate for \"{shortScriptPath}\"");
@@ -70,68 +72,39 @@ namespace Cwru.Common.Services
             return mappingList;
         }
 
-        public async Task CreateMappingAsync(Guid projectId, string projectRoot, IEnumerable<string> projectFiles, string filePath, string webresourceName)
+        public async Task CreateMappingAsync(ProjectInfo projectInfo, string filePath, string webResourceName)
         {
-            var mappingFilePath = GetMappingFilePath(projectFiles) ??
-                await CreateMappingFileAsync(projectId, projectRoot, projectFiles);
-
-            var doc = XDocument.Load(mappingFilePath);
-
-            doc.Element("Mappings").Add(
-                new XElement("Mapping",
-                    new XAttribute("localPath", filePath.RemoveRoot(projectRoot)),
-                    new XAttribute("webResourceName", webresourceName)));
-
-            doc.Save(mappingFilePath);
-        }
-
-        public bool IsMappingFileReadOnly(IEnumerable<string> projectFiles)
-        {
-            var path = GetMappingFilePath(projectFiles);
-            return path != null ? new FileInfo(path).IsReadOnly : false;
-        }
-
-        public bool IsMappingRequired(string projectRoot, IEnumerable<string> projectFiles, string projectItemPath, string webresourceName, bool ignoreExtension)
-        {
-            var fileName = Path.GetFileName(projectItemPath);
-            if (fileName == webresourceName)
+            var isMappingFileReadOnly = IsMappingFileReadOnly(projectInfo);
+            if (isMappingFileReadOnly)
             {
-                return false;
-            }
-
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(projectItemPath);
-            if (ignoreExtension && fileNameWithoutExtension == webresourceName)
-            {
-                return false;
-            }
-
-            var mappings = LoadMappings(projectRoot, projectFiles);
-            if (mappings.Any(x => x.Value == webresourceName))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public async Task<string> CreateMappingFileAsync(Guid projectGuid, string projectRoot, IEnumerable<string> projectFiles)
-        {
-            var filePath = MappingFileName.AddRoot(projectRoot);
-
-            if (File.Exists(filePath))
-            {
-                var path = GetMappingFilePath(projectFiles);
-                if (path == null)
+                var message = "Mapping record can't be created. File \"UploaderMapping.config\" is read-only. Do you want to proceed? \r\n\r\n" +
+                                "Schema name of the web resource you are creating is differ from the file name. " +
+                                "Because of that new mapping record has to be created in the file \"UploaderMapping.config\". " +
+                                "Unfortunately the file \"UploaderMapping.config\" is read-only (file might be under a source control), so mapping record cant be created. \r\n\r\n" +
+                                "Press OK to proceed without mapping record creation (You have to do that manually later). Press Cancel to fix problem and try later.";
+                var result = MessageBox.Show(message, "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (result == DialogResult.Cancel)
                 {
-                    await vsDteService.AddFromFileAsync(projectGuid, filePath);
+                    return;
                 }
-                return filePath;
             }
 
-            using (var writer = File.CreateText(filePath))
+            if (!isMappingFileReadOnly)
             {
-                var mappingFileLines = new string[]
+                await AddMappingAsync(projectInfo, filePath, webResourceName);
+            }
+        }
+
+        public async Task CreateMappingFileAsync(ProjectInfo projectInfo)
+        {
+            var mappingFilePath = MappingFileName.AddRoot(projectInfo.Root);
+
+            if (!File.Exists(mappingFilePath))
+            {
+                using (var writer = File.CreateText(mappingFilePath))
                 {
+                    var mappingFileLines = new string[]
+                    {
                     "<?xml version=\"1.0\" encoding=\"utf-8\" ?>",
                     "<Mappings  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"	xsi:noNamespaceSchemaLocation=\"http://exitoconsulting.ru/schema/CrmWebResourcesUpdater/MappingSchema.xsd\">",
                     "    <!--",
@@ -140,21 +113,85 @@ namespace Cwru.Common.Services
                     "    <Mapping localPath=\"account.js\" webResourceName=\"new_account\"/>",
                     "    -->",
                     "</Mappings>",
-                };
+                    };
 
-                var mappingFileContent = string.Join(Environment.NewLine, mappingFileLines);
-                await writer.WriteAsync(mappingFileContent);
+                    var mappingFileContent = string.Join(Environment.NewLine, mappingFileLines);
+                    await writer.WriteAsync(mappingFileContent);
+                }
             }
 
-            await vsDteService.AddFromFileAsync(projectGuid, filePath);
-            return filePath;
+            if (!projectInfo.ContainsFile(mappingFilePath))
+            {
+                await vsDteService.AddFromFileAsync(projectInfo.Guid, mappingFilePath);
+            }
         }
 
-        private string GetMappingFilePath(IEnumerable<string> projectFiles)
+        public bool IsMappingRequired(Dictionary<string, string> mappings, string filePath, string webResourceName)
         {
-            return projectFiles != null ?
-                projectFiles.FirstOrDefault(x => x.EndWithLower(MappingFileName)) :
-                null;
+            var fileName = Path.GetFileName(filePath);
+            if (fileName.IsEqualToLower(webResourceName))
+            {
+                return false;
+            }
+
+            if (mappings.Any(x => x.Key.IsEqualToLower(filePath) && x.Value.IsEqualToLower(webResourceName)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public string GetMappingByFilePath(Dictionary<string, string> mappings, string filePath)
+        {
+            return mappings.Where(x => x.Key.IsEqualToLower(filePath)).Select(x => x.Value).FirstOrDefault();
+        }
+
+        private async Task AddMappingAsync(ProjectInfo projectInfo, string filePath, string webresourceName)
+        {
+            if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(filePath.RemoveRoot(projectInfo.Root)))
+            {
+                throw new ArgumentNullException(nameof(filePath), "Mapping requres non empty file path");
+            }
+
+            if (string.IsNullOrEmpty(webresourceName))
+            {
+                throw new ArgumentNullException(nameof(webresourceName), "Mapping requres non empty webresource name");
+            }
+
+            var mappingFilePath = MappingFileName.AddRoot(projectInfo.Root);
+            if (!projectInfo.ContainsFile(mappingFilePath))
+            {
+                await CreateMappingFileAsync(projectInfo);
+            }
+            else
+            {
+                var mappings = LoadMappings(projectInfo);
+                if (MappingExists(mappings, filePath, webresourceName))
+                {
+                    return;
+                }
+            }
+
+            var doc = XDocument.Load(mappingFilePath);
+
+            doc.Element("Mappings").Add(
+                new XElement("Mapping",
+                    new XAttribute("localPath", filePath.RemoveRoot(projectInfo.Root)),
+                    new XAttribute("webResourceName", webresourceName)));
+
+            doc.Save(mappingFilePath);
+        }
+
+        private bool IsMappingFileReadOnly(ProjectInfo projectInfo)
+        {
+            var mappingFilePath = MappingFileName.AddRoot(projectInfo.Root);
+            return projectInfo.ContainsFile(mappingFilePath) ? new FileInfo(mappingFilePath).IsReadOnly : false;
+        }
+
+        private bool MappingExists(Dictionary<string, string> mappings, string filePath, string webResourceName)
+        {
+            return mappings.Any(x => x.Key.IsEqualToLower(filePath) && x.Value.IsEqualToLower(webResourceName));
         }
     }
 }

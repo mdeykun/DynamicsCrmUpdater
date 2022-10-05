@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Security;
+using System.Text.RegularExpressions;
 
 namespace Cwru.Common.Extensions
 {
@@ -43,14 +45,31 @@ namespace Cwru.Common.Extensions
             return result.TrimStart('\\');
         }
 
-        public static bool IsEqualToLower(this string val1, string val2)
+        public static bool IsEqualToLower(this string val1, params string[] vals)
         {
-            return string.Compare(val1, val2, true) == 0;
+            return vals.Any(x => string.Compare(val1, x, true) == 0);
         }
 
         public static bool EndWithLower(this string val1, string val2)
         {
-            return val1.EndsWith(val2, StringComparison.InvariantCultureIgnoreCase);
+            return val1.EndsWith(val2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool StartWithLower(this string val1, string val2)
+        {
+            return val1.StartsWith(val2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static string RemoveIllegalFileNameSymbols(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+
+            var regexSearch = new string(Path.GetInvalidFileNameChars());// + new string(Path.GetInvalidPathChars());
+            var r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            return r.Replace(value, "");
         }
     }
 }

@@ -33,7 +33,7 @@ namespace Cwru.Common.Services
             return GetFromCache(environmentId.Value);
         }
 
-        public async Task<SolutionDetail> GetSolutionDetailsAsync(EnvironmentConfig environmentConfig, bool updateCache = false)
+        public async Task<SolutionDetail> GetDefaultSolutionDetailsAsync(EnvironmentConfig environmentConfig, bool updateCache = false)
         {
             return await GetSolutionDetailsAsync(environmentConfig, environmentConfig.SelectedSolutionId, updateCache);
         }

@@ -2,7 +2,7 @@
 using Cwru.Common.Config;
 using Cwru.Common.Model;
 using Cwru.Connection.Services;
-using Cwru.Publisher;
+using Cwru.Publisher.Services;
 using Cwru.VsExtension.Commands.Base;
 using System.Threading.Tasks;
 
@@ -10,16 +10,16 @@ namespace Cwru.VsExtension.Commands
 {
     internal sealed class UpdateWrCommand : PublisherCommandBase
     {
-        private readonly PublishService publishService;
+        private readonly UpdateWrService updateWrService;
 
-        public UpdateWrCommand(Logger logger, ConnectionService connectionService, PublishService publishService) : base(logger, connectionService)
+        public UpdateWrCommand(Logger logger, ConnectionService connectionService, UpdateWrService updateWrService) : base(logger, connectionService)
         {
-            this.publishService = publishService;
+            this.updateWrService = updateWrService;
         }
 
         protected override async Task ExecutePublisherLogicAsync(ProjectInfo projectInfo, ProjectConfig projectConfig)
         {
-            await publishService.UploadWrToDefaultEnvironmentAsync(projectInfo, projectConfig, false);
+            await updateWrService.UploadWrDefaultEnvironmentAsync(projectInfo, projectConfig, false);
         }
     }
 }

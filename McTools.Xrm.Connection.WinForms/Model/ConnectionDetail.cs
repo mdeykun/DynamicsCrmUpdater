@@ -136,7 +136,7 @@ namespace McTools.Xrm.Connection.WinForms.Model
         public int CompareTo(object obj)
         {
             var detail = (ConnectionDetail)obj;
-            return String.Compare(ConnectionName, detail.ConnectionName, StringComparison.Ordinal);
+            return string.Compare(ConnectionName, detail.ConnectionName, StringComparison.Ordinal);
         }
         public override string ToString()
         {

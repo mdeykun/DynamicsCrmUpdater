@@ -124,7 +124,7 @@ namespace Cwru.CrmRequests.Service
                         { "displayname", webResource.DisplayName },
                         { "description", webResource.Description },
                         { "content", webResource.Content },
-                        { "webresourcetype", new OptionSetValue(webResource.Type) },
+                        { "webresourcetype", new OptionSetValue((int)webResource.Type) },
                     }
                 };
 
@@ -208,7 +208,7 @@ namespace Cwru.CrmRequests.Service
             {
                 Console.WriteLine("Wr requested");
 
-                var columnSet = new ColumnSet("name");
+                var columnSet = new ColumnSet("name", "webresourcetype");
                 if (downloadContent)
                 {
                     columnSet.AddColumn("content");
@@ -239,16 +239,17 @@ namespace Cwru.CrmRequests.Service
                     query.Criteria.Conditions.AddRange(webResourceNames.Select(x => new ConditionExpression("name", ConditionOperator.Equal, x)));
                 }
 
-                var retrieveWebresourcesResponse = client.RetrieveMultiple(query);
+                var retrieveWebresourcesResponse = RetriveAll(client, query);
 
                 return new Response<IEnumerable<WebResource>>()
                 {
                     IsSuccessful = true,
-                    Payload = retrieveWebresourcesResponse.Entities.Select(x => new WebResource()
+                    Payload = retrieveWebresourcesResponse.Select(x => new WebResource()
                     {
                         Id = x.Id,
                         Name = x.GetAttributeValue<string>("name"),
-                        Content = x.GetAttributeValue<string>("content")
+                        Content = x.GetAttributeValue<string>("content"),
+                        Type = (WebResourceType)x.GetAttributeValue<OptionSetValue>("webresourcetype")?.Value
                     })
                 };
             }
@@ -273,22 +274,23 @@ namespace Cwru.CrmRequests.Service
 
                 var query = new QueryExpression("webresource")
                 {
-                    ColumnSet = new ColumnSet("name", "content"),
+                    ColumnSet = new ColumnSet("name", "content", "webresourcetype"),
                     Criteria = new FilterExpression(LogicalOperator.Or)
                 };
 
                 query.Criteria.Conditions.AddRange(webResourceNames.Select(x => new ConditionExpression("name", ConditionOperator.Equal, x)));
 
-                var retrieveWebresourcesResponse = client.RetrieveMultiple(query);
+                var retrieveWebresourcesResponse = RetriveAll(client, query);
 
                 return new Response<IEnumerable<WebResource>>()
                 {
                     IsSuccessful = true,
-                    Payload = retrieveWebresourcesResponse.Entities.Select(x => new WebResource()
+                    Payload = retrieveWebresourcesResponse.Select(x => new WebResource()
                     {
                         Id = x.Id,
                         Name = x.GetAttributeValue<string>("name"),
-                        Content = x.GetAttributeValue<string>("content")
+                        Content = x.GetAttributeValue<string>("content"),
+                        Type = (WebResourceType)x.GetAttributeValue<OptionSetValue>("webresourcetype")?.Value
                     })
                 };
             }
@@ -390,6 +392,29 @@ namespace Cwru.CrmRequests.Service
             }
 
             return сrmServiceClient;
+        }
+        private List<Entity> RetriveAll(IOrganizationService organizationService, QueryExpression query)
+        {
+            var result = new List<Entity>();
+
+            var response = organizationService.RetrieveMultiple(query);
+            result.AddRange(response.Entities);
+
+            for (var pageNumber = 2; pageNumber <= 10; pageNumber++)
+            {
+                if (!response.MoreRecords)
+                {
+                    break;
+                }
+
+                query.PageInfo.PagingCookie = response.PagingCookie;
+                query.PageInfo.PageNumber = pageNumber;
+
+                response = organizationService.RetrieveMultiple(query);
+                result.AddRange(response.Entities);
+            }
+
+            return result;
         }
     }
 }

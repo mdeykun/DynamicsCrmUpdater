@@ -87,7 +87,7 @@ namespace Cwru.Common.Model
                 .Split(';')
                 .Where(kvp => kvp.Contains('='))
                 .Select(kvp => kvp.Split(new char[] { '=' }, 2))
-                .ToDictionary(kvp => kvp[0].Trim(), kvp => kvp[1].Trim(), StringComparer.InvariantCultureIgnoreCase);
+                .ToDictionary(kvp => kvp[0].Trim(), kvp => kvp[1].Trim(), StringComparer.OrdinalIgnoreCase);
 
             var connectionInfoProperties = typeof(CrmConnectionString).GetProperties();
             var propertiesWithAttribute = connectionInfoProperties.Where(prop => prop.IsDefined(typeof(ConnectionStringAliases), false));
@@ -99,7 +99,7 @@ namespace Cwru.Common.Model
                 var aliasesAttributes = (ConnectionStringAliases[])property.GetCustomAttributes(typeof(ConnectionStringAliases), false);
                 var aliases = ConcatArrays(aliasesAttributes.Select(x => x.Aliases).ToArray());
 
-                var key = keyValues.Keys.FirstOrDefault(x => aliases.Contains(x, StringComparer.InvariantCultureIgnoreCase));
+                var key = keyValues.Keys.FirstOrDefault(x => aliases.Contains(x, StringComparer.OrdinalIgnoreCase));
 
                 var aliasPropertyName = $"{property.Name}Alias";
                 var aliasProperty = connectionInfoProperties.Where(prop => prop.Name == aliasPropertyName).FirstOrDefault();
