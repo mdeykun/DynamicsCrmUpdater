@@ -9,6 +9,7 @@ namespace Cwru.Common.Config
         public ProjectConfig()
         {
             Environments = new List<EnvironmentConfig>();
+            SelectedEnvironments = new List<Guid>();
         }
 
         public Guid ProjectId { get; set; }
@@ -17,6 +18,7 @@ namespace Cwru.Common.Config
         public bool IgnoreExtensions { get; set; }
         public bool ExtendedLog { get; set; }
         public Guid? DafaultEnvironmentId { get; set; }
+        public List<Guid> SelectedEnvironments { get; set; }
         public List<EnvironmentConfig> Environments { get; set; }
 
         public object Clone()

@@ -57,7 +57,7 @@ namespace Cwru.Publisher.Services
         {
             await OperationStartAsync("Downloading web resources...", "Downloading...");
 
-            var dialog = new SelectWebResourcesForm(logger, projectConfig, crmRequest, solutionsService, webResourceTypesService);
+            var dialog = new SelectWebResourcesForm(projectConfig, crmRequest, solutionsService, webResourceTypesService);
 
             var result = dialog.ShowDialog() == DialogResult.OK ?
                 await DownloadWrByWrNamesAsync(projectInfo, projectConfig, dialog.SelectedEnvironmentId, dialog.SelectedWebResources) :

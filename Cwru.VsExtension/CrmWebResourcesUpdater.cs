@@ -45,12 +45,13 @@ namespace Cwru.VsExtension
             Resolver.Initialize(this);
             Resolver.WatchdogService.Value.Start();
 
-            await AddCommandAsync(0x0100, () => Resolver.UpdateWebResourcesCommand.Value, ItemCommandSet, ProjectCommandSet);
+            await AddCommandAsync(0x0100, () => Resolver.UpdateWebResourcesCommand.Value, ProjectCommandSet);
             await AddCommandAsync(0x0200, () => Resolver.UpdaterOptionsCommand.Value, ProjectCommandSet);
             await AddCommandAsync(0x0300, () => Resolver.UpdateSelectedWebResourcesCommand.Value, ItemCommandSet);
             await AddCommandAsync(0x0400, () => Resolver.CreateWebResourceCommand.Value, ItemCommandSet);
             await AddCommandAsync(0x0500, () => Resolver.DownloadSelectedWrCommand.Value, ItemCommandSet);
             await AddCommandAsync(0x0600, () => Resolver.DownloadWrsCommand.Value, ProjectCommandSet, FolderCommandSet);
+            await AddCommandAsync(0x0700, () => Resolver.UpdateWrEnvironmentsCommand.Value, ItemCommandSet);
 
             await InitializeDTEAsync(cancellationToken);
         }

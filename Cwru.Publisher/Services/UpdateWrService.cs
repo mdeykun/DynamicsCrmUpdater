@@ -5,6 +5,7 @@ using Cwru.Common.Model;
 using Cwru.Common.Services;
 using Cwru.CrmRequests.Common.Contracts;
 using Cwru.Publisher.Extensions;
+using Cwru.Publisher.Forms;
 using Cwru.Publisher.Helpers;
 using Cwru.Publisher.Model;
 using Cwru.Publisher.Services.Base;
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Cwru.Publisher.Services
 {
@@ -21,22 +23,49 @@ namespace Cwru.Publisher.Services
         private readonly MappingService mappingService;
         private readonly ICrmRequests crmRequest;
         private readonly SolutionsService solutionsService;
+        private readonly ConfigurationService configurationService;
 
         public UpdateWrService(
             Logger logger,
             ICrmRequests crmWebResourcesUpdaterClient,
             MappingService mappingHelper,
             SolutionsService solutionsService,
-            VsDteService vsDteService) : base(logger, vsDteService)
+            VsDteService vsDteService,
+            ConfigurationService configurationService) : base(logger, vsDteService)
         {
             this.crmRequest = crmWebResourcesUpdaterClient;
             this.mappingService = mappingHelper;
             this.solutionsService = solutionsService;
+            this.configurationService = configurationService;
         }
 
-        public Task UploadWrEnvironmentsAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
+        public async Task UploadWrEnvironmentsAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
         {
-            throw new NotImplementedException();
+            await vsDteService.SaveAllAsync();
+            await OperationStartAsync("Uploading web resources...", "Uploading...");
+
+            var dialog = new SelectEnvironmentsForm(projectConfig);
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                projectConfig.SelectedEnvironments = dialog.SelectedEnvironments.Select(x => x.Id).ToList();
+                configurationService.Save(projectConfig);
+
+                foreach (var environment in dialog.SelectedEnvironments)
+                {
+                    await logger.WriteLineAsync();
+                    await logger.WriteEnvironmentInfoAsync(environment);
+
+                    var result = await UploadWrAsync(projectConfig, environment, projectInfo, selectedItemsOnly);
+
+                    await OperationEndAsync(result);
+                }
+            }
+            else
+            {
+                var result = new Result() { ResultType = ResultType.Canceled };
+                await OperationEndAsync(result);
+            }
         }
 
         public async Task UploadWrDefaultEnvironmentAsync(ProjectInfo projectInfo, ProjectConfig projectConfig, bool selectedItemsOnly)
@@ -48,10 +77,7 @@ namespace Cwru.Publisher.Services
 
             var result = await UploadWrAsync(projectConfig, environment, projectInfo, selectedItemsOnly);
 
-            await OperationEndAsync(result,
-                $"{result.Processed} web resource{result.Processed.Select(" was", "s were")} uploaded",
-                $"Failed to upload script{result.Total.Select("", "s")}",
-                $"Web resource{result.Total.Select(" was", "s were")} uploading was canceled");
+            await OperationEndAsync(result);
         }
 
         private async Task<Result> UploadWrAsync(ProjectConfig projectConfig, EnvironmentConfig environmentConfig, ProjectInfo projectInfo, bool selectedItemsOnly)
@@ -167,6 +193,14 @@ namespace Cwru.Publisher.Services
             }
 
             return retrieveWebResourceResponse.Payload;
+        }
+
+        private async Task OperationEndAsync(Result result)
+        {
+            await OperationEndAsync(result,
+                $"{result.Processed} web resource{result.Processed.Select(" was", "s were")} uploaded",
+                $"Failed to upload web resource{result.Total.Select("", "s")}",
+                $"Operation was canceled");
         }
     }
 }

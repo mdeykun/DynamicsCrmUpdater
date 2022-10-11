@@ -160,7 +160,7 @@ namespace Cwru.Connection.Services
 
             selector.ShowDialog();
 
-            if (selector.DialogResult == DialogResult.OK || selector.DialogResult == DialogResult.Yes)
+            if (selector.DialogResult == DialogResult.OK)
             {
                 projectConfig.Environments = ConvertFromXrmCrmConnections(selector.ConnectionsList);
                 projectConfig.ExtendedLog = selector.ConnectionsList.ExtendedLog;

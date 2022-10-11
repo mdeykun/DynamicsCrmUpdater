@@ -65,7 +65,8 @@ namespace Cwru.VsExtension
                 CrmRequestsClient.Value,
                 MappingService.Value,
                 SolutionsService.Value,
-                VsDteService.Value));
+                VsDteService.Value,
+                ConfigurationService.Value));
 
             DownloadWrService = new Lazy<DownloadWrService>(() => new DownloadWrService(
                 Logger.Value,
@@ -96,6 +97,7 @@ namespace Cwru.VsExtension
             CreateWebResourceCommand = new Lazy<CreateWrCommand>(() => new CreateWrCommand(Logger.Value, ConnectionService.Value, CreateWrService.Value));
             UpdaterOptionsCommand = new Lazy<UpdaterOptionsCommand>(() => new UpdaterOptionsCommand(Logger.Value, ConnectionService.Value));
             UpdateSelectedWebResourcesCommand = new Lazy<UpdateSelectedWrCommand>(() => new UpdateSelectedWrCommand(Logger.Value, ConnectionService.Value, UpdateWrService.Value));
+            UpdateWrEnvironmentsCommand = new Lazy<UpdateWrEnvironmentsCommand>(() => new UpdateWrEnvironmentsCommand(Logger.Value, ConnectionService.Value, UpdateWrService.Value));
             UpdateWebResourcesCommand = new Lazy<UpdateWrCommand>(() => new UpdateWrCommand(Logger.Value, ConnectionService.Value, UpdateWrService.Value));
             DownloadSelectedWrCommand = new Lazy<DownloadSelectedWrCommand>(() => new DownloadSelectedWrCommand(Logger.Value, ConnectionService.Value, DownloadWrService.Value));
             DownloadWrsCommand = new Lazy<DownloadWrsCommand>(() => new DownloadWrsCommand(Logger.Value, ConnectionService.Value, DownloadWrService.Value));
@@ -123,6 +125,7 @@ namespace Cwru.VsExtension
         public static Lazy<UpdaterOptionsCommand> UpdaterOptionsCommand { get; private set; }
         public static Lazy<UpdateSelectedWrCommand> UpdateSelectedWebResourcesCommand { get; private set; }
         public static Lazy<UpdateWrCommand> UpdateWebResourcesCommand { get; private set; }
+        public static Lazy<UpdateWrEnvironmentsCommand> UpdateWrEnvironmentsCommand { get; private set; }
         public static Lazy<DownloadSelectedWrCommand> DownloadSelectedWrCommand { get; private set; }
         public static Lazy<DownloadWrsCommand> DownloadWrsCommand { get; private set; }
     }

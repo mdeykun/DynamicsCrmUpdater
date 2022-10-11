@@ -60,7 +60,7 @@ namespace Cwru.Publisher.Services
                 var filePath = projectInfo.GetSelectedFilePath();
                 await logger.WriteLineAsync($"File path: {filePath?.RemoveRoot(projectInfo.Root)}");
 
-                var dialog = new CreateWebResourceForm(logger, filePath, defaultSolution, webResourceTypesService);
+                var dialog = new CreateWebResourceForm(filePath, defaultSolution, webResourceTypesService);
                 var dialogResult = dialog.ShowDialog();
 
                 var result = new Result() { ResultType = ResultType.Canceled };

@@ -37,6 +37,11 @@ namespace Cwru.Common
             pane.OutputStringThreadSafe(message);
         }
 
+        public async Task WriteLineAsync()
+        {
+            await WriteAsync("\r\n");
+        }
+
         public async Task WriteLineAsync(Exception ex, bool printStackTrace = false)
         {
             await WriteLineAsync("An error occured: " + ex.Message);

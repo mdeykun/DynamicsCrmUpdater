@@ -1,5 +1,4 @@
-﻿using Cwru.Common;
-using Cwru.Common.Config;
+﻿using Cwru.Common.Config;
 using Cwru.Common.Extensions;
 using Cwru.Common.Model;
 using Cwru.Common.Services;
@@ -19,7 +18,6 @@ namespace Cwru.Publisher.Forms
 
     public partial class SelectWebResourcesForm : Form
     {
-        private readonly Logger logger;
         private readonly ProjectConfig projectConfig;
         private readonly ICrmRequests crmRequests;
         private readonly SolutionsService solutionsService;
@@ -36,7 +34,6 @@ namespace Cwru.Publisher.Forms
         public List<WebResource> SelectedWebResources { get; set; }
 
         public SelectWebResourcesForm(
-            Logger logger,
             ProjectConfig projectConfig,
             ICrmRequests crmRequests,
             SolutionsService solutionsService,
@@ -44,7 +41,6 @@ namespace Cwru.Publisher.Forms
         {
             this.SelectedWebResources = new List<WebResource>();
 
-            this.logger = logger;
             this.projectConfig = projectConfig;
             this.crmRequests = crmRequests;
             this.solutionsService = solutionsService;
@@ -187,11 +183,13 @@ namespace Cwru.Publisher.Forms
         private void okButton_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
+            Close();
         }
 
         private void wrSearchTextBox_TextChanged(object sender, EventArgs e)

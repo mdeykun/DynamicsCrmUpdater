@@ -37,8 +37,8 @@
             this.solutionsComboBox = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.panel6 = new System.Windows.Forms.Panel();
             this.removeButton = new System.Windows.Forms.Button();
@@ -141,8 +141,8 @@
             // 
             // flowLayoutPanel1
             // 
-            this.flowLayoutPanel1.Controls.Add(this.cancelButton);
             this.flowLayoutPanel1.Controls.Add(this.okButton);
+            this.flowLayoutPanel1.Controls.Add(this.cancelButton);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 384);
@@ -150,26 +150,26 @@
             this.flowLayoutPanel1.Size = new System.Drawing.Size(767, 34);
             this.flowLayoutPanel1.TabIndex = 11;
             // 
-            // cancelButton
-            // 
-            this.cancelButton.Location = new System.Drawing.Point(675, 3);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(89, 26);
-            this.cancelButton.TabIndex = 9;
-            this.cancelButton.Text = "Cancel";
-            this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
-            // 
             // okButton
             // 
             this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.okButton.Location = new System.Drawing.Point(580, 3);
+            this.okButton.Location = new System.Drawing.Point(675, 3);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(89, 26);
             this.okButton.TabIndex = 8;
             this.okButton.Text = "Ok";
             this.okButton.UseVisualStyleBackColor = true;
             this.okButton.Click += new System.EventHandler(this.okButton_Click);
+            // 
+            // cancelButton
+            // 
+            this.cancelButton.Location = new System.Drawing.Point(580, 3);
+            this.cancelButton.Name = "cancelButton";
+            this.cancelButton.Size = new System.Drawing.Size(89, 26);
+            this.cancelButton.TabIndex = 9;
+            this.cancelButton.Text = "Cancel";
+            this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // tableLayoutPanel4
             // 
@@ -332,7 +332,7 @@
             this.ClientSize = new System.Drawing.Size(773, 421);
             this.Controls.Add(this.tableLayoutPanel2);
             this.Name = "SelectWebResourcesForm";
-            this.Text = "SelectWebResourcesForm";
+            this.Text = "Select Web Resources";
             this.Load += new System.EventHandler(this.selectWebResourcesForm_Load);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);

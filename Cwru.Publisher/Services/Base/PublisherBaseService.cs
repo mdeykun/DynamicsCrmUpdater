@@ -38,6 +38,7 @@ namespace Cwru.Publisher.Services.Base
 
             if (environmentConfig != null)
             {
+                await logger.WriteLineAsync();
                 await logger.WriteEnvironmentInfoAsync(environmentConfig);
             }
         }

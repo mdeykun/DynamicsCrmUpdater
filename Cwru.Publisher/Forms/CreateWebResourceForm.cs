@@ -1,6 +1,4 @@
-﻿using Cwru.Common;
-using Cwru.Common.Config;
-using Cwru.Common.Model;
+﻿using Cwru.Common.Model;
 using Cwru.Common.Services;
 using System;
 using System.IO;
@@ -12,22 +10,17 @@ namespace Cwru.Publisher.Forms
 {
     public partial class CreateWebResourceForm : Form
     {
-        private readonly Logger logger;
         private readonly WebResourceTypesService webResourceTypesService;
-        private readonly SolutionsService solutionsService;
-        private readonly EnvironmentConfig environmentConfig;
         private readonly SolutionDetail solutionDetail;
         private readonly string filePath;
 
         public WebResource WebResource { get; set; }
 
         public CreateWebResourceForm(
-            Logger logger,
             string filePath,
             SolutionDetail solutionDetail,
             WebResourceTypesService webResourceTypesService)
         {
-            this.logger = logger;
             this.webResourceTypesService = webResourceTypesService;
             this.solutionDetail = solutionDetail;
             this.filePath = filePath;
