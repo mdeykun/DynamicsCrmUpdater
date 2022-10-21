@@ -30,6 +30,7 @@ namespace Cwru.Publisher.Forms
                 selectedEnvironments = projectConfig.Environments.Where(x => projectConfig.SelectedEnvironments.Contains(x.Id));
             }
 
+            SelectedEnvironments.AddRange(selectedEnvironments);
             allEnvironmentsListBox.Items.AddRange(environments.ToArray());
             selectedEnvironmentsListBox.Items.AddRange(selectedEnvironments.ToArray());
         }
