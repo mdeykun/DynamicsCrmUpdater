@@ -146,15 +146,15 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
 
         public static int GetImageIndex(this ConnectionDetail detail)
         {
-            if (detail.UseOnline)
-            {
-                return 2;
-            }
+            //if (detail.UseOnline)
+            //{
+            //    return 2;
+            //}
 
-            if (detail.UseIfd)
-            {
-                return 1;
-            }
+            //if (detail.UseIfd)
+            //{
+            //    return 1;
+            //}
 
             return 0;
         }

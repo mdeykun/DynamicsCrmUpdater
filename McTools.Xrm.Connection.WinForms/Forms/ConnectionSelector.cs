@@ -172,7 +172,7 @@ namespace McTools.Xrm.Connection.WinForms
         {
             if (lvConnections.SelectedItems.Count == 1)
             {
-                ListViewItem item = lvConnections.SelectedItems[0];
+                var item = lvConnections.SelectedItems[0];
 
                 var cd = (ConnectionDetail)item.Tag;
 
@@ -273,7 +273,7 @@ namespace McTools.Xrm.Connection.WinForms
             try
             {
                 LoadImages();
-                foreach (ConnectionDetail detail in connectionsList.Connections)
+                foreach (var detail in connectionsList.Connections)
                 {
                     lvConnections.Items.Add(detail);
                 }
@@ -287,8 +287,8 @@ namespace McTools.Xrm.Connection.WinForms
         private void LoadImages()
         {
             lvConnections.SmallImageList = new ImageList();
-            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png"));
-            lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.server_key.png"));
+            //lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.CRMOnlineLive_16.png"));
+            //lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.server_key.png"));
             lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.powerapps16.png"));
         }
     }

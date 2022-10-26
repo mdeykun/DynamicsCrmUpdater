@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="MicrosoftDynamicsCrmWebResourcesUpdater - 0.5.1" Version="0.5.90" Language="en-US" Publisher="Marat Deykun" />
+        <Identity Id="MicrosoftDynamicsCrmWebResourcesUpdater - 0.5.1" Version="0.06.01" Language="en-US" Publisher="Marat Deykun" />
         <DisplayName>Microsoft Dynamics 365 CRM Web Resources Updater</DisplayName>
-        <Description xml:space="preserve">Microsoft Dynamics 365 CRM Web Resources Updater gives you an easy way to update and publish web resources directly from Visual Studio. Add-on updates only web resources that are differ. So it takes as little time as possible to publish web resources. You can configure add-on to automatically publish just updated web resources.</Description>
+        <Description xml:space="preserve">Microsoft Dynamics 365 CRM Web Resources Updater gives you an easy way to update, publish and download web resources directly from Visual Studio. Add-on updates only web resources that are differ. So it takes as little time as possible to publish web resources. You can configure add-on to automatically publish just updated web resources.</Description>
         <MoreInfo>https://happycrm.blogspot.ru/p/crm-publisher.html</MoreInfo>
         <License>Resources\license.txt</License>
         <GettingStartedGuide>Resources\ReadMe.docx</GettingStartedGuide>
