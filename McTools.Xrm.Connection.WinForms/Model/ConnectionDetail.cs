@@ -49,7 +49,7 @@ namespace McTools.Xrm.Connection.WinForms.Model
         public bool UseOnline => !string.IsNullOrWhiteSpace(OriginalUrl) ? OriginalUrl.IndexOf(".dynamics.com", StringComparison.InvariantCultureIgnoreCase) > 0 : false;
         public string UserDomain { get; set; }
         public string UserName { get; set; }
-        public bool UseSsl => OriginalUrl?.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ?? OriginalUrl.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        public bool UseSsl => !string.IsNullOrWhiteSpace(OriginalUrl) ? OriginalUrl.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) : false;
         public Guid? SelectedSolutionId { get; set; } = null;
         public string SolutionName { get; set; }
         public string OrganizationUrlName
