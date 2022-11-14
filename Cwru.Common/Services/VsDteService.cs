@@ -41,14 +41,16 @@ namespace Cwru.Common.Services
                 throw new Exception("Project guid can't be retrived");
             }
 
-            var elements = await GetSolutionElementsRecursiveAsync(project);
+            var selectedItems = await GetSelectedElementsAsync();
+            var elements = await GetSolutionElementsRecursiveAsync(project, selectedItems);
 
             return new ProjectInfo()
             {
                 Root = Path.GetDirectoryName(project.FullName).ToLower(),
                 Guid = projectGuid,
                 Elements = elements,
-                ElementsFlat = GetElementsFlatList(elements)
+                ElementsFlat = GetElementsFlatList(elements),
+                SelectedElements = GetElementsFlatList(selectedItems)
             };
         }
         public async Task SetStatusBarAsync(string message, object icon = null)
@@ -130,7 +132,7 @@ namespace Cwru.Common.Services
 
             return null;
         }
-        private async Task<IEnumerable<SolutionElement>> GetSolutionElementsRecursiveAsync(Project project)
+        private async Task<IEnumerable<SolutionElement>> GetSolutionElementsRecursiveAsync(Project project, IEnumerable<SolutionElement> selectedItems)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -139,7 +141,6 @@ namespace Cwru.Common.Services
                 return Enumerable.Empty<SolutionElement>();
             }
 
-            var selectedItems = await GetSelectedElementsAsync();
             return await GetSolutionElementsRecursiveAsync(ToEnumerable(project.ProjectItems), selectedItems);
         }
         private async Task<IEnumerable<SolutionElement>> GetSolutionElementsRecursiveAsync(IEnumerable<ProjectItem> itemsToCheck, IEnumerable<SolutionElement> selected)
@@ -161,10 +162,10 @@ namespace Cwru.Common.Services
                     continue;
                 }
 
-                if (selected != null && selected.Any(x => x.FilePath.IsEqualToLower(solutionElement.FilePath)))
-                {
-                    solutionElement.IsSelected = true;
-                }
+                //if (selected != null && selected.Any(x => x.FilePath.IsEqualToLower(solutionElement.FilePath)))
+                //{
+                //    solutionElement.IsSelected = true;
+                //}
 
                 if (item.ProjectItems != null)
                 {

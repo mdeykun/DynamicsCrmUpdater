@@ -44,9 +44,11 @@ namespace Cwru.Publisher.Services
 
         public async Task DownloadSelectedWrAsync(ProjectInfo projectInfo, ProjectConfig projectConfig)
         {
-            await OperationStartAsync("Downloading web resources...", "Downloading...");
+            var environmentConfig = projectConfig.GetDefaultEnvironment();
 
-            var result = await DownloadWrByFilesAsync(projectConfig, projectConfig.GetDefaultEnvironment(), projectInfo);
+            await OperationStartAsync("Downloading web resources...", "Downloading...", environmentConfig);
+
+            var result = await DownloadWrByFilesAsync(projectConfig, environmentConfig, projectInfo);
 
             await OperationEndAsync(result,
                 $"{result.Processed} web resource{result.Processed.Select(" was", "s were")} downloaded",
@@ -86,8 +88,6 @@ namespace Cwru.Publisher.Services
                 {
                     return new Result(ResultType.Canceled, total: total, processed: 0, failed: 0);
                 }
-
-                await logger.WriteEnvironmentInfoAsync(environmentConfig);
 
                 var mappings = mappingService.LoadMappings(projectInfo);
 

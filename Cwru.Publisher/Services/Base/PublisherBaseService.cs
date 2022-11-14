@@ -29,6 +29,7 @@ namespace Cwru.Publisher.Services.Base
             if (!string.IsNullOrEmpty(message))
             {
                 await logger.WriteLineWithTimeAsync(message);
+                await logger.WriteLineAsync();
             }
 
             if (!string.IsNullOrEmpty(statusBarMessage))
@@ -38,7 +39,6 @@ namespace Cwru.Publisher.Services.Base
 
             if (environmentConfig != null)
             {
-                await logger.WriteLineAsync();
                 await logger.WriteEnvironmentInfoAsync(environmentConfig);
             }
         }

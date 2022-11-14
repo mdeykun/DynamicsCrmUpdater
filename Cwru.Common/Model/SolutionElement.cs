@@ -15,6 +15,6 @@ namespace Cwru.Common.Model
 
         public string FilePath { get; set; }
 
-        public bool IsSelected { get; set; }
+        //public bool IsSelected { get; set; }
     }
 }

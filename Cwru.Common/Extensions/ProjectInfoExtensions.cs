@@ -19,7 +19,7 @@ namespace Cwru.Common.Extensions
 
         public static string GetSelectedFolderPath(this ProjectInfo projectInfo)
         {
-            return GetElementsFlatList(projectInfo.Elements).FirstOrDefault(x => x.IsSelected && x.Type == SolutionElementType.Folder)?.FilePath;
+            return GetElementsFlatList(projectInfo.SelectedElements).FirstOrDefault(x => x.Type == SolutionElementType.Folder)?.FilePath;
         }
 
         public static IEnumerable<string> GetFilesInSelectedFolder(this ProjectInfo projectInfo, string folderPath)
@@ -29,12 +29,12 @@ namespace Cwru.Common.Extensions
 
         public static IEnumerable<string> GetSelectedFilesPaths(this ProjectInfo projectInfo)
         {
-            return projectInfo.ElementsFlat.Where(x => x.IsSelected && x.Type == SolutionElementType.File).Select(x => x.FilePath).ToList();
+            return projectInfo.SelectedElements.Where(x => x.Type == SolutionElementType.File).Select(x => x.FilePath).ToList();
         }
 
         public static string GetSelectedFilePath(this ProjectInfo projectInfo)
         {
-            return projectInfo.ElementsFlat.FirstOrDefault(x => x.IsSelected && x.Type == SolutionElementType.File)?.FilePath;
+            return projectInfo.SelectedElements.FirstOrDefault(x => x.Type == SolutionElementType.File)?.FilePath;
         }
 
         public static bool ContainsFile(this ProjectInfo projectInfo, string filePath)

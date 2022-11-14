@@ -10,7 +10,6 @@ namespace Cwru.Publisher.Extensions
         public static async Task WriteEnvironmentInfoAsync(this ILogger logger, EnvironmentConfig environmentConfig)
         {
             await logger.WriteLineAsync($"Environment: {environmentConfig.Name} ({environmentConfig.ConnectionString.ServiceUri})");
-            //await logger.WriteLineAsync($"URL: ");
         }
 
         public static async Task WriteSolutionInfoAsync(this ILogger logger, SolutionDetail solutionDetail)

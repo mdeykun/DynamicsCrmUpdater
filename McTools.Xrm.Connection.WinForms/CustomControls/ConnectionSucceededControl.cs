@@ -31,22 +31,30 @@ namespace McTools.Xrm.Connection.WinForms.CustomControls
             get => (SolutionDetail)comboBoxSolutions.SelectedItem;
         }
 
-        private async void ConnectionSucceededControl_Load(object sender, System.EventArgs e)
+        private async void ConnectionSucceededControl_Load(object sender, EventArgs e)
         {
-            var connectionInfo = ConnectionDetail.ToCrmConnectionString();
-            var solutionsResponse = await solutionsService.GetSolutionsDetailsAsync(connectionInfo.BuildConnectionString(), ConnectionDetail.ConnectionId, true);
-            var solutions = solutionsResponse.ToArray();
-
-            comboBoxSolutions.Items.AddRange(solutions);
-
-            if (ConnectionDetail != null && ConnectionDetail.SelectedSolutionId != null)
+            try
             {
-                var selectedSolution = solutions.FirstOrDefault(x => x.SolutionId == ConnectionDetail.SelectedSolutionId);
-                if (selectedSolution != null)
+                var connectionInfo = ConnectionDetail.ToCrmConnectionString();
+                var solutionsResponse = await solutionsService.GetSolutionsDetailsAsync(connectionInfo.BuildConnectionString(), ConnectionDetail.ConnectionId, true);
+                var solutions = solutionsResponse.ToArray();
+
+                comboBoxSolutions.Items.AddRange(solutions);
+
+                if (ConnectionDetail != null && ConnectionDetail.SelectedSolutionId != null)
                 {
-                    var index = Array.IndexOf(solutions, selectedSolution);
-                    comboBoxSolutions.SelectedIndex = index;
+                    var selectedSolution = solutions.FirstOrDefault(x => x.SolutionId == ConnectionDetail.SelectedSolutionId);
+                    if (selectedSolution != null)
+                    {
+                        var index = Array.IndexOf(solutions, selectedSolution);
+                        comboBoxSolutions.SelectedIndex = index;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
             }
         }
     }
