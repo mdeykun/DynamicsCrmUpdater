@@ -3,7 +3,7 @@
     <Metadata>
         <Identity Id="MicrosoftDynamicsCrmWebResourcesUpdater - 0.5.1" Version="0.06.02" Language="en-US" Publisher="Marat Deykun" />
         <DisplayName>Microsoft Dynamics 365 CRM Web Resources Updater</DisplayName>
-        <Description xml:space="preserve">Microsoft Dynamics 365 CRM Web Resources Updater gives you an easy way to update, publish and download web resources directly from Visual Studio. Add-on updates only web resources that are differ. So it takes as little time as possible to publish web resources. You can configure add-on to automatically publish just updated web resources.</Description>
+        <Description xml:space="preserve">Create, update, download Microsoft Dynamics 365 CRM Web Resources directly from Visual Studio. Bring web resources development on next level.</Description>
         <MoreInfo>https://happycrm.blogspot.ru/p/crm-publisher.html</MoreInfo>
         <License>Resources\license.txt</License>
         <GettingStartedGuide>Resources\ReadMe.docx</GettingStartedGuide>
@@ -12,14 +12,23 @@
         <Tags>Microsoft Dynamics CRM 365, Microsoft Dynamics CRM, CRM, CRM Web Resources, D365 Web Resources, Dynamics 365,  Dynamics CRM, D365, Dynamics 365 Customer Engagement</Tags>
     </Metadata>
     <Installation>
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0,17.0)" />
-        <InstallationTarget Version="[15.0,17.0)" Id="Microsoft.VisualStudio.Pro" />
-        <InstallationTarget Version="[15.0,17.0)" Id="Microsoft.VisualStudio.Enterprise" />
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0,17.0)">
+        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Pro">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Enterprise">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
             <ProductArchitecture>x86</ProductArchitecture>
         </InstallationTarget>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
             <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Enterprise">
+            <ProductArchitecture>x86</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Pro">
+            <ProductArchitecture>x86</ProductArchitecture>
         </InstallationTarget>
     </Installation>
     <Dependencies>

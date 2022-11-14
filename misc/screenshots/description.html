@@ -1,0 +1,66 @@
+<h3>Overview</h3>
+<p>
+Microsoft Dynamics CRM Web Resources Updater gives you an easy way to work with web resources directly from Visual Studio. The main reason this tool was created is JavaScript's development process speed up.
+</p> 
+<h3>What does this tool do?</h3> 
+<ul> 
+	<li>Uploads web resources into Microsoft Dynamics CRM </li>
+	<li>Downloads web resources from Microsoft Dynamics CRM </li>
+	<li>Publishes updated web resources </li>
+	<li>Creates new web resources&nbsp; </li>
+</ul> 
+<h3>How does it work?</h3>
+<p>As soon as you have add-on installed you will get new menu items for each project:<br> <br> 
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/PublishWebResources.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/PublishWebResources.png" border="0" alt="" width="300">
+</a>
+</p> 
+<p>You have to set-up connection to Microsoft Dynamics CRM solution you are working on before start using add-on (see Configuration Section).</p>
+<p>
+	To update web resources just press &quot;Update Web Resources&quot;. 
+	Add-on will ask CRM for all web resources that belong to Microsoft 
+	Dynamics CRM solution. As second step it will try to find appropriate web resource for each file from you project and if content is differ it will update it. If you configured add-on to atomically publish updated web resources, it will do it for you.
+</p> 
+<p>
+You can also publish selected web resource, to do that just right click on web resource and select &quot;Update Web Resource&quot;:<br> <br> 
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/PublishWebResource.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/PublishWebResource.png" border="0" alt="" width="300"></a></p> 
+<p>&nbsp;</p>
+<h4>Important</h4>
+<p style="font-style:italic">
+Add-on defines web resource to be updated by comparing file name (with extension) and web resource name. Let's say we have ec ̲ contact.js in the project. 
+Add-on will look for a web resource with name ec ̲ contact.js to update its  content.</p> 
+<p style="font-style:italic">You can set-up tool to search web resource by file name with and without extension: <br> <br>
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/WithAndWithoutExtensions.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/WithAndWithoutExtensions.png" border="0" alt="" width="400"></a></p>
+<p style="font-style:italic">You can also use mapping file to map files in your project and web resources (see section &quot;USING MAPPING FILE&quot; below).</p> 
+<p style="font-style:italic">Using add-on assumes that web resources for each Microsoft Dynamics CRM solution you are working on are stored in separated projects. Such projects do not take part in building Visual Studio solution. Add-on enables you to configure  separated connection for each project and publish web resources for each project (Microsoft Dynamics CRM solution) separately.</p> 
+<p><br><br></p> 
+<h3>How to start?</h3>
+<h4>Installation</h4> You can install add-on from <a href="/items?itemName=MaratVDeykun.MicrosoftDynamicsCRMWebResourcesUpdater">Visual Studio Marketplace</a> 
+<h4>Configuration</h4> 
+<p>To configure add-on for a project right-click on project and select &quot;Updater Options&quot;. Following window will be opened:<br> <br> 
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/SetUpWindow.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/SetUpWindow.png" border="0" alt="" width="400"></a> <br> <br> 
+Press &quot;New connection&quot; as shown:<br> <br> 
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/NewConnectionButton.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/NewConnectionButton.png" border="0" alt=""></a> <br> <br> 
+Connection set-up window will be opened. Fill-in appropriate fields and press Button &quot;OK&quot;:<br> <br> 
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/ConnectionDialog.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/ConnectionDialog.png" border="0" alt="" width="300"></a> 
+<br> <br> As soon as you create new connection it will be listed in the grid as shown:<br> <br> 
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/Configuration.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/Configuration.png" border="0" alt="" width="400"></a> <br> <br> 
+Select just created connection using dropdown list. Set check box if you want updated web resources to be published. Press button &quot;Save&quot;. <br> <br> 
+That's all. Now you are ready to use add-on.</p> 
+<h4>Using Mapping File</h4>
+<p>Mapping files allows having custom mapping between files in your project and web resources names. To create mapping file just press on &ldquo;Create mapping File&rdquo;: <br> <br> 
+<a href="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/MappingFilesCreation.png">
+<img src="https://raw.githubusercontent.com/mdeykun/DynamicsCrmUpdater/master/misc/screenshots/MappingFilesCreation.png" border="0" alt="" width="400"></a> <br> <br> 
+New file will be added to your project. Use following syntax to define mapping:<br> 
+<span style="font-weight:bold">&lt;Mapping localPath=&quot;scripts\contact.js&quot; webResourceName=&quot;new_contact&quot;/&gt;&lt;Mapping localPath=&quot;account.js&quot; webResourceName=&quot;new_account&quot;/&gt;</span></p> 
+<p><br/></p>
+<h3>Source code</h3>
+<p>The source code for this extension is available on <a href="https://github.com/mdeykun/DynamicsCrmUpdater"> GitHub</a>. Feel free to take it and add stuff you're missing.</p> 
+<h3>Support</h3>
+<p>If you have any issue with addon, question or comment feel free to leave a comment at the Q&A section.</p> 

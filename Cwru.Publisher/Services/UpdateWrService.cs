@@ -53,7 +53,6 @@ namespace Cwru.Publisher.Services
 
                 foreach (var environment in dialog.SelectedEnvironments)
                 {
-                    await logger.WriteLineAsync();
                     await logger.WriteEnvironmentInfoAsync(environment);
 
                     var result = await UploadWrAsync(projectConfig, environment, projectInfo, selectedItemsOnly);
