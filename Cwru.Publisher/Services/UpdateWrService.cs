@@ -51,8 +51,14 @@ namespace Cwru.Publisher.Services
                 projectConfig.SelectedEnvironments = dialog.SelectedEnvironments.Select(x => x.Id).ToList();
                 configurationService.Save(projectConfig);
 
-                foreach (var environment in dialog.SelectedEnvironments)
+                for (var i = 0; i < dialog.SelectedEnvironments.Count; i++)
                 {
+                    var environment = dialog.SelectedEnvironments[i];
+
+                    if (i != 0)
+                    {
+                        await logger.WriteLineAsync();
+                    }
                     await logger.WriteEnvironmentInfoAsync(environment);
 
                     var result = await UploadWrAsync(projectConfig, environment, projectInfo, selectedItemsOnly);
