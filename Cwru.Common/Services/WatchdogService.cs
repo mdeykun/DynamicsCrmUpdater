@@ -13,9 +13,9 @@ namespace Cwru.Common.Services
 
         private readonly string path;
         private readonly string appName;
-        private readonly Logger logger;
+        private readonly ILogger logger;
 
-        public WatchdogService(Logger logger, string path, string appName)
+        public WatchdogService(ILogger logger, string path, string appName)
         {
             this.path = path;
             this.appName = appName;
@@ -54,7 +54,7 @@ namespace Cwru.Common.Services
                     }
                     if (crashCount > crashCountTreshold)
                     {
-                        await logger.WriteAsync("Failed to launch publisher service");
+                        await logger.WriteLineAsync("Failed to launch publisher service");
                         shutdown = true;
                         break;
                     }

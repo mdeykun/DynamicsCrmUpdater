@@ -25,7 +25,6 @@ namespace Cwru.Common.Services
         const string SelectedConnectionIdPropertyName = "SelectedConnectionId";
         const string AutoPublishPropertyName = "AutoPublishEnabled";
         const string IgnoreExtensionsPropertyName = "IgnoreExtensions";
-        const string ExtendedLogPropertyName = "ExtendedLog";
         const string SettingsVersionPropertyName = "SettingsVersion";
 
         public ConfigsConversionService(
@@ -79,7 +78,6 @@ namespace Cwru.Common.Services
                         DafaultEnvironmentId = settingsStore.GetGuid(collectionPath, SelectedConnectionIdPropertyName),
                         PublishAfterUpload = settingsStore.GetBoolOrDefault(collectionPath, AutoPublishPropertyName),
                         IgnoreExtensions = settingsStore.GetBoolean(collectionPath, IgnoreExtensionsPropertyName),
-                        ExtendedLog = settingsStore.GetBoolean(collectionPath, ExtendedLogPropertyName),
                         Version = "2"
                     };
 
@@ -145,7 +143,7 @@ namespace Cwru.Common.Services
                 }
                 catch (Exception ex)
                 {
-                    await logger.WriteAsync("Error occured during connection detail conversion:");
+                    await logger.WriteLineAsync("Error occured during connection detail conversion:");
                     await logger.WriteLineAsync(ex);
                 }
             }
@@ -171,7 +169,7 @@ namespace Cwru.Common.Services
             if (connectionDetail.ConnectionString != null)
             {
                 var connectionString = connectionDetail.ConnectionString;
-                connectionString = DecriptConnectionString(connectionString);
+                connectionString = await DecriptConnectionStringAsync(connectionString);
                 return CrmConnectionString.Parse(connectionString);
             }
 
@@ -285,7 +283,7 @@ namespace Cwru.Common.Services
             return null;
         }
 
-        private string DecriptConnectionString(string connectionString)
+        private async Task<string> DecriptConnectionStringAsync(string connectionString)
         {
             try
             {
@@ -305,6 +303,7 @@ namespace Cwru.Common.Services
             }
             catch (Exception ex)
             {
+                await logger.WriteDebugAsync(ex);
                 return connectionString;
             }
         }

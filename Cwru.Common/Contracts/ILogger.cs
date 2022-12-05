@@ -6,10 +6,16 @@ namespace Cwru.Common
     public interface ILogger
     {
         Task ClearAsync();
-        Task WriteLineAsync(Exception ex, bool printStackTrace = false);
-        Task WriteAsync(string message);
-        Task WriteLineAsync(string message, Exception ex, bool printStackTrace = false);
-        Task WriteLineAsync(string message, bool print = true);
-        Task WriteLineWithTimeAsync(string message, bool print = true);
+
+        Task WriteLineAsync();
+        Task WriteLineAsync(string message);
+        Task WriteLineAsync(Exception ex);
+        Task WriteLineAsync(string message, Exception ex);
+
+        Task WriteLineWithTimeAsync(string message);
+
+        Task WriteDebugAsync(string message);
+        Task WriteDebugAsync(Exception ex);
+        Task WriteDebugAsync(string message, Exception ex);
     }
 }

@@ -13,7 +13,7 @@ namespace McTools.Xrm.Connection.WinForms
 {
     public partial class ConnectionSelector : Form
     {
-        private readonly Logger logger;
+        private readonly ILogger logger;
         private readonly ICrmRequests crmRequests;
         private readonly SolutionsService solutionsService;
         private readonly ProjectInfo projectInfo;
@@ -22,7 +22,7 @@ namespace McTools.Xrm.Connection.WinForms
         private ConnectionDetailsList connectionsList;
 
         public ConnectionSelector(
-            Logger logger,
+            ILogger logger,
             ProjectInfo projectInfo,
             MappingService mappingHelper,
             ICrmRequests crmRequests,
@@ -58,7 +58,7 @@ namespace McTools.Xrm.Connection.WinForms
         private async void bSave_Click(object sender, EventArgs e)
         {
             var selectedConnection = comboBoxSelectedConnection.SelectedItem as ConnectionDetail;
-            if (selectedConnection == null)
+            if (lvConnections.Items.Count > 0 && selectedConnection == null)
             {
                 await logger.WriteLineAsync("Connection is not selected");
                 MessageBox.Show("Connection is not selected", "Microsoft Dynamics CRM Web Resources Updater", MessageBoxButtons.OK, MessageBoxIcon.Error);

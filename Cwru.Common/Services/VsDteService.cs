@@ -292,7 +292,6 @@ namespace Cwru.Common.Services
 
             return list;
         }
-
         private async Task<IEnumerable<UIHierarchyItem>> GetSelectedHierarchyItemsAsync()
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();

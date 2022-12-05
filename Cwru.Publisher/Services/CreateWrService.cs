@@ -22,7 +22,7 @@ namespace Cwru.Publisher.Services
         private readonly WebResourceTypesService webResourceTypesService;
 
         public CreateWrService(
-            Logger logger,
+            ILogger logger,
             ICrmRequests crmWebResourcesUpdaterClient,
             MappingService mappingHelper,
             SolutionsService solutionsService,
@@ -93,7 +93,7 @@ namespace Cwru.Publisher.Services
                 return GetFailedResult("Web resource '" + webResource.Name + "' already exists in CRM");
             }
 
-            var mappings = mappingService.LoadMappings(projectInfo);
+            var mappings = await mappingService.LoadMappingsAsync(projectInfo);
             var mapping = mappingService.GetMappingByFilePath(mappings, filePath);
             if (!string.IsNullOrWhiteSpace(mapping) && !mapping.IsEqualToLower(webResource.Name))
             {

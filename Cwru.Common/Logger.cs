@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using Cwru.Common.Config;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Threading.Tasks;
@@ -10,14 +11,17 @@ namespace Cwru.Common
     {
         public static readonly Guid OutputWindowGuid = new Guid("10B2DB3C-1CB4-43B4-80D4-A03204A616D4");
 
+        private readonly ToolConfig toolConfig = null;
         private IVsOutputWindow outputWindow;
         private IVsOutputWindowPane outputWindowPane;
 
+
         private readonly Microsoft.VisualStudio.Shell.IAsyncServiceProvider serviceProvider;
 
-        public Logger(AsyncPackage asyncPackage)
+        public Logger(AsyncPackage asyncPackage, ToolConfig toolConfig = null)
         {
             this.serviceProvider = asyncPackage;
+            this.toolConfig = toolConfig;
         }
 
         public async Task ClearAsync()
@@ -28,13 +32,30 @@ namespace Cwru.Common
             pane.Clear();
         }
 
-        public async Task WriteAsync(string message)
+        public async Task WriteDebugAsync(string message)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            if (toolConfig?.ExtendedLog == true)
+            {
+                await WriteLineAsync(message);
+            }
+        }
 
-            var pane = await GetOutputPaneAsync();
-            pane.Activate();
-            pane.OutputStringThreadSafe(message);
+        public async Task WriteDebugAsync(Exception ex)
+        {
+            if (toolConfig?.ExtendedLog == true)
+            {
+                await WriteLineAsync(ex);
+            }
+        }
+
+        public async Task WriteDebugAsync(string message, Exception ex)
+        {
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                await WriteDebugAsync(message);
+            }
+
+            await WriteDebugAsync(ex);
         }
 
         public async Task WriteLineAsync()
@@ -42,33 +63,30 @@ namespace Cwru.Common
             await WriteAsync("\r\n");
         }
 
-        public async Task WriteLineAsync(Exception ex, bool printStackTrace = false)
+        public async Task WriteLineAsync(Exception ex)
         {
             await WriteLineAsync("An error occured: " + ex.Message);
-            await WriteLineAsync(ex.StackTrace, printStackTrace);
+            await WriteLineAsync(ex.StackTrace);
         }
 
-        public async Task WriteLineAsync(string message, Exception ex, bool printStackTrace = false)
+        public async Task WriteLineAsync(string message, Exception ex)
         {
             if (!string.IsNullOrWhiteSpace(message))
             {
                 await WriteLineAsync(message);
             }
 
-            await WriteLineAsync(ex, printStackTrace);
+            await WriteLineAsync(ex);
         }
 
-        public async Task WriteLineAsync(string message, bool print = true)
+        public async Task WriteLineAsync(string message)
         {
-            if (print)
-            {
-                await WriteAsync(message + "\r\n");
-            }
+            await WriteAsync(message + "\r\n");
         }
 
-        public async Task WriteLineWithTimeAsync(string message, bool print = true)
+        public async Task WriteLineWithTimeAsync(string message)
         {
-            await WriteLineAsync(DateTime.Now.ToString("HH:mm") + ": " + message, print);
+            await WriteLineAsync(DateTime.Now.ToString("HH:mm") + ": " + message);
         }
 
         private async Task<IVsOutputWindowPane> GetOutputPaneAsync()
@@ -97,6 +115,14 @@ namespace Cwru.Common
 
             outputWindow.CreatePane(ref windowGuid, windowTitle, 1, 1);
             outputWindow.GetPane(ref windowGuid, out outputWindowPane);
+        }
+
+        private async Task WriteAsync(string message)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var pane = await GetOutputPaneAsync();
+            pane.Activate();
+            pane.OutputStringThreadSafe(message);
         }
     }
 }

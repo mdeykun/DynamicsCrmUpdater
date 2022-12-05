@@ -17,27 +17,30 @@ namespace Cwru.Connection.Services
 {
     public class ConnectionService
     {
-        private readonly Logger logger;
+        private readonly ILogger logger;
         private readonly VsDteService vsDteHelper;
         private readonly MappingService mappingHelper;
         private readonly ICrmRequests crmRequests;
-        private readonly ConfigurationService configurationService;
+        private readonly ToolConfigurationService toolConfigurationService;
+        private readonly ProjectConfigurationService projectConfigurationService;
         private readonly SolutionsService solutionsService;
 
         public ConnectionService(
-            Logger logger,
+            ILogger logger,
             ICrmRequests crmRequests,
             SolutionsService solutionsService,
             VsDteService vsDteHelper,
             MappingService mappingHelper,
-            ConfigurationService configurationService)
+            ToolConfigurationService toolConfigurationService,
+            ProjectConfigurationService projectConfigurationService)
         {
             this.logger = logger;
             this.crmRequests = crmRequests;
             this.solutionsService = solutionsService;
             this.vsDteHelper = vsDteHelper;
             this.mappingHelper = mappingHelper;
-            this.configurationService = configurationService;
+            this.toolConfigurationService = toolConfigurationService;
+            this.projectConfigurationService = projectConfigurationService;
         }
 
         public async Task<ConnectionData> GetAndValidateConnectionAsync()
@@ -48,10 +51,16 @@ namespace Cwru.Connection.Services
                 return GetFailed("Project is not selected or selected project can't be identified");
             }
 
-            var projectConfig = await configurationService.GetProjectConfigAsync(projectInfo.Guid);
+            var projectConfig = await projectConfigurationService.GetProjectConfigAsync(projectInfo.Guid);
             if (projectConfig == null)
             {
                 return GetFailed("Failed to load project config.");
+            }
+
+            var toolConfig = toolConfigurationService.GetToolConfig();
+            if (toolConfig == null)
+            {
+                return GetFailed("Failed to load tool config.");
             }
 
             var environmentConfig = projectConfig.GetDefaultEnvironment();
@@ -133,10 +142,19 @@ namespace Cwru.Connection.Services
                             ProjectInfo = projectInfo,
                         };
                     }
+                    else
+                    {
+                        return GetFailed("Сonnection form was closed without saving");
+                    }
                 }
             }
 
-            return GetFailed();
+            return new ConnectionData()
+            {
+                IsValid = true,
+                ProjectConfig = projectConfig,
+                ProjectInfo = projectInfo,
+            };
         }
 
         public async Task<EnvironmentConfig> ShowConfigurationDialogAsync()
@@ -148,7 +166,8 @@ namespace Cwru.Connection.Services
                 return null;
             }
 
-            var projectConfig = await configurationService.GetProjectConfigAsync(project.Guid);
+            var toolConfig = toolConfigurationService.GetToolConfig();
+            var projectConfig = await projectConfigurationService.GetProjectConfigAsync(project.Guid);
 
             var selector = new ConnectionSelector(
                 logger,
@@ -156,19 +175,21 @@ namespace Cwru.Connection.Services
                 mappingHelper,
                 crmRequests,
                 solutionsService,
-                ConvertToXrmConnectionDetail(projectConfig));
+                ConvertToXrmConnectionDetail(projectConfig, toolConfig));
 
             selector.ShowDialog();
 
             if (selector.DialogResult == DialogResult.OK)
             {
+                toolConfig.ExtendedLog = selector.ConnectionsList.ExtendedLog;
+                toolConfigurationService.SaveToolConfig(toolConfig);
+
                 projectConfig.Environments = ConvertFromXrmCrmConnections(selector.ConnectionsList);
-                projectConfig.ExtendedLog = selector.ConnectionsList.ExtendedLog;
                 projectConfig.PublishAfterUpload = selector.ConnectionsList.PublishAfterUpload;
                 projectConfig.IgnoreExtensions = selector.ConnectionsList.IgnoreExtensions;
                 projectConfig.DafaultEnvironmentId = selector.ConnectionsList.SelectedConnectionId;
+                projectConfigurationService.SaveProjectConfig(projectConfig);
 
-                configurationService.Save(projectConfig);
 
                 return projectConfig.GetDefaultEnvironment();
             }
@@ -226,7 +247,7 @@ namespace Cwru.Connection.Services
                 if (dialog.SavePassword)
                 {
                     environmentConfig.SavePassword = true;
-                    configurationService.Save(projectConfig);
+                    projectConfigurationService.SaveProjectConfig(projectConfig);
                 }
             }
             return dialog.DialogResult;
@@ -247,14 +268,14 @@ namespace Cwru.Connection.Services
                 if (dialog.SaveSecret)
                 {
                     environmentConfig.SavePassword = true;
-                    configurationService.Save(projectConfig);
+                    projectConfigurationService.SaveProjectConfig(projectConfig);
                 }
             }
 
             return dialog.DialogResult;
         }
 
-        private ConnectionDetailsList ConvertToXrmConnectionDetail(ProjectConfig projectConfig)
+        private ConnectionDetailsList ConvertToXrmConnectionDetail(ProjectConfig projectConfig, ToolConfig toolConfig)
         {
             var connections = new List<ConnectionDetail>();
             if (projectConfig != null && projectConfig.Environments != null)
@@ -297,7 +318,7 @@ namespace Cwru.Connection.Services
 
             return new ConnectionDetailsList(connections)
             {
-                ExtendedLog = projectConfig.ExtendedLog,
+                ExtendedLog = toolConfig.ExtendedLog == true,
                 IgnoreExtensions = projectConfig.IgnoreExtensions,
                 PublishAfterUpload = projectConfig.PublishAfterUpload,
                 SelectedConnectionId = projectConfig.DafaultEnvironmentId

@@ -13,20 +13,23 @@ namespace Cwru.Common.Services
     public class MappingService
     {
         private readonly VsDteService vsDteService;
+        private readonly ILogger logger;
         public const string MappingFileName = "UploaderMapping.config";
 
-        public MappingService(VsDteService vsDteHelper)
+        public MappingService(ILogger logger, VsDteService vsDteHelper)
         {
+            this.logger = logger;
             this.vsDteService = vsDteHelper;
         }
 
-        public Dictionary<string, string> LoadMappings(ProjectInfo projectInfo)
+        public async Task<Dictionary<string, string>> LoadMappingsAsync(ProjectInfo projectInfo)
         {
             var mappingList = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
             var mappingFilePath = MappingFileName.AddRoot(projectInfo.Root);
             if (!projectInfo.ContainsFile(mappingFilePath))
             {
+                await logger.WriteDebugAsync($"Mapping file was not found: {mappingFilePath}");
                 return mappingList;
             }
 
@@ -166,7 +169,7 @@ namespace Cwru.Common.Services
             }
             else
             {
-                var mappings = LoadMappings(projectInfo);
+                var mappings = await LoadMappingsAsync(projectInfo);
                 if (MappingExists(mappings, filePath, webresourceName))
                 {
                     return;

@@ -18,8 +18,6 @@ namespace Cwru.VsExtension
     {
         public static void Initialize(AsyncPackage package)
         {
-            Logger = new Lazy<Logger>(() => new Logger(package));
-
             XmlSerializerService = new Lazy<XmlSerializerService>();
 
             CrmRequestsClient = new Lazy<ICrmRequests>(() => new CrmRequestsClient(
@@ -33,24 +31,30 @@ namespace Cwru.VsExtension
                 },
                 new EndpointAddress("net.pipe://localhost/CrmWebResourceUpdaterSvc")));
 
-            VsDteService = new Lazy<VsDteService>(() => new VsDteService(package, Logger.Value));
             SettingsStore = new Lazy<WritableSettingsStore>(() =>
             {
                 var shellSettingsManager = new ShellSettingsManager(package);
                 return shellSettingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
             });
 
+            ToolConfigurationService = new Lazy<ToolConfigurationService>(() => new ToolConfigurationService(SettingsStore.Value));
+            ProjectConfigurationService = new Lazy<ProjectConfigurationService>(() => new ProjectConfigurationService(SettingsStore.Value, ConfigsConversionService.Value));
+
+            Logger = new Lazy<Logger>(() =>
+            {
+                var toolConfig = ToolConfigurationService.Value.GetToolConfig();
+                return new Logger(package, toolConfig);
+            });
+            VsDteService = new Lazy<VsDteService>(() => new VsDteService(package, Logger.Value));
+
             WebResourceTypesService = new Lazy<WebResourceTypesService>(() => new WebResourceTypesService(Logger.Value));
             CryptoService = new Lazy<CryptoService>(() => new CryptoService());
             SolutionsService = new Lazy<SolutionsService>(() => new SolutionsService(CrmRequestsClient.Value));
 
             ConfigsConversionService = new Lazy<ConfigsConversionService>(() => new ConfigsConversionService(Logger.Value, CryptoService.Value, XmlSerializerService.Value, SettingsStore.Value));
-            ConfigurationService = new Lazy<ConfigurationService>(() =>
-            {
-                return new ConfigurationService(Logger.Value, SettingsStore.Value, VsDteService.Value, ConfigsConversionService.Value);
-            });
 
-            MappingService = new Lazy<MappingService>(() => new MappingService(VsDteService.Value));
+
+            MappingService = new Lazy<MappingService>(() => new MappingService(Logger.Value, VsDteService.Value));
 
             CreateWrService = new Lazy<CreateWrService>(() => new CreateWrService(
                 Logger.Value,
@@ -66,7 +70,7 @@ namespace Cwru.VsExtension
                 MappingService.Value,
                 SolutionsService.Value,
                 VsDteService.Value,
-                ConfigurationService.Value));
+                ProjectConfigurationService.Value));
 
             DownloadWrService = new Lazy<DownloadWrService>(() => new DownloadWrService(
                 Logger.Value,
@@ -82,7 +86,8 @@ namespace Cwru.VsExtension
                 SolutionsService.Value,
                 VsDteService.Value,
                 MappingService.Value,
-                ConfigurationService.Value));
+                ToolConfigurationService.Value,
+                ProjectConfigurationService.Value));
 
             WatchdogService = new Lazy<WatchdogService>(() =>
             {
@@ -108,7 +113,8 @@ namespace Cwru.VsExtension
         public static Lazy<ICrmRequests> CrmRequestsClient { get; private set; }
         public static Lazy<VsDteService> VsDteService { get; private set; }
         public static Lazy<MappingService> MappingService { get; private set; }
-        public static Lazy<ConfigurationService> ConfigurationService { get; private set; }
+        public static Lazy<ProjectConfigurationService> ProjectConfigurationService { get; private set; }
+        public static Lazy<ToolConfigurationService> ToolConfigurationService { get; private set; }
         public static Lazy<ConfigsConversionService> ConfigsConversionService { get; private set; }
         public static Lazy<CreateWrService> CreateWrService { get; private set; }
         public static Lazy<UpdateWrService> UpdateWrService { get; private set; }
@@ -119,8 +125,6 @@ namespace Cwru.VsExtension
         public static Lazy<Logger> Logger { get; private set; }
         public static Lazy<WatchdogService> WatchdogService { get; private set; }
         public static Lazy<WebResourceTypesService> WebResourceTypesService { get; private set; }
-
-
         public static Lazy<CreateWrCommand> CreateWebResourceCommand { get; private set; }
         public static Lazy<UpdaterOptionsCommand> UpdaterOptionsCommand { get; private set; }
         public static Lazy<UpdateSelectedWrCommand> UpdateSelectedWebResourcesCommand { get; private set; }

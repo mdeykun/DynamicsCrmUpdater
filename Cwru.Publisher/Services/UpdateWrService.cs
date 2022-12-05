@@ -23,15 +23,15 @@ namespace Cwru.Publisher.Services
         private readonly MappingService mappingService;
         private readonly ICrmRequests crmRequest;
         private readonly SolutionsService solutionsService;
-        private readonly ConfigurationService configurationService;
+        private readonly ProjectConfigurationService configurationService;
 
         public UpdateWrService(
-            Logger logger,
+            ILogger logger,
             ICrmRequests crmWebResourcesUpdaterClient,
             MappingService mappingHelper,
             SolutionsService solutionsService,
             VsDteService vsDteService,
-            ConfigurationService configurationService) : base(logger, vsDteService)
+            ProjectConfigurationService configurationService) : base(logger, vsDteService)
         {
             this.crmRequest = crmWebResourcesUpdaterClient;
             this.mappingService = mappingHelper;
@@ -49,7 +49,7 @@ namespace Cwru.Publisher.Services
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 projectConfig.SelectedEnvironments = dialog.SelectedEnvironments.Select(x => x.Id).ToList();
-                configurationService.Save(projectConfig);
+                configurationService.SaveProjectConfig(projectConfig);
 
                 for (var i = 0; i < dialog.SelectedEnvironments.Count; i++)
                 {
@@ -92,7 +92,7 @@ namespace Cwru.Publisher.Services
 
             try
             {
-                var filesToUpload = await GetProjectFilesAsync(projectInfo, selectedItemsOnly, projectConfig.ExtendedLog);
+                var filesToUpload = await GetProjectFilesAsync(projectInfo, selectedItemsOnly);
                 total = filesToUpload.Count();
                 if (total <= 0)
                 {
@@ -102,21 +102,21 @@ namespace Cwru.Publisher.Services
                 var selectedSolution = await solutionsService.GetDefaultSolutionDetailsAsync(environmentConfig);
                 await logger.WriteSolutionInfoAsync(selectedSolution);
 
-                await logger.WriteLineAsync("Starting uploading process", projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync("Starting uploading process");
                 await logger.WriteLineAsync("--------------------------------------------------------------");
 
-                var mappings = mappingService.LoadMappings(projectInfo);
+                var mappings = await mappingService.LoadMappingsAsync(projectInfo);
 
                 var webResourceNames = GetWrNames(filesToUpload, mappings, projectConfig.IgnoreExtensions);
-                var webResources = await RetrieveSolutionWrsAsync(environmentConfig.ConnectionString.BuildConnectionString(), environmentConfig.SelectedSolutionId, webResourceNames, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
-                var fileToWrMapping = await GetFileToWrMappingAsync(projectInfo, filesToUpload, mappings, webResources, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
+                var webResources = await RetrieveSolutionWrsAsync(environmentConfig.ConnectionString.BuildConnectionString(), environmentConfig.SelectedSolutionId, webResourceNames);
+                var fileToWrMapping = await GetFileToWrMappingAsync(projectInfo, filesToUpload, mappings, webResources, projectConfig.IgnoreExtensions);
 
                 foreach (var filePath in fileToWrMapping.Keys)
                 {
                     var webResource = fileToWrMapping[filePath];
 
                     var relativePath = filePath.Replace(projectInfo.Root + "\\", "");
-                    var isUpdated = await UpdateWrByFileAsync(environmentConfig, webResource, filePath, relativePath, projectConfig.ExtendedLog);
+                    var isUpdated = await UpdateWrByFileAsync(environmentConfig, webResource, filePath, relativePath);
                     if (isUpdated)
                     {
                         updatedWrs.Add(webResource);
@@ -124,7 +124,7 @@ namespace Cwru.Publisher.Services
                 }
 
                 await logger.WriteLineAsync("--------------------------------------------------------------");
-                await logger.WriteLineAsync("Uploading process was completed", projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync("Uploading process was completed");
 
                 await logger.WriteLineWithTimeAsync(updatedWrs.Count + " file" + (updatedWrs.Count == 1 ? " was" : "s were") + " uploaded");
 
@@ -139,16 +139,16 @@ namespace Cwru.Publisher.Services
             catch (Exception ex)
             {
                 await logger.WriteLineAsync($"Failed to upload script{total.Select("", "s")}.");
-                await logger.WriteLineAsync(ex, projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync(ex);
 
                 return new Result(ResultType.Failure, total: total, processed: updatedWrs.Count, failed: 0, ex);
             }
         }
 
-        private async Task<bool> UpdateWrByFileAsync(EnvironmentConfig environmentConfig, WebResource webResource, string filePath, string relativePath, bool extendedLog)
+        private async Task<bool> UpdateWrByFileAsync(EnvironmentConfig environmentConfig, WebResource webResource, string filePath, string relativePath)
         {
             var webResourceName = Path.GetFileName(filePath);
-            await logger.WriteLineAsync("Uploading " + webResourceName, extendedLog);
+            await logger.WriteDebugAsync("Uploading " + webResourceName);
 
             var localContent = FilesHelper.GetEncodedFileContent(filePath);
             var remoteContent = webResource.Content;
@@ -187,9 +187,9 @@ namespace Cwru.Publisher.Services
             await logger.WriteLineWithTimeAsync(count + " file" + (count == 1 ? " was" : "s were") + " published");
         }
 
-        private async Task<IEnumerable<WebResource>> RetrieveSolutionWrsAsync(string connectionString, Guid solutionId, IEnumerable<string> webResourceNames, bool ignoreExtensions, bool extendedLog)
+        private async Task<IEnumerable<WebResource>> RetrieveSolutionWrsAsync(string connectionString, Guid solutionId, IEnumerable<string> webResourceNames)
         {
-            await logger.WriteLineAsync("Retrieving existing web resources", extendedLog);
+            await logger.WriteDebugAsync("Retrieving existing web resources");
 
             var retrieveWebResourceResponse = await crmRequest.RetrieveSolutionWebResourcesAsync(connectionString, solutionId, webResourceNames);
             if (retrieveWebResourceResponse.IsSuccessful == false)

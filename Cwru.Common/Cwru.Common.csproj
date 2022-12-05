@@ -61,6 +61,7 @@
     <Compile Include="Attributes\ConnectionStringAliases.cs" />
     <Compile Include="Config\Certificate.cs" />
     <Compile Include="Config\Depricated\ConnectionDetail.cs" />
+    <Compile Include="Config\ToolConfig.cs" />
     <Compile Include="Config\ProjectConfig.cs" />
     <Compile Include="Extensions\IntExtensions.cs" />
     <Compile Include="Extensions\ProjectConfigExtensions.cs" />
@@ -74,10 +75,11 @@
     <Compile Include="Model\SolutionElement.cs" />
     <Compile Include="Model\SolutionElementType.cs" />
     <Compile Include="Model\WebResourceType.cs" />
-    <Compile Include="Services\ConfigurationService.cs" />
+    <Compile Include="Services\ProjectConfigurationService.cs" />
     <Compile Include="Services\ConfigsConversionService.cs" />
     <Compile Include="Services\CryptoService.cs" />
     <Compile Include="Services\MappingService.cs" />
+    <Compile Include="Services\ToolConfigurationService.cs" />
     <Compile Include="Services\VsDteService.cs" />
     <Compile Include="Services\WatchdogService.cs" />
     <Compile Include="Services\WebResourceTypesService.cs" />

@@ -15,10 +15,10 @@ namespace Cwru.Publisher.Services.Base
 {
     public class PublisherBaseService
     {
-        protected readonly Logger logger;
+        protected readonly ILogger logger;
         protected readonly VsDteService vsDteService;
 
-        public PublisherBaseService(Logger logger, VsDteService vsDteService)
+        public PublisherBaseService(ILogger logger, VsDteService vsDteService)
         {
             this.logger = logger;
             this.vsDteService = vsDteService;
@@ -92,23 +92,23 @@ namespace Cwru.Publisher.Services.Base
                 await vsDteService.SetStatusBarAsync(statusBarMessage);
             }
         }
-        protected async Task<IEnumerable<string>> GetProjectFilesAsync(ProjectInfo projectInfo, bool selectedItemsOnly, bool extendedLog)
+        protected async Task<IEnumerable<string>> GetProjectFilesAsync(ProjectInfo projectInfo, bool selectedItemsOnly)
         {
-            await logger.WriteLineAsync(selectedItemsOnly ? "Loading selected files' paths" : "Loading all files' paths", extendedLog);
+            await logger.WriteDebugAsync(selectedItemsOnly ? "Loading selected files' paths" : "Loading all files' paths");
             var files = selectedItemsOnly ? projectInfo.GetSelectedFilesPaths() : projectInfo.GetFilesPaths();
 
             if (files == null || files.Count() == 0)
             {
-                await logger.WriteLineAsync("Failed to load files' paths", extendedLog);
+                await logger.WriteDebugAsync("Failed to load files' paths");
                 return Enumerable.Empty<string>();
             }
 
-            await logger.WriteLineAsync(files.Count() + " path" + (files.Count() == 1 ? " was" : "s were") + " loaded", extendedLog);
+            await logger.WriteDebugAsync(files.Count() + " path" + (files.Count() == 1 ? " was" : "s were") + " loaded");
 
             files = files.ExcludeFile(MappingService.MappingFileName);
             return files;
         }
-        protected async Task<Dictionary<string, WebResource>> GetFileToWrMappingAsync(ProjectInfo projectInfo, IEnumerable<string> files, Dictionary<string, string> mappings, IEnumerable<WebResource> webResources, bool ignoreExtensions, bool extendedLog)
+        protected async Task<Dictionary<string, WebResource>> GetFileToWrMappingAsync(ProjectInfo projectInfo, IEnumerable<string> files, Dictionary<string, string> mappings, IEnumerable<WebResource> webResources, bool ignoreExtensions)
         {
             var result = new Dictionary<string, WebResource>();
 
@@ -120,21 +120,20 @@ namespace Cwru.Publisher.Services.Base
                     webResourceName = mappings[filePath];
 
                     var relativePath = filePath.Replace(projectInfo.Root + "\\", "");
-                    await logger.WriteLineAsync($"Mapping found: {relativePath} to {webResourceName}", extendedLog);
+                    await logger.WriteDebugAsync($"Mapping found: {relativePath} to {webResourceName}");
                 }
 
                 var webResource = webResources.FirstOrDefault(x => x.Name.IsEqualToLower(webResourceName));
                 if (webResource == null && ignoreExtensions)
                 {
-                    await logger.WriteLineAsync(webResourceName + " does not exist or not added to selected solution", extendedLog);
+                    await logger.WriteDebugAsync(webResourceName + " does not exist or not added to selected solution");
                     webResourceName = Path.GetFileNameWithoutExtension(filePath);
-                    await logger.WriteLineAsync("Searching for " + webResourceName, extendedLog);
+                    await logger.WriteDebugAsync("Searching for " + webResourceName);
                     webResource = webResources.FirstOrDefault(x => x.Name.IsEqualToLower(webResourceName));
                 }
                 if (webResource == null)
                 {
-                    await logger.WriteLineAsync("Uploading of " + webResourceName + " was skipped: web resource does not exist or not added to selected solution", extendedLog);
-                    await logger.WriteLineAsync(webResourceName + " does not exist or not added to selected solution", !extendedLog);
+                    await logger.WriteLineAsync(webResourceName + " does not exist or not added to selected solution");
                     continue;
                 }
 

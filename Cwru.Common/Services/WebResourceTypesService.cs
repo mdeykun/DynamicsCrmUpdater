@@ -8,9 +8,9 @@ namespace Cwru.Common.Services
 {
     public class WebResourceTypesService
     {
-        private readonly Logger logger;
+        private readonly ILogger logger;
 
-        public WebResourceTypesService(Logger logger)
+        public WebResourceTypesService(ILogger logger)
         {
             this.logger = logger;
         }

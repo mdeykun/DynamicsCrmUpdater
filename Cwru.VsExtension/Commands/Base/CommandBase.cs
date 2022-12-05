@@ -18,7 +18,9 @@ namespace Cwru.VsExtension.Commands.Base
             try
             {
                 await logger.ClearAsync();
+                await logger.WriteDebugAsync("CommandBase: Command started");
                 await ExecuteInternalAsync();
+                await logger.WriteDebugAsync("CommandBase: Command completed");
             }
             catch (Exception ex)
             {

@@ -29,7 +29,7 @@ namespace Cwru.Publisher.Services
         private readonly int openFilesLimit = 10;
 
         public DownloadWrService(
-            Logger logger,
+            ILogger logger,
             ICrmRequests crmWebResourcesUpdaterClient,
             MappingService mappingHelper,
             SolutionsService solutionsService,
@@ -76,7 +76,7 @@ namespace Cwru.Publisher.Services
             var total = 0;
             try
             {
-                var filesToDownload = await GetProjectFilesAsync(projectInfo, true, projectConfig.ExtendedLog);
+                var filesToDownload = await GetProjectFilesAsync(projectInfo, true);
                 total = filesToDownload.Count();
                 if (total == 0)
                 {
@@ -89,14 +89,14 @@ namespace Cwru.Publisher.Services
                     return new Result(ResultType.Canceled, total: total, processed: 0, failed: 0);
                 }
 
-                var mappings = mappingService.LoadMappings(projectInfo);
+                var mappings = await mappingService.LoadMappingsAsync(projectInfo);
 
-                await logger.WriteLineAsync("Starting downloading process", projectConfig.ExtendedLog);
+                await logger.WriteLineAsync("Starting downloading process");
                 await logger.WriteLineAsync("--------------------------------------------------------------");
 
                 var webResourceNames = GetWrNames(filesToDownload, mappings, projectConfig.IgnoreExtensions);
-                var webResources = await RetrieveWrsAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResourceNames, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
-                var fileToWrMapping = await GetFileToWrMappingAsync(projectInfo, filesToDownload, mappings, webResources, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
+                var webResources = await RetrieveWrsAsync(environmentConfig.ConnectionString.BuildConnectionString(), webResourceNames);
+                var fileToWrMapping = await GetFileToWrMappingAsync(projectInfo, filesToDownload, mappings, webResources, projectConfig.IgnoreExtensions);
 
                 foreach (var filePath in fileToWrMapping.Keys)
                 {
@@ -109,7 +109,7 @@ namespace Cwru.Publisher.Services
                 }
 
                 await logger.WriteLineAsync("--------------------------------------------------------------");
-                await logger.WriteLineAsync("Downloading process was completed", projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync("Downloading process was completed");
                 await logger.WriteLineWithTimeAsync(downloaded + " file" + (downloaded == 1 ? " was" : "s were") + " downloaded");
 
                 return new Result(ResultType.Success, total: total, processed: downloaded, failed: 0);
@@ -117,7 +117,7 @@ namespace Cwru.Publisher.Services
             catch (Exception ex)
             {
                 await logger.WriteLineAsync($"Failed to download script{total.Select("", "s")}.");
-                await logger.WriteLineAsync(ex, projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync(ex);
 
                 return new Result(ResultType.Failure, total: total, processed: downloaded, failed: 0, exception: ex);
             }
@@ -152,13 +152,13 @@ namespace Cwru.Publisher.Services
 
                 await logger.WriteEnvironmentInfoAsync(environment);
 
-                var mappings = mappingService.LoadMappings(projectInfo);
+                var mappings = await mappingService.LoadMappingsAsync(projectInfo);
 
-                await logger.WriteLineAsync("Starting downloading process", projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync("Starting downloading process");
                 await logger.WriteLineAsync("--------------------------------------------------------------");
 
-                var webResources = await RetrieveWrsAsync(environment.ConnectionString.BuildConnectionString(), webResourcesNames, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
-                var fileToWrMapping = await GetWrToFileMappingAsync(projectInfo, webResources, mappings, projectConfig.IgnoreExtensions, projectConfig.ExtendedLog);
+                var webResources = await RetrieveWrsAsync(environment.ConnectionString.BuildConnectionString(), webResourcesNames);
+                var fileToWrMapping = GetWrToFileMapping(projectInfo, webResources, mappings, projectConfig.IgnoreExtensions);
 
                 foreach (var wrName in webResourcesNames)
                 {
@@ -230,7 +230,7 @@ namespace Cwru.Publisher.Services
                 }
 
                 await logger.WriteLineAsync("--------------------------------------------------------------");
-                await logger.WriteLineAsync("Downloading process was completed", projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync("Downloading process was completed");
                 await logger.WriteLineWithTimeAsync(downloaded + " file" + (downloaded == 1 ? " was" : "s were") + " downloaded");
 
                 return new Result(ResultType.Success, total: total, processed: downloaded, failed: 0);
@@ -238,7 +238,7 @@ namespace Cwru.Publisher.Services
             catch (Exception ex)
             {
                 await logger.WriteLineAsync($"Failed to download script{total.Select("", "s")}.");
-                await logger.WriteLineAsync(ex, projectConfig.ExtendedLog);
+                await logger.WriteDebugAsync(ex);
 
                 return new Result(ResultType.Failure, total: total, processed: downloaded, failed: 0, ex);
             }
@@ -260,9 +260,9 @@ namespace Cwru.Publisher.Services
             return environment;
         }
 
-        private async Task<IEnumerable<WebResource>> RetrieveWrsAsync(string connectionString, IEnumerable<string> webResourceNames, bool ignoreExtensions, bool extendedLog)
+        private async Task<IEnumerable<WebResource>> RetrieveWrsAsync(string connectionString, IEnumerable<string> webResourceNames)
         {
-            await logger.WriteLineAsync("Retrieving existing web resources", extendedLog);
+            await logger.WriteDebugAsync("Retrieving existing web resources");
 
             var retrieveWebResourceResponse = await crmRequest.RetrieveWebResourcesAsync(connectionString, webResourceNames);
             if (retrieveWebResourceResponse.IsSuccessful == false)
@@ -304,7 +304,7 @@ namespace Cwru.Publisher.Services
             await logger.WriteLineAsync($"{webResource.Name} was downloaded. {relativePath}");
             return true;
         }
-        private async Task<Dictionary<string, WebResource>> GetWrToFileMappingAsync(ProjectInfo projectInfo, IEnumerable<WebResource> webResources, Dictionary<string, string> mappings, bool ignoreExtensions, bool extendedLog)
+        private Dictionary<string, WebResource> GetWrToFileMapping(ProjectInfo projectInfo, IEnumerable<WebResource> webResources, Dictionary<string, string> mappings, bool ignoreExtensions)
         {
             var result = new Dictionary<string, WebResource>();
 
