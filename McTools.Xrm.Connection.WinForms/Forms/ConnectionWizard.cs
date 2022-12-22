@@ -422,6 +422,13 @@ namespace McTools.Xrm.Connection.WinForms
                 await logger.WriteDebugAsync(cs);
 
                 var validationResponse = await crmRequests.ValidateConnectionAsync(cs);
+                if (!string.IsNullOrWhiteSpace(validationResponse.ConnectionInfo))
+                {
+                    await logger.WriteDebugAsync("----------------------------------------------------");
+                    await logger.WriteDebugAsync("Connection additional info:");
+                    await logger.WriteDebugAsync(validationResponse.ConnectionInfo);
+                    await logger.WriteDebugAsync("----------------------------------------------------");
+                }
 
                 if (validationResponse.IsSuccessful == false)
                 {

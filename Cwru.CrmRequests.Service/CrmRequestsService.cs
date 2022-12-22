@@ -8,7 +8,9 @@ using Microsoft.Xrm.Tooling.Connector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.ServiceModel;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +19,7 @@ namespace Cwru.CrmRequests.Service
     [ServiceBehavior(Name = "CrmWebResourceUpdaterServerSvc", InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single)]
     public class CrmRequestsService : ICrmRequests
     {
+        private List<string> useAlternateConnection = new List<string>();
         public async Task<Response<ConnectionResult>> ValidateConnectionAsync(string crmConnectionString)
         {
             return await Task.Factory.StartNew(() => ValidateConnection(crmConnectionString), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
@@ -59,11 +62,12 @@ namespace Cwru.CrmRequests.Service
             {
                 Console.WriteLine("Connection validation requested");
 
-                var client = CreateOrganizationService(crmConnectionString, false);
+                var client = CreateOrganizationService(crmConnectionString, false, out var info);
 
                 return new Response<ConnectionResult>()
                 {
                     IsSuccessful = true,
+                    ConnectionInfo = info,
                     Payload = new ConnectionResult()
                     {
                         IsReady = client.IsReady,
@@ -370,26 +374,93 @@ namespace Cwru.CrmRequests.Service
                 return GetFailedResponse<bool>(ex);
             }
         }
-        private Response<T> GetFailedResponse<T>(Exception ex, T payload = default(T))
+        private CrmServiceClient CreateOrganizationService(string crmConnectionString)
         {
-            return new Response<T>()
-            {
-                ErrorMessage = ex.Message,
-                IsSuccessful = false,
-                Payload = payload,
-                Exception = ex
-            };
+            return CreateOrganizationService(crmConnectionString);
         }
-        private CrmServiceClient CreateOrganizationService(string connectionString, bool throwEx = true)
+        private CrmServiceClient CreateOrganizationService(string crmConnectionString, bool throwEx, out string connectionInfo)
         {
-            var client = new CrmServiceClient(connectionString);
+            connectionInfo = string.Empty;
 
-            if (throwEx && client?.IsReady != true)
+            CrmServiceClient client;
+            if (useAlternateConnection.Contains(crmConnectionString))
             {
-                throw client?.LastCrmException != null ? throw new Exception(client.LastCrmError, client.LastCrmException) : new Exception("Crm connection is not ready");
+                client = CreateOrganizationServiceAlternate(crmConnectionString, out connectionInfo);
+            }
+            else
+            {
+                client = new CrmServiceClient(crmConnectionString);
+                if (client.IsReady != true)
+                {
+                    var alternateClient = CreateOrganizationServiceAlternate(crmConnectionString, out connectionInfo);
+                    if (alternateClient?.IsReady == true)
+                    {
+                        useAlternateConnection.Add(crmConnectionString);
+                        client = alternateClient;
+                    }
+                }
+            }
+
+            if (client?.IsReady != true)
+            {
+                if (useAlternateConnection.Contains(crmConnectionString))
+                {
+                    useAlternateConnection.Remove(crmConnectionString);
+                }
+
+                if (throwEx)
+                {
+                    throw client?.LastCrmException != null ? throw new Exception(client.LastCrmError, client.LastCrmException) : new Exception("Crm connection is not ready");
+                }
             }
 
             return client;
+        }
+        private CrmServiceClient CreateOrganizationServiceAlternate(string crmConnectionString, out string alternateClientInfo)
+        {
+            CrmServiceClient alternateClient = null;
+            alternateClientInfo = "Creating alternate client=>";
+
+            try
+            {
+                var cs = CrmConnectionString.Parse(crmConnectionString);
+
+                if (cs.AuthenticationType == Cwru.Common.Model.AuthenticationType.AD && !string.IsNullOrWhiteSpace(cs.ServiceUri))
+                {
+                    var match = Regex.Match(
+                        cs.ServiceUri?.Trim(),
+                        @"^(?:https|http):\/\/\S*?\/(\S*?)(?:\/\S*\s*|\s*)$",
+                        RegexOptions.IgnoreCase);
+
+                    if (match.Success)
+                    {
+                        var uri = new Uri(cs.ServiceUri);
+                        alternateClient = new CrmServiceClient(
+                            credential: cs.IntegratedSecurity != true ? new NetworkCredential(cs.UserName, cs.Password, cs.Domain) : CredentialCache.DefaultNetworkCredentials,
+                            hostName: uri.Host,
+                            port: uri.Port.ToString(),
+                            orgName: match.Groups[1].Value,
+                            useUniqueInstance: cs.RequireNewInstance == true,
+                            useSsl: string.Compare(uri.Scheme, "https", true) == 0);
+                    }
+                }
+
+                if (alternateClient?.IsReady == true)
+                {
+                    alternateClientInfo += "Created";
+                }
+                else
+                {
+                    alternateClientInfo += $"Failed\r\n{alternateClient.LastCrmError}";
+                }
+            }
+            catch (Exception ex)
+            {
+                alternateClientInfo += $"Failed\r\n{ex}";
+                Console.WriteLine(ex.ToString());
+            }
+
+            return alternateClient;
         }
         private List<Entity> RetriveAll(IOrganizationService organizationService, QueryExpression query)
         {
@@ -413,6 +484,17 @@ namespace Cwru.CrmRequests.Service
             }
 
             return result;
+        }
+        private Response<T> GetFailedResponse<T>(Exception ex, T payload = default(T), string connectionInfo = null)
+        {
+            return new Response<T>()
+            {
+                ErrorMessage = ex.Message,
+                IsSuccessful = false,
+                Payload = payload,
+                Exception = ex,
+                ConnectionInfo = connectionInfo
+            };
         }
     }
 }

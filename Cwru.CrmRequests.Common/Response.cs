@@ -8,6 +8,7 @@ namespace Cwru.CrmRequests.Common
         public string ErrorMessage { get; set; }
         public Exception Exception { get; set; }
         public T Payload { get; set; }
+        public string ConnectionInfo { get; set; }
 
         public void EnsureSuccess()
         {
