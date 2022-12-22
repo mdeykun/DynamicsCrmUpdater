@@ -147,7 +147,7 @@ namespace McTools.Xrm.Connection.WinForms
 
         private void tsbNewConnection_Click(object sender, EventArgs e)
         {
-            var cForm = new ConnectionWizard(crmRequests, solutionsService)
+            var cForm = new ConnectionWizard(crmRequests, solutionsService, logger)
             {
                 StartPosition = FormStartPosition.CenterParent
             };
@@ -176,7 +176,7 @@ namespace McTools.Xrm.Connection.WinForms
 
                 var cd = (ConnectionDetail)item.Tag;
 
-                var cForm = new ConnectionWizard(crmRequests, solutionsService, cd)
+                var cForm = new ConnectionWizard(crmRequests, solutionsService, logger, cd)
                 {
                     StartPosition = FormStartPosition.CenterParent
                 };

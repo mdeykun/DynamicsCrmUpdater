@@ -59,14 +59,16 @@ namespace Cwru.CrmRequests.Service
             {
                 Console.WriteLine("Connection validation requested");
 
-                var client = CreateOrganizationService(crmConnectionString);
+                var client = CreateOrganizationService(crmConnectionString, false);
+
                 return new Response<ConnectionResult>()
                 {
-                    IsSuccessful = client.IsReady,
+                    IsSuccessful = true,
                     Payload = new ConnectionResult()
                     {
                         IsReady = client.IsReady,
                         LastCrmError = client.LastCrmError,
+                        LastCrmException = client.LastCrmException,
                         OrganizationUniqueName = client.ConnectedOrgUniqueName,
                         OrganizationVersion = client.ConnectedOrgVersion?.ToString(),
                     }
@@ -75,11 +77,7 @@ namespace Cwru.CrmRequests.Service
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return GetFailedResponse(ex, new ConnectionResult()
-                {
-                    IsReady = false,
-                    LastCrmError = ex.Message
-                });
+                return GetFailedResponse<ConnectionResult>(ex);
             }
         }
         private Response<bool> UploadWebresource(string crmConnectionString, WebResource webResource)
@@ -382,16 +380,16 @@ namespace Cwru.CrmRequests.Service
                 Exception = ex
             };
         }
-        private CrmServiceClient CreateOrganizationService(string connectionString)
+        private CrmServiceClient CreateOrganizationService(string connectionString, bool throwEx = true)
         {
-            var сrmServiceClient = new CrmServiceClient(connectionString);
+            var client = new CrmServiceClient(connectionString);
 
-            if (сrmServiceClient == null || сrmServiceClient.IsReady == false)
+            if (throwEx && client?.IsReady != true)
             {
-                throw сrmServiceClient.LastCrmException ?? new Exception("Crm connection is not ready");
+                throw client?.LastCrmException != null ? throw new Exception(client.LastCrmError, client.LastCrmException) : new Exception("Crm connection is not ready");
             }
 
-            return сrmServiceClient;
+            return client;
         }
         private List<Entity> RetriveAll(IOrganizationService organizationService, QueryExpression query)
         {

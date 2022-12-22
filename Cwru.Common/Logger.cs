@@ -65,8 +65,12 @@ namespace Cwru.Common
 
         public async Task WriteLineAsync(Exception ex)
         {
-            await WriteLineAsync("An error occured: " + ex.Message);
-            await WriteLineAsync(ex.StackTrace);
+            if (ex == null)
+            {
+                return;
+            }
+
+            await WriteLineAsync(ex.ToString());
         }
 
         public async Task WriteLineAsync(string message, Exception ex)

@@ -1,4 +1,5 @@
-﻿using Cwru.Common.Extensions;
+﻿using Cwru.Common;
+using Cwru.Common.Extensions;
 using Cwru.Common.Model;
 using Cwru.Common.Services;
 using Cwru.CrmRequests.Common.Contracts;
@@ -25,8 +26,13 @@ namespace McTools.Xrm.Connection.WinForms
 
         private readonly ICrmRequests crmRequests;
         private readonly SolutionsService solutionsService;
+        private readonly ILogger logger;
 
-        public ConnectionWizard(ICrmRequests crmRequests, SolutionsService solutionsService, ConnectionDetail detail = null)
+        public ConnectionWizard(
+            ICrmRequests crmRequests,
+            SolutionsService solutionsService,
+            ILogger logger,
+            ConnectionDetail detail = null)
         {
             InitializeComponent();
 
@@ -41,6 +47,7 @@ namespace McTools.Xrm.Connection.WinForms
 
             this.crmRequests = crmRequests;
             this.solutionsService = solutionsService;
+            this.logger = logger;
         }
 
         public ConnectionDetail CrmConnectionDetail { get; private set; }
@@ -407,26 +414,42 @@ namespace McTools.Xrm.Connection.WinForms
         {
             try
             {
+                await logger.WriteDebugAsync("Connection validation");
                 var currentDetail = CrmConnectionDetail;
-
                 var crmConnectionString = currentDetail.ToCrmConnectionString();
-                var validationResponse = await crmRequests.ValidateConnectionAsync(crmConnectionString.BuildConnectionString());
+                var cs = crmConnectionString.BuildConnectionString();
+                await logger.WriteDebugAsync("Connection string that will be used:");
+                await logger.WriteDebugAsync(cs);
+
+                var validationResponse = await crmRequests.ValidateConnectionAsync(cs);
+
                 if (validationResponse.IsSuccessful == false)
                 {
-                    throw new Exception($"Failed to validate connection: {validationResponse.ErrorMessage}");
-                }
-                var connectionResult = validationResponse.Payload;
+                    lastError = $"Failed to validate connection: {validationResponse.ErrorMessage}";
+                    await logger.WriteLineAsync(lastError);
+                    await logger.WriteLineAsync(validationResponse.Exception);
+                    await logger.WriteLineAsync(validationResponse.Exception?.InnerException);
 
-                if (!connectionResult.IsReady)
-                {
-                    lastError = connectionResult.LastCrmError;
                     DisplayControl<ConnectionFailedControl>();
+                    return;
+                }
 
+                var connectionResult = validationResponse.Payload;
+                if (connectionResult?.IsReady != true)
+                {
+                    lastError = $"Failed to validate connection. LastCrmError: {connectionResult.LastCrmError}";
+                    await logger.WriteLineAsync(lastError);
+                    await logger.WriteLineAsync(connectionResult.LastCrmException);
+                    await logger.WriteLineAsync(connectionResult.LastCrmException?.InnerException);
+
+                    DisplayControl<ConnectionFailedControl>();
                     return;
                 }
 
                 CrmConnectionDetail.Organization = connectionResult.OrganizationUniqueName;
                 CrmConnectionDetail.OrganizationVersion = connectionResult.OrganizationVersion;
+
+                await logger.WriteLineAsync($"Connection was validated. Organization Unique Name: {connectionResult.OrganizationUniqueName}");
 
                 DisplayControl<ConnectionSucceededControl>();
             }

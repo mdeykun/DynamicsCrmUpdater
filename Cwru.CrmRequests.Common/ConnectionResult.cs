@@ -1,4 +1,6 @@
-﻿namespace Cwru.CrmRequests.Common
+﻿using System;
+
+namespace Cwru.CrmRequests.Common
 {
     public class ConnectionResult
     {
@@ -6,5 +8,6 @@
         public string LastCrmError { get; set; }
         public string OrganizationUniqueName { get; set; }
         public string OrganizationVersion { get; set; }
+        public Exception LastCrmException { get; set; }
     }
 }

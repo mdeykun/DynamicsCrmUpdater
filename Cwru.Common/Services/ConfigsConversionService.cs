@@ -277,6 +277,7 @@ namespace Cwru.Common.Services
             }
             catch (Exception ex)
             {
+                await logger.WriteLineAsync("An error occured: ");
                 await logger.WriteLineAsync(ex);
             }
 

@@ -7,7 +7,6 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
 {
     public static class ConnectionDetailExtensions
     {
-        //TODO: Review from AuthenticationTypes perspective
         public static CrmConnectionString ToCrmConnectionString(this ConnectionDetail connectionDetail, bool? forceNewService = null)
         {
             if (connectionDetail.Certificate != null)
@@ -110,7 +109,6 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                 ServiceUri = connectionDetail.OriginalUrl,
                 IntegratedSecurity = true,
                 LoginPrompt = "None",
-
             };
 
             if (connectionDetail.IntegratedSecurity != true)
@@ -146,16 +144,6 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
 
         public static int GetImageIndex(this ConnectionDetail detail)
         {
-            //if (detail.UseOnline)
-            //{
-            //    return 2;
-            //}
-
-            //if (detail.UseIfd)
-            //{
-            //    return 1;
-            //}
-
             return 0;
         }
     }

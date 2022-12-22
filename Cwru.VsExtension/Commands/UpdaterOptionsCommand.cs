@@ -18,7 +18,7 @@ namespace Cwru.VsExtension.Commands
         {
             await logger.WriteDebugAsync("UpdaterOptionsCommand: Command started");
             await connectionService.ShowConfigurationDialogAsync();
-            await logger.WriteDebugAsync("UpdaterOptionsCommand: Command started");
+            await logger.WriteDebugAsync("UpdaterOptionsCommand: Command completed");
         }
     }
 }

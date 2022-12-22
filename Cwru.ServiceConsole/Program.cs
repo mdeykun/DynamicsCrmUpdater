@@ -13,12 +13,12 @@ namespace Cwru.ServiceConsole
         static void Main(string[] args)
         {
             //DEPLOY: not for production use:
-            var processes = Process.GetProcessesByName("Cwru.ServiceConsole");
-            var processesToKill = processes.Where(p => p.Id != Process.GetCurrentProcess().Id).ToList();
-            foreach (var process in processesToKill)
-            {
-                process.Kill();
-            }
+            //var processes = Process.GetProcessesByName("Cwru.ServiceConsole");
+            //var processesToKill = processes.Where(p => p.Id != Process.GetCurrentProcess().Id).ToList();
+            //foreach (var process in processesToKill)
+            //{
+            //    process.Kill();
+            //}
 
             var svc = new CrmRequestsService();
             var host = new ServiceHost(svc, new Uri("net.pipe://localhost"));
