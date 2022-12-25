@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="MicrosoftDynamicsCrmWebResourcesUpdater - 0.5.1" Version="0.06.09" Language="en-US" Publisher="Marat Deykun" />
+        <Identity Id="MicrosoftDynamicsCrmWebResourcesUpdater - 0.5.1" Version="0.06.11" Language="en-US" Publisher="Marat Deykun" />
         <DisplayName>Microsoft Dynamics 365 CRM Web Resources Updater</DisplayName>
         <Description xml:space="preserve">Create, update, download Microsoft Dynamics 365 CRM Web Resources directly from Visual Studio. Bring web resources development on next level.</Description>
         <MoreInfo>https://happycrm.blogspot.ru/p/crm-publisher.html</MoreInfo>

@@ -376,7 +376,7 @@ namespace Cwru.CrmRequests.Service
         }
         private CrmServiceClient CreateOrganizationService(string crmConnectionString)
         {
-            return CreateOrganizationService(crmConnectionString);
+            return CreateOrganizationService(crmConnectionString, true, out _);
         }
         private CrmServiceClient CreateOrganizationService(string crmConnectionString, bool throwEx, out string connectionInfo)
         {
@@ -419,29 +419,66 @@ namespace Cwru.CrmRequests.Service
         private CrmServiceClient CreateOrganizationServiceAlternate(string crmConnectionString, out string alternateClientInfo)
         {
             CrmServiceClient alternateClient = null;
-            alternateClientInfo = "Creating alternate client=>";
+            alternateClientInfo = string.Empty;
 
             try
             {
                 var cs = CrmConnectionString.Parse(crmConnectionString);
 
-                if (cs.AuthenticationType == Cwru.Common.Model.AuthenticationType.AD && !string.IsNullOrWhiteSpace(cs.ServiceUri))
+                if (cs.AuthenticationType != Cwru.Common.Model.AuthenticationType.AD &&
+                    cs.AuthenticationType != Cwru.Common.Model.AuthenticationType.IFD)
                 {
-                    var match = Regex.Match(
-                        cs.ServiceUri?.Trim(),
-                        @"^(?:https|http):\/\/\S*?\/(\S*?)(?:\/\S*\s*|\s*)$",
-                        RegexOptions.IgnoreCase);
+                    return null;
+                }
 
-                    if (match.Success)
+                if (string.IsNullOrWhiteSpace(cs.ServiceUri))
+                {
+                    throw new ArgumentNullException(nameof(cs.ServiceUri));
+                }
+
+                var serviceUri = cs.ServiceUri.Trim();
+                var uri = new Uri(serviceUri);
+                var orgName = GetOrganizationName(serviceUri);
+                var useSsl = string.Compare(uri.Scheme, "https", true) == 0;
+
+                alternateClientInfo = "Creating alternate client=>";
+
+                if (cs.AuthenticationType == Cwru.Common.Model.AuthenticationType.AD)
+                {
+                    alternateClient = new CrmServiceClient(
+                        credential: cs.IntegratedSecurity != true ? new NetworkCredential(cs.UserName, cs.Password, cs.Domain) : CredentialCache.DefaultNetworkCredentials,
+                        hostName: uri.Host,
+                        port: uri.Port.ToString(),
+                        orgName: orgName,
+                        useUniqueInstance: cs.RequireNewInstance == true,
+                        useSsl: useSsl);
+                }
+
+                if (cs.AuthenticationType == Cwru.Common.Model.AuthenticationType.IFD)
+                {
+                    if (cs.IntegratedSecurity == true)
                     {
-                        var uri = new Uri(cs.ServiceUri);
                         alternateClient = new CrmServiceClient(
-                            credential: cs.IntegratedSecurity != true ? new NetworkCredential(cs.UserName, cs.Password, cs.Domain) : CredentialCache.DefaultNetworkCredentials,
+                            credential: CredentialCache.DefaultNetworkCredentials,
+                            authType: Microsoft.Xrm.Tooling.Connector.AuthenticationType.IFD,
                             hostName: uri.Host,
                             port: uri.Port.ToString(),
-                            orgName: match.Groups[1].Value,
+                            orgName: orgName,
                             useUniqueInstance: cs.RequireNewInstance == true,
-                            useSsl: string.Compare(uri.Scheme, "https", true) == 0);
+                            useSsl: useSsl);
+                    }
+                    else
+                    {
+                        alternateClient = new CrmServiceClient(
+                            userId: cs.UserName,
+                            password: cs.Password,
+                            domain: cs.Domain,
+                            homeRealm: cs.HomeRealmUri,
+                            hostName: uri.Host,
+                            port: uri.Port.ToString(),
+                            orgName: orgName,
+                            useUniqueInstance: cs.RequireNewInstance == true,
+                            useSsl: useSsl);
                     }
                 }
 
@@ -451,7 +488,7 @@ namespace Cwru.CrmRequests.Service
                 }
                 else
                 {
-                    alternateClientInfo += $"Failed\r\n{alternateClient.LastCrmError}";
+                    alternateClientInfo += $"Failed\r\n{alternateClient?.LastCrmError}";
                 }
             }
             catch (Exception ex)
@@ -485,6 +522,7 @@ namespace Cwru.CrmRequests.Service
 
             return result;
         }
+
         private Response<T> GetFailedResponse<T>(Exception ex, T payload = default(T), string connectionInfo = null)
         {
             return new Response<T>()
@@ -495,6 +533,23 @@ namespace Cwru.CrmRequests.Service
                 Exception = ex,
                 ConnectionInfo = connectionInfo
             };
+        }
+
+        private string GetOrganizationName(string serviceUri)
+        {
+            if (string.IsNullOrEmpty(serviceUri))
+            {
+                throw new ArgumentNullException(nameof(serviceUri));
+            }
+
+            var match = Regex.Match(serviceUri?.Trim(), @"^(?:https?):\/\/\S*?\/(\S*?)(?:\/\S*\s*|\s*)$", RegexOptions.IgnoreCase);
+
+            if (match.Success == false || match.Groups.Count <= 1)
+            {
+                throw new Exception("Can't retrieve orgName from Service Uri");
+            }
+
+            return match.Groups[1].Value;
         }
     }
 }

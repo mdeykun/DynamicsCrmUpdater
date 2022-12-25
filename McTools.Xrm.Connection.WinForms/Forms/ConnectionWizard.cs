@@ -172,7 +172,7 @@ namespace McTools.Xrm.Connection.WinForms
 
                 if (ccc.PasswordChanged)
                 {
-                    CrmConnectionDetail.UserPassword = ccc.Password.ToSecureString();
+                    CrmConnectionDetail.UserPassword = ccc.Password.Trim().ToSecureString();
                 }
 
                 if (string.IsNullOrEmpty(CrmConnectionDetail.UserName) || CrmConnectionDetail.UserPassword == null)

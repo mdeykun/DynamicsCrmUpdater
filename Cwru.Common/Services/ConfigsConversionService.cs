@@ -158,8 +158,8 @@ namespace Cwru.Common.Services
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.Certificate,
-                    ServiceUri = connectionDetail.OriginalUrl,
-                    Thumbprint = connectionDetail.Certificate.Thumbprint,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                    Thumbprint = connectionDetail.Certificate.Thumbprint?.Trim(),
                     ClientId = connectionDetail.AzureAdAppId,
                     RequireNewInstance = forceNewService,
                     LoginPrompt = "None"
@@ -168,7 +168,7 @@ namespace Cwru.Common.Services
 
             if (connectionDetail.ConnectionString != null)
             {
-                var connectionString = connectionDetail.ConnectionString;
+                var connectionString = connectionDetail.ConnectionString?.Trim();
                 connectionString = await DecriptConnectionStringAsync(connectionString);
                 return CrmConnectionString.Parse(connectionString);
             }
@@ -178,7 +178,7 @@ namespace Cwru.Common.Services
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.ClientSecret,
-                    ServiceUri = connectionDetail.OriginalUrl,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
                     ClientId = connectionDetail.AzureAdAppId,
                     ClientSecret = await DecryptOrNullAsync(connectionDetail.ClientSecretEncrypted),
                     RequireNewInstance = forceNewService,
@@ -193,10 +193,10 @@ namespace Cwru.Common.Services
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.OAuth,
-                    ServiceUri = connectionDetail.OriginalUrl,
-                    UserName = connectionDetail.UserName,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                    UserName = connectionDetail.UserName?.Trim(),
                     ClientId = connectionDetail.AzureAdAppId,
-                    RedirectUri = connectionDetail.ReplyUrl,
+                    RedirectUri = connectionDetail.ReplyUrl?.Trim(),
                     TokenCacheStorePath = path,
                     RequireNewInstance = forceNewService,
                     LoginPrompt = "None"
@@ -210,8 +210,8 @@ namespace Cwru.Common.Services
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.OAuth,
-                    ServiceUri = connectionDetail.OriginalUrl,
-                    UserName = connectionDetail.UserName,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                    UserName = connectionDetail.UserName?.Trim(),
                     Password = await DecryptOrNullAsync(connectionDetail.UserPasswordEncrypted),
                     ClientId = connectionDetail.AzureAdAppId != Guid.Empty ? connectionDetail.AzureAdAppId : new Guid("51f81489-12ee-4a9e-aaae-a2591f45987d"),
                     RedirectUri = connectionDetail.ReplyUrl ?? "app://58145B91-0C36-4500-8554-080854F2AC97",
@@ -228,7 +228,7 @@ namespace Cwru.Common.Services
                     return new CrmConnectionString()
                     {
                         AuthenticationType = AuthenticationType.IFD,
-                        ServiceUri = connectionDetail.OriginalUrl,
+                        ServiceUri = connectionDetail.OriginalUrl?.Trim(),
                         RequireNewInstance = forceNewService,
                         LoginPrompt = "None"
                     };
@@ -238,11 +238,11 @@ namespace Cwru.Common.Services
                     return new CrmConnectionString()
                     {
                         AuthenticationType = AuthenticationType.IFD,
-                        ServiceUri = connectionDetail.OriginalUrl,
-                        UserName = connectionDetail.UserName,
-                        Domain = connectionDetail.UserDomain,
+                        ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                        UserName = connectionDetail.UserName?.Trim(),
+                        Domain = connectionDetail.UserDomain?.Trim(),
                         Password = await DecryptOrNullAsync(connectionDetail.UserPasswordEncrypted),
-                        HomeRealmUri = connectionDetail.HomeRealmUrl,
+                        HomeRealmUri = connectionDetail.HomeRealmUrl?.Trim(),
                         RequireNewInstance = forceNewService,
                         LoginPrompt = "None"
                     };
@@ -252,7 +252,7 @@ namespace Cwru.Common.Services
             var cs = new CrmConnectionString()
             {
                 AuthenticationType = AuthenticationType.AD,
-                ServiceUri = connectionDetail.OriginalUrl,
+                ServiceUri = connectionDetail.OriginalUrl?.Trim(),
                 IntegratedSecurity = true,
                 LoginPrompt = "None",
 
@@ -260,8 +260,8 @@ namespace Cwru.Common.Services
 
             if (connectionDetail.IsCustomAuth == true)
             {
-                cs.Domain = connectionDetail.UserDomain;
-                cs.UserName = connectionDetail.UserName;
+                cs.Domain = connectionDetail.UserDomain?.Trim();
+                cs.UserName = connectionDetail.UserName?.Trim();
                 cs.Password = await DecryptOrNullAsync(connectionDetail.UserPasswordEncrypted);
             }
 

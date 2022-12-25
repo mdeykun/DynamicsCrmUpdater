@@ -14,8 +14,8 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.Certificate,
-                    ServiceUri = connectionDetail.OriginalUrl,
-                    Thumbprint = connectionDetail.Certificate.Thumbprint,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                    Thumbprint = connectionDetail.Certificate.Thumbprint?.Trim(),
                     ClientId = connectionDetail.AzureAdAppId,
                     RequireNewInstance = forceNewService,
                     LoginPrompt = "None"
@@ -24,7 +24,7 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
 
             if (connectionDetail.ConnectionString != null)
             {
-                return CrmConnectionString.Parse(connectionDetail.ConnectionString);
+                return CrmConnectionString.Parse(connectionDetail.ConnectionString?.Trim());
             }
 
             if (connectionDetail.AuthType == AuthenticationType.ClientSecret)
@@ -32,7 +32,7 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.ClientSecret,
-                    ServiceUri = connectionDetail.OriginalUrl,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
                     ClientId = connectionDetail.AzureAdAppId,
                     ClientSecret = connectionDetail.ClientSecret,
                     RequireNewInstance = forceNewService,
@@ -47,10 +47,10 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.OAuth,
-                    ServiceUri = connectionDetail.OriginalUrl,
-                    UserName = connectionDetail.UserName,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                    UserName = connectionDetail.UserName?.Trim(),
                     ClientId = connectionDetail.AzureAdAppId,
-                    RedirectUri = connectionDetail.ReplyUrl,
+                    RedirectUri = connectionDetail.ReplyUrl?.Trim(),
                     TokenCacheStorePath = path,
                     RequireNewInstance = forceNewService,
                     LoginPrompt = "None"
@@ -64,11 +64,11 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                 return new CrmConnectionString()
                 {
                     AuthenticationType = AuthenticationType.OAuth,
-                    ServiceUri = connectionDetail.OriginalUrl,
-                    UserName = connectionDetail.UserName,
+                    ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                    UserName = connectionDetail.UserName?.Trim(),
                     Password = connectionDetail.UserPassword,
                     ClientId = connectionDetail.AzureAdAppId != Guid.Empty ? connectionDetail.AzureAdAppId : new Guid("51f81489-12ee-4a9e-aaae-a2591f45987d"),
-                    RedirectUri = connectionDetail.ReplyUrl ?? "app://58145B91-0C36-4500-8554-080854F2AC97",
+                    RedirectUri = connectionDetail.ReplyUrl?.Trim() ?? "app://58145B91-0C36-4500-8554-080854F2AC97",
                     TokenCacheStorePath = path,
                     RequireNewInstance = forceNewService,
                     LoginPrompt = "None"
@@ -82,7 +82,7 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                     return new CrmConnectionString()
                     {
                         AuthenticationType = AuthenticationType.IFD,
-                        ServiceUri = connectionDetail.OriginalUrl,
+                        ServiceUri = connectionDetail.OriginalUrl?.Trim(),
                         RequireNewInstance = forceNewService,
                         LoginPrompt = "None"
                     };
@@ -92,11 +92,11 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
                     return new CrmConnectionString()
                     {
                         AuthenticationType = AuthenticationType.IFD,
-                        ServiceUri = connectionDetail.OriginalUrl,
-                        UserName = connectionDetail.UserName,
-                        Domain = connectionDetail.UserDomain,
+                        ServiceUri = connectionDetail.OriginalUrl?.Trim(),
+                        UserName = connectionDetail.UserName?.Trim(),
+                        Domain = connectionDetail.UserDomain?.Trim(),
                         Password = connectionDetail.UserPassword,
-                        HomeRealmUri = connectionDetail.HomeRealmUrl,
+                        HomeRealmUri = connectionDetail.HomeRealmUrl?.Trim(),
                         RequireNewInstance = forceNewService,
                         LoginPrompt = "None"
                     };
@@ -106,15 +106,15 @@ namespace McTools.Xrm.Connection.WinForms.Extensions
             var cs = new CrmConnectionString()
             {
                 AuthenticationType = AuthenticationType.AD,
-                ServiceUri = connectionDetail.OriginalUrl,
+                ServiceUri = connectionDetail.OriginalUrl?.Trim(),
                 IntegratedSecurity = true,
                 LoginPrompt = "None",
             };
 
             if (connectionDetail.IntegratedSecurity != true)
             {
-                cs.Domain = connectionDetail.UserDomain;
-                cs.UserName = connectionDetail.UserName;
+                cs.Domain = connectionDetail.UserDomain?.Trim();
+                cs.UserName = connectionDetail.UserName?.Trim();
                 cs.Password = connectionDetail.UserPassword;
                 cs.IntegratedSecurity = null;
             }

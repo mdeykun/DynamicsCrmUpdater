@@ -59,7 +59,7 @@
             this.Version.Size = new System.Drawing.Size(312, 30);
             this.Version.TabIndex = 1;
             this.Version.Tag = "3";
-            this.Version.Text = "Version: 0.06.09";
+            this.Version.Text = "Version: 0.06.11";
             // 
             // DevelopedBy
             // 
