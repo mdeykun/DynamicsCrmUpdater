@@ -70,6 +70,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\WritableSettingsStoreExtensions.cs" />
     <Compile Include="Contracts\ILogger.cs" />
+    <Compile Include="Info.cs" />
     <Compile Include="JsonConverters\AuthenticationTypeConverter.cs" />
     <Compile Include="JsonConverters\SecureStringConverter.cs" />
     <Compile Include="Model\SolutionElement.cs" />

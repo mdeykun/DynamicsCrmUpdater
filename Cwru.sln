@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cwru.Common.Services", "Cwr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cwru.CrmRequests.Common", "Cwru.CrmRequests.Common\Cwru.CrmRequests.Common.csproj", "{197284AA-2F8A-4A26-880A-1ADC83D83D4D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cwru.TestConsole", "Cwru.TestConsole\Cwru.TestConsole.csproj", "{DAE2D391-20E9-4C53-84C6-868092BC506C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug Without GemBox|Any CPU = Debug Without GemBox|Any CPU
@@ -161,6 +163,18 @@ Global
 		{197284AA-2F8A-4A26-880A-1ADC83D83D4D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{197284AA-2F8A-4A26-880A-1ADC83D83D4D}.Release|x86.ActiveCfg = Release|Any CPU
 		{197284AA-2F8A-4A26-880A-1ADC83D83D4D}.Release|x86.Build.0 = Release|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug Without GemBox|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug Without GemBox|Any CPU.Build.0 = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug Without GemBox|x86.ActiveCfg = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug Without GemBox|x86.Build.0 = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Debug|x86.Build.0 = Debug|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Release|x86.ActiveCfg = Release|Any CPU
+		{DAE2D391-20E9-4C53-84C6-868092BC506C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

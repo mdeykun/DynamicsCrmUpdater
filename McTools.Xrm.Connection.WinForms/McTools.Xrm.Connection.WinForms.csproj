@@ -127,6 +127,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\ListViewExtensions.cs" />
+    <Compile Include="Forms\DonateForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DonateForm.Designer.cs">
+      <DependentUpon>DonateForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\AboutForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -273,6 +279,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\DonateForm.resx">
+      <DependentUpon>DonateForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </EmbeddedResource>

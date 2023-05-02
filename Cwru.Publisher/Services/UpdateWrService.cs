@@ -31,7 +31,7 @@ namespace Cwru.Publisher.Services
             MappingService mappingHelper,
             SolutionsService solutionsService,
             VsDteService vsDteService,
-            ProjectConfigurationService configurationService) : base(logger, vsDteService)
+            ProjectConfigurationService configurationService) : base(logger, vsDteService, true)
         {
             this.crmRequest = crmWebResourcesUpdaterClient;
             this.mappingService = mappingHelper;
@@ -46,29 +46,41 @@ namespace Cwru.Publisher.Services
 
             var dialog = new SelectEnvironmentsForm(projectConfig);
 
+            Result result = null;
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 projectConfig.SelectedEnvironments = dialog.SelectedEnvironments.Select(x => x.Id).ToList();
                 configurationService.SaveProjectConfig(projectConfig);
 
-                for (var i = 0; i < dialog.SelectedEnvironments.Count; i++)
+                if (dialog.SelectedEnvironments.Count == 0)
                 {
-                    var environment = dialog.SelectedEnvironments[i];
+                    await logger.WriteLineAsync("Environments where not selected");
 
-                    if (i != 0)
-                    {
-                        await logger.WriteLineAsync();
-                    }
-                    await logger.WriteEnvironmentInfoAsync(environment);
-
-                    var result = await UploadWrAsync(projectConfig, environment, projectInfo, selectedItemsOnly);
-
+                    result = new Result() { ResultType = ResultType.Canceled };
                     await OperationEndAsync(result);
+                }
+                else
+                {
+
+                    for (var i = 0; i < dialog.SelectedEnvironments.Count; i++)
+                    {
+                        var environment = dialog.SelectedEnvironments[i];
+
+                        if (i != 0)
+                        {
+                            await logger.WriteLineAsync();
+                        }
+                        await logger.WriteEnvironmentInfoAsync(environment);
+
+                        result = await UploadWrAsync(projectConfig, environment, projectInfo, selectedItemsOnly);
+
+                        await OperationEndAsync(result);
+                    }
                 }
             }
             else
             {
-                var result = new Result() { ResultType = ResultType.Canceled };
+                result = new Result() { ResultType = ResultType.Canceled };
                 await OperationEndAsync(result);
             }
         }

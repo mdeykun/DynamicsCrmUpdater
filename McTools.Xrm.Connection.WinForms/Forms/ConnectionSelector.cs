@@ -291,5 +291,10 @@ namespace McTools.Xrm.Connection.WinForms
             //lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.server_key.png"));
             lvConnections.SmallImageList.Images.Add(RessourceManager.GetImage("McTools.Xrm.Connection.WinForms.Resources.powerapps16.png"));
         }
+
+        private void showDonationButton_Click(object sender, EventArgs e)
+        {
+            new DonateForm().ShowDialog();
+        }
     }
 }

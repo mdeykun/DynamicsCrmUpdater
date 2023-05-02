@@ -35,6 +35,7 @@
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.panel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             this.button1 = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -59,20 +60,20 @@
             this.Version.Size = new System.Drawing.Size(312, 30);
             this.Version.TabIndex = 1;
             this.Version.Tag = "3";
-            this.Version.Text = "Version: 0.06.11";
+            this.Version.Text = "Version: 0.00.00";
             // 
             // DevelopedBy
             // 
             this.DevelopedBy.Location = new System.Drawing.Point(3, 47);
             this.DevelopedBy.Name = "DevelopedBy";
-            this.DevelopedBy.Size = new System.Drawing.Size(312, 83);
+            this.DevelopedBy.Size = new System.Drawing.Size(312, 54);
             this.DevelopedBy.TabIndex = 2;
             this.DevelopedBy.Tag = "2";
             this.DevelopedBy.Text = "Developed By: Marat Deykun, Artyom Deykun.";
             // 
             // ConnectionControl
             // 
-            this.ConnectionControl.Location = new System.Drawing.Point(3, 130);
+            this.ConnectionControl.Location = new System.Drawing.Point(3, 141);
             this.ConnectionControl.Name = "ConnectionControl";
             this.ConnectionControl.Size = new System.Drawing.Size(312, 17);
             this.ConnectionControl.TabIndex = 3;
@@ -80,12 +81,14 @@
             // 
             // linkLabel1
             // 
-            this.linkLabel1.Location = new System.Drawing.Point(3, 147);
+            this.linkLabel1.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.linkLabel1.Location = new System.Drawing.Point(3, 158);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(312, 15);
             this.linkLabel1.TabIndex = 4;
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = "XrmTools connection control.";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
             // panel1
             // 
@@ -112,12 +115,23 @@
             this.flowLayoutPanel1.Controls.Add(this.Title);
             this.flowLayoutPanel1.Controls.Add(this.Version);
             this.flowLayoutPanel1.Controls.Add(this.DevelopedBy);
+            this.flowLayoutPanel1.Controls.Add(this.linkLabel2);
             this.flowLayoutPanel1.Controls.Add(this.ConnectionControl);
             this.flowLayoutPanel1.Controls.Add(this.linkLabel1);
             this.flowLayoutPanel1.Location = new System.Drawing.Point(24, 23);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(318, 176);
             this.flowLayoutPanel1.TabIndex = 0;
+            // 
+            // linkLabel2
+            // 
+            this.linkLabel2.Location = new System.Drawing.Point(3, 101);
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.Size = new System.Drawing.Size(206, 40);
+            this.linkLabel2.TabIndex = 5;
+            this.linkLabel2.TabStop = true;
+            this.linkLabel2.Text = "Submit bug or feature request";
+            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
             // 
             // button1
             // 
@@ -158,5 +172,6 @@
         private System.Windows.Forms.TableLayoutPanel panel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.LinkLabel linkLabel2;
     }
 }

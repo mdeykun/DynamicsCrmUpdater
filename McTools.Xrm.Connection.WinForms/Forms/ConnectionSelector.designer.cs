@@ -51,7 +51,8 @@
             this.bCreateMapping = new System.Windows.Forms.Button();
             this.comboBoxSelectedConnection = new System.Windows.Forms.ComboBox();
             this.pnlMain = new System.Windows.Forms.Panel();
-            this.button1 = new System.Windows.Forms.Button();
+            this.showAboutButton = new System.Windows.Forms.Button();
+            this.showDonationButton = new System.Windows.Forms.Button();
             this.menu.SuspendLayout();
             this.pnlFooter.SuspendLayout();
             this.pnlMain.SuspendLayout();
@@ -277,16 +278,27 @@
             this.pnlMain.Size = new System.Drawing.Size(744, 251);
             this.pnlMain.TabIndex = 6;
             // 
-            // button1
+            // showAboutButton
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(717, 1);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(23, 23);
-            this.button1.TabIndex = 7;
-            this.button1.Text = "?";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.bAboutClick);
+            this.showAboutButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.showAboutButton.Location = new System.Drawing.Point(717, 1);
+            this.showAboutButton.Name = "showAboutButton";
+            this.showAboutButton.Size = new System.Drawing.Size(23, 23);
+            this.showAboutButton.TabIndex = 7;
+            this.showAboutButton.Text = "?";
+            this.showAboutButton.UseVisualStyleBackColor = true;
+            this.showAboutButton.Click += new System.EventHandler(this.bAboutClick);
+            // 
+            // showDonationButton
+            // 
+            this.showDonationButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.showDonationButton.Location = new System.Drawing.Point(651, 1);
+            this.showDonationButton.Name = "showDonationButton";
+            this.showDonationButton.Size = new System.Drawing.Size(60, 23);
+            this.showDonationButton.TabIndex = 8;
+            this.showDonationButton.Text = "Donate";
+            this.showDonationButton.UseVisualStyleBackColor = true;
+            this.showDonationButton.Click += new System.EventHandler(this.showDonationButton_Click);
             // 
             // ConnectionSelector
             // 
@@ -294,7 +306,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.bCancel;
             this.ClientSize = new System.Drawing.Size(744, 410);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.showDonationButton);
+            this.Controls.Add(this.showAboutButton);
             this.Controls.Add(this.pnlMain);
             this.Controls.Add(this.pnlFooter);
             this.Controls.Add(this.menu);
@@ -337,6 +350,7 @@
         private System.Windows.Forms.CheckBox cbAutoPublish;
         private System.Windows.Forms.Button bCreateMapping;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button showAboutButton;
+        private System.Windows.Forms.Button showDonationButton;
     }
 }

@@ -60,9 +60,9 @@ namespace Cwru.ServiceConsole
             //DEPLOY: not for production use:
             var processes = Process.GetProcessesByName("Cwru.ServiceConsole");
             var processesToKill = processes.Where(p => p.Id != Process.GetCurrentProcess().Id).ToList();
-            foreach (var process in processesToKill)
+            foreach (var toKill in processesToKill)
             {
-                process.Kill();
+                toKill.Kill();
             }
         }
     }

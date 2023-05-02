@@ -17,15 +17,23 @@ namespace Cwru.Publisher.Services.Base
     {
         protected readonly ILogger logger;
         protected readonly VsDteService vsDteService;
+        protected readonly bool showDonation = false;
 
-        public PublisherBaseService(ILogger logger, VsDteService vsDteService)
+        public PublisherBaseService(ILogger logger, VsDteService vsDteService, bool showDonation = false)
         {
             this.logger = logger;
             this.vsDteService = vsDteService;
+            this.showDonation = showDonation;
         }
 
         protected async Task OperationStartAsync(string message, string statusBarMessage = null, EnvironmentConfig environmentConfig = null)
         {
+            if (showDonation)
+            {
+                await ShowSupportUsMessageAsync();
+                await logger.WriteLineAsync();
+            }
+
             if (!string.IsNullOrEmpty(message))
             {
                 await logger.WriteLineWithTimeAsync(message);
@@ -91,6 +99,15 @@ namespace Cwru.Publisher.Services.Base
             {
                 await vsDteService.SetStatusBarAsync(statusBarMessage);
             }
+        }
+        protected async Task ShowSupportUsMessageAsync()
+        {
+            await logger.WriteLineAsync("Please help us to support and extend the tool:");
+            await logger.WriteLineAsync();
+            await logger.WriteLineAsync("USDT (ERC20): " + Info.UsdtErc20);
+            await logger.WriteLineAsync("USDT (TRC20): " + Info.UsdtTrc20);
+            await logger.WriteLineAsync("Ethereum: " + Info.EthErc20);
+            await logger.WriteLineAsync("Bitcoin: " + Info.Btc);
         }
         protected async Task<IEnumerable<string>> GetProjectFilesAsync(ProjectInfo projectInfo, bool selectedItemsOnly)
         {
