@@ -176,7 +176,7 @@ namespace Cwru.Common.Model
 
         public string BuildConnectionString()
         {
-            var csBuilder = new DbConnectionStringBuilder();
+            var csBuilder = new DbConnectionStringBuilder(true);
 
             var connectionInfoProperties = typeof(CrmConnectionString).GetProperties();
             var propertiesWithAttribute = connectionInfoProperties.Where(prop => prop.IsDefined(typeof(ConnectionStringAliases), false));
