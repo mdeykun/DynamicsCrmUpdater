@@ -274,7 +274,7 @@ namespace Cwru.Publisher.Services
         }
         private async Task<bool> ReplaceWrContentAsync(ProjectInfo projectInfo, WebResource webResource, string filePath, bool openDownloadedFiles = false)
         {
-            var localContent = FilesHelper.GetEncodedFileContent(filePath);
+            var localContent = filePath.EndsWith(".json") ? FilesHelper.GetFileContent(filePath) : FilesHelper.GetEncodedFileContent(filePath);
             var remoteContent = webResource.Content;
 
             var relativePath = filePath.Replace(projectInfo.Root + "\\", "");

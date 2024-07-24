@@ -26,7 +26,8 @@ namespace Cwru.Publisher.Helpers
                 fs.Read(binaryData, 0, (int)fs.Length);
                 fs.Close();
 
-                return Encoding.UTF8.GetString(binaryData);
+                // use Encoding.Default to also process special characters like German Umlauts, czech characters, ... in translation files
+                return Encoding.Default.GetString(binaryData);
             }
         }
     }
