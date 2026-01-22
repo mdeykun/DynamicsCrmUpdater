@@ -80,7 +80,7 @@ namespace Cwru.Publisher.Services
 
         private async Task<Result> CreateWrAsync(ProjectInfo projectInfo, EnvironmentConfig environment, WebResource webResource, string filePath)
         {
-            webResource.Content = FilesHelper.GetEncodedFileContent(filePath);
+            webResource.Content = filePath.EndsWith(".json") ? FilesHelper.GetFileContent(filePath) : FilesHelper.GetEncodedFileContent(filePath);
 
             var isWebResourceExistsResponse = await crmRequest.IsWebResourceExistsAsync(environment.ConnectionString.BuildConnectionString(), webResource.Name);
             if (isWebResourceExistsResponse.IsSuccessful == false)

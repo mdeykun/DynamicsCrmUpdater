@@ -162,7 +162,7 @@ namespace Cwru.Publisher.Services
             var webResourceName = Path.GetFileName(filePath);
             await logger.WriteDebugAsync("Uploading " + webResourceName);
 
-            var localContent = FilesHelper.GetEncodedFileContent(filePath);
+            var localContent = filePath.EndsWith(".json") ? FilesHelper.GetFileContent(filePath) : FilesHelper.GetEncodedFileContent(filePath);
             var remoteContent = webResource.Content;
             if (remoteContent.Length != localContent.Length || remoteContent != localContent)
             {
